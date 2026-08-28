@@ -1,16 +1,16 @@
 {
-  "name": "@robzolkos/lazypi",
+  "name": "@tommy-ca/lazypi",
   "version": "0.6.4",
   "description": "Opinionated one-shot installer for a full-featured Pi coding agent setup.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/robzolkos/LazyPi"
+    "url": "https://github.com/tommy-ca/LazyPi"
   },
   "bugs": {
-    "url": "https://github.com/robzolkos/LazyPi/issues"
+    "url": "https://github.com/tommy-ca/LazyPi/issues"
   },
-  "homepage": "https://github.com/robzolkos/LazyPi",
+  "homepage": "https://github.com/tommy-ca/LazyPi",
   "type": "module",
   "bin": {
     "lazypi": "bin/lazypi.mjs"

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+* simplify catalog to 18 essential packages across core/tools/research/themes; add goal and context-usage; drop compound, todos, powerbar/extension-settings, plannotator, slopchop, usage, raw-paste, autoresearch
+* remove Compound Engineering and package-load-order machinery from the installer and doctor
+
+### Docs
+
+* trim package pages, sidebar, and landing catalog to the simplified catalog; add Goal and Context Usage pages
+
 ## [0.6.4](https://github.com/robzolkos/LazyPi/compare/v0.6.3...v0.6.4) (2026-07-27)
 
 

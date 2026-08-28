@@ -4,17 +4,16 @@ import assert from "node:assert/strict";
 import { PACKAGES } from "../bin/lazypi.mjs";
 import { expectedPackageSources, packageSourcesFromSettings } from "../scripts/assert-installed-packages.mjs";
 
-test("expectedPackageSources matches full catalog except compound's unmanaged source", () => {
+test("expectedPackageSources matches the full catalog", () => {
 	const expected = expectedPackageSources();
 
-	assert.equal(expected.includes("npm:@every-env/compound-plugin"), false);
-	assert.equal(expected.length, PACKAGES.length - 1);
+	assert.equal(expected.length, PACKAGES.length);
 });
 
 test("expectedPackageSources supports excluded package ids", () => {
-	const expected = expectedPackageSources({ except: ["compound", "pi-ask-user"] });
+	const expected = expectedPackageSources({ except: ["goal", "pi-ask-user"] });
 
-	assert.equal(expected.includes("npm:@every-env/compound-plugin"), false);
+	assert.equal(expected.includes("npm:@narumitw/pi-goal"), false);
 	assert.equal(expected.includes("npm:pi-ask-user"), false);
 	assert.equal(expected.length, PACKAGES.length - 2);
 });

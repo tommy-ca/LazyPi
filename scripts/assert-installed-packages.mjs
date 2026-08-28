@@ -8,8 +8,6 @@ import { pathToFileURL } from "node:url";
 
 import { PACKAGES } from "../bin/lazypi.mjs";
 
-const COMPOUND_ID = "compound";
-
 export function packageSourcesFromSettings(settings) {
 	return new Set(
 		(settings?.packages ?? [])
@@ -22,7 +20,6 @@ export function expectedPackageSources({ except = [] } = {}) {
 	const excluded = new Set(except);
 	return PACKAGES
 		.filter((pkg) => !excluded.has(pkg.id))
-		.filter((pkg) => pkg.id !== COMPOUND_ID)
 		.map((pkg) => pkg.source);
 }
 

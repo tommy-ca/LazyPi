@@ -92,19 +92,17 @@ test("resolveAgentConfigDir matches Pi path semantics", () => {
 	}
 });
 
-test("status reads settings and Compound state from PI_CODING_AGENT_DIR", (t) => {
+test("status reads settings from PI_CODING_AGENT_DIR", (t) => {
 	const { home, workspace } = createWorkspace(t);
 	const customAgentDir = join(home, ".pi", "lazy");
 	writeSettings(join(home, ".pi", "agent"), ["npm:pi-mcp-adapter"]);
 	writeSettings(customAgentDir, ["npm:pi-subagents"]);
-	writeJson(join(customAgentDir, "compound-engineering", "install-manifest.json"), { files: ["AGENTS.md"] });
 
 	const result = runCli(["status"], { cwd: workspace, home, agentDir: "~/.pi/lazy" });
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.ok(result.stdout.includes(`Settings file: ${join(customAgentDir, "settings.json")}`));
 	assert.match(result.stdout, /✓ \[core\] subagents/);
-	assert.match(result.stdout, /✓ \[frameworks\] compound/);
 	assert.doesNotMatch(result.stdout, /✓ \[core\] mcp/);
 });
 
@@ -140,7 +138,7 @@ test("update and remove inspect the custom global settings", (t) => {
 	const updateResult = runCli(["update"], { cwd: workspace, home, agentDir: customAgentDir, bin, callsPath });
 	assert.equal(updateResult.status, 0, `STDOUT:\n${updateResult.stdout}\nSTDERR:\n${updateResult.stderr}`);
 	const customSettings = JSON.parse(readFileSync(join(customAgentDir, "settings.json"), "utf8"));
-	assert.deepEqual(customSettings.packages, [EXTENSION_SETTINGS_SOURCE, POWERBAR_SOURCE, "npm:pi-memory-md"]);
+	assert.deepEqual(customSettings.packages, [POWERBAR_SOURCE, EXTENSION_SETTINGS_SOURCE, "npm:pi-memory-md"]);
 	assert.deepEqual(JSON.parse(readFileSync(join(defaultAgentDir, "settings.json"), "utf8")).packages, ["npm:pi-subagents"]);
 
 	const removeResult = runCli(["remove", "memory"], { cwd: workspace, home, agentDir: customAgentDir, bin, callsPath });
@@ -159,6 +157,6 @@ test("--local settings remain independent of PI_CODING_AGENT_DIR", (t) => {
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.ok(result.stdout.includes(`Settings file: ${join(workspace, ".pi", "settings.json")}`));
-	assert.match(result.stdout, /✓ \[core\] mcp/);
+	assert.match(result.stdout, /✓ \[tools\] mcp/);
 	assert.doesNotMatch(result.stdout, /✓ \[core\] subagents/);
 });
