@@ -71,5 +71,6 @@ context; no trusting project-local packages in untrusted clones.
 The source harness runs ≈10 packages and explicitly omits checkbox todos;
 LazyPi previously shipped 25 including a todo list, powerbar, plannotator,
 slopchop, usage, raw-paste, autoresearch, and compound. The adopted gaps:
-goal + context-usage replace todos/usage; fff and $ mention are deferred;
-powerbar/plannotator/slopchop/raw-paste were dropped as non-essential UI.
+goal + context-usage replace todos/usage;
+powerbar/plannotator/slopchop/raw-paste were dropped as non-essential UI. fff and $
+mention were adopted later (fff-search and harness-essentials changes, 2026-08-28).

@@ -1,0 +1,56 @@
+---
+layout: docs
+title: "FFF — LazyPi Docs"
+---
+<h1>FFF</h1>
+    <p class="page-desc">Fuzzy file and content search: FFF-powered <code>fffind</code>, <code>ffgrep</code>, and <code>fff-multi-grep</code> alongside the built-in tools.</p>
+
+    <h2>What it does</h2>
+    <p>
+      This package adds a Rust-native, SIMD-accelerated search index (<a href="https://github.com/dmtrKovalenko/fff" target="_blank" rel="noopener">FFF</a>) as additional tools — it does not replace Pi's built-in <code>find</code> and <code>grep</code>:
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Tool</th>
+          <th>What it does</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>fffind</code></td>
+          <td>Fuzzy file-name search, frecency-ranked, typo-tolerant, git-aware</td>
+        </tr>
+        <tr>
+          <td><code>ffgrep</code></td>
+          <td>SIMD content search with smart case, context lines, and cursor pagination</td>
+        </tr>
+        <tr>
+          <td><code>fff-multi-grep</code></td>
+          <td>OR-logic multi-pattern content search via Aho-Corasick</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      No subprocess per call (no <code>fd</code>/<code>rg</code> spawning): files are indexed in the background at session start, and access history (frecency) ranks results across sessions. <code>/fff-health</code> shows index status; <code>/fff-rescan</code> reindexes.
+    </p>
+
+    <h2>Why it's included</h2>
+    <p>
+      The harness's context-hygiene rule: unbounded grep dumps flood the transcript. <code>ffgrep</code> pages results with a cursor (default 100), so searches stay bounded and the agent reads then continues. For <code>$HOME</code>-launched sessions with huge trees, disable home indexing with <code>FFF_ENABLE_HOME_SCAN=0</code>.
+    </p>
+
+    <div class="learn-more">
+      <a href="https://github.com/dmtrKovalenko/fff/tree/main/packages/pi-fff" target="_blank" rel="noopener">→ GitHub — dmtrKovalenko/fff (pi-fff)</a>
+    </div>
+
+    <nav class="prev-next">
+      <a href="/docs/packages/interactive-shell.html" class="prev-next-link">
+        <span class="prev-next-label">Previous</span>
+        ← Previous
+      </a>
+      <a href="/docs/packages/ralph-wiggum.html" class="prev-next-link next">
+        <span class="prev-next-label">Next</span>
+        Next →
+      </a>
+    </nav>

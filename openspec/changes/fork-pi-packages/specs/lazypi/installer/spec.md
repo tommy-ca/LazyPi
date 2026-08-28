@@ -9,12 +9,12 @@ MAY carry `legacySources` and `forked`.
 #### Scenario: Lean catalog shape
 
 - **WHEN** the catalog is loaded
-- **THEN** it SHALL contain exactly 15 entries across the categories `core`,
+- **THEN** it SHALL contain exactly 16 entries across the categories `core`,
   `tools`, `research`, and `themes`
 - **AND** `core` SHALL contain subagents, pi-ask-user, pi-skillful,
   mention-skill, skill-args, goal, btw, context-usage, and simplify
-- **AND** `tools` SHALL contain web-access, memory, mcp, and
-  interactive-shell
+- **AND** `tools` SHALL contain web-access, memory, mcp, interactive-shell,
+  and fff
 - **AND** `research` SHALL contain ralph-wiggum
 - **AND** `themes` SHALL contain curated-themes only
 
@@ -29,6 +29,12 @@ MAY carry `legacySources` and `forked`.
 
 - **WHEN** the catalog defines `skill-args`
 - **THEN** its `source` SHALL be `npm:@juicesharp/rpiv-args`
+
+#### Scenario: Search substrate source
+
+- **WHEN** the catalog defines `fff`
+- **THEN** its `source` SHALL be `npm:@ff-labs/pi-fff`
+- **AND** its default mode SHALL be additive (`tools-and-ui`)
 
 #### Scenario: Side chat best alternative
 

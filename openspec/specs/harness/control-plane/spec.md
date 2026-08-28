@@ -88,6 +88,14 @@ lane.
 - **THEN** research runs in an isolated child that cannot write project files
 - **AND** only chosen URLs are fetched deep
 
+#### Scenario: Search substrate
+
+- **WHEN** the agent searches file contents or names in a repository
+- **THEN** results SHALL come back in bounded, paged pages with a cursor for
+  the next page
+- **AND** unbounded dumps of grep hits SHALL NOT be written into the
+  transcript
+
 ### Requirement: Security Posture
 
 The harness SHALL treat Pi as maximum privilege: packages run with the user's

@@ -53,6 +53,7 @@ export const PACKAGES = [
 	},
 	{ id: "mcp", category: "tools", source: "npm:pi-mcp-adapter", description: "MCP server integration", hint: "Connect Pi to any MCP-compatible tool server." },
 	{ id: "interactive-shell", category: "tools", source: "npm:pi-interactive-shell", description: "Interactive shell overlays", hint: "Run Pi, Codex, editors, SSH, and long-running CLIs in observable overlays with hands-free and dispatch modes." },
+	{ id: "fff", category: "tools", source: "npm:@ff-labs/pi-fff", description: "FFF fuzzy search", hint: "Additive fffind / ffgrep / fff-multi-grep beside the built-in tools; /fff-health checks the index." },
 	{ id: "ralph-wiggum", category: "research", source: "npm:@tmustier/pi-ralph-wiggum", description: "Ralph Wiggum agent loop", hint: "Long-running iterative dev loops with goals, checklists, and optional self-reflection." },
 	{ id: "curated-themes", category: "themes", source: "npm:@victor-software-house/pi-curated-themes", description: "65 curated dark themes", hint: "65 dark terminal themes adapted from iTerm2-Color-Schemes." },
 ];
@@ -206,7 +207,7 @@ ${bold("Default behaviour:")}
 
 ${bold("Categories:")}
   core         the harness control plane: sub-agents, ask gate, skill visibility, $ mention, skill args, goal, side chat, context budget, simplify
-  tools        capability: web access, memory, MCP, shell overlays
+  tools        capability: web access, memory, MCP, shell overlays, fff search
   research     long-running iterative dev loops
   themes       the curated dark theme pack
 
