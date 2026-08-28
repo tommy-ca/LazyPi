@@ -4,7 +4,7 @@
 
 ### Features
 
-* simplify catalog to 18 essential packages across core/tools/research/themes; add goal and context-usage; drop compound, todos, powerbar/extension-settings, plannotator, slopchop, usage, raw-paste, autoresearch
+* simplify catalog to essential packages (now 15) across core/tools/research/themes; add goal, context-usage, skill visibility, $ mention, and skill args; drop compound, todos, powerbar/extension-settings, plannotator, slopchop, usage, raw-paste, autoresearch
 * remove Compound Engineering and package-load-order machinery from the installer and doctor
 
 ### Docs

@@ -18,7 +18,7 @@ pi-packages/
   packages/
     pi-subagents/         # fork of pi-subagents       (agent contract preserved)
     pi-ask-user/          # fork of pi-ask-user        (typed options, ask-gate defaults)
-    pi-web-tools/         # fork of pi-web-access      (pluggable providers, keyless default)
+    pi-web-tools/         # fork of pi-web-access      (ownership/trim, keyless default)
     pi-btw/               # fork of pi-btw             (side thread, non-mutating)
     pi-todo/              # own overlay (rpiv-todo-style, survives /reload; NOT a checkbox list)
     pi-memory/            # fork of pi-memory-md       (owned memory format)
@@ -48,7 +48,8 @@ pi-packages/
 | --- | --- | --- |
 | pi-subagents | upstream pi-subagents | keep agent contract + workflowScript/runs.all/runs.run/fresh; carry the subagents.agentOverrides blanking doc |
 | pi-ask-user | upstream pi-ask-user | keep tool schema + settings; typed options default |
-| pi-web-tools | pi-web-access | add provider pluggability (Brave/Tavily/Serper/Exa/SearXNG/…) with a keyless default provider |
+| pi-web-tools | pi-web-access | upstream already ships pluggable providers (26 incl. keyless DuckDuckGo) — the owned fork differentiates on ownership, trimming to the harness surface, and a confirmed keyless default (self-hosted SearXNG/Ollama) |
+| pi-args | @juicesharp/rpiv-args | skill parameterization ($1 / $ARGUMENTS, !cmd), cataloged as skill-args |
 | pi-btw | upstream pi-btw | enforce non-mutating side threads |
 | pi-todo | authored (rpiv-todo style) | live overlay surviving /reload + compaction |
 | pi-memory | pi-memory-md | owned storage format; versioned |

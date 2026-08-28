@@ -69,3 +69,19 @@ ask-user-question/todo/btw/web-tools rather than forking those upstream.
 Deliberate non-copies: no MLflow telemetry, no marketing site, no i18n/voice/
 warp unless the operator wants them. Keep the fork set at the harness control
 plane only (see `changes/fork-pi-packages/proposal.md`).
+## 2026-08-28 addendum — provider/tool audit and alternatives verdict
+
+npm-currency check (registry, 2026-08-28): all rpiv packages at 2.7.1
+(published 2026-08-24), peer-depending on `@earendil-works/pi-coding-agent`
+since the 2.x line. `@tintinweb/pi-subagents` 0.19.0 (2026-08-27, active:
+12 releases in ~5 weeks) — the fork rpiv-mono peer-depends on. `pi-web-access`
+0.27.0 (2026-08-28 — newer than rpiv-web-tools).
+
+| Candidate from rpiv-mono | vs catalog | Verdict |
+| --- | --- | --- |
+| rpiv-web-tools (web_search, web_fetch; 10 providers, Brave default needs a key; SearXNG/Ollama self-hosted) | catalog has pi-web-access (web_search, fetch_content, get_search_content, source_check; 26 providers incl. keyless DuckDuckGo; zero-config search; video/PDF/GitHub; /websearch /curator /search) | **KEEP pi-web-access** — broader, zero-config, newer. Provider pluggability already exists upstream, so the planned owned fork differentiates on ownership/trim + keyless default, not provider logic. Fetch tool names differ (web_fetch vs fetch_content) — skills referencing either must match. |
+| rpiv-ask-user-question (tool `ask_user_question`, typed questionnaire) | catalog has pi-ask-user (`ask_user`) | **KEEP pi-ask-user** — swapping would break the harness ask gate unless every call site is renamed. |
+| @tintinweb/pi-subagents | catalog has pi-subagents | **KEEP upstream pi-subagents** — the owned fork (fork-pi-packages) will replace it; @tintinweb is active but never a catalog dependency here. |
+| rpiv-btw | catalog has @narumitw/pi-btw (gist P9 pick) | **KEEP @narumitw** — already the best; rpiv-btw is opt-in in their family. |
+| rpiv-args ($1/$ARGUMENTS + `` !`cmd` `` in skills) | no catalog equivalent; complements skill visibility + mention | **ADD** as `skill-args` (change rpiv-alternatives). Future owned fork: `pi-args`. |
+| rpiv-todo / rpiv-advisor / rpiv-workflow / rpiv-pi / i18n / voice / warp / telemetry | — | Rejected: todo is the checkbox anti-pattern; advisor/workflow/umbrella are heavy pipeline (philosophy: subagents + goal); rest niche. |

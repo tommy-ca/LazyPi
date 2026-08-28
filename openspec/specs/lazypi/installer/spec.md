@@ -17,10 +17,10 @@ MAY carry `legacySources` and `forked`.
 #### Scenario: Lean catalog shape
 
 - **WHEN** the catalog is loaded
-- **THEN** it SHALL contain exactly 14 entries across the categories `core`,
+- **THEN** it SHALL contain exactly 15 entries across the categories `core`,
   `tools`, `research`, and `themes`
 - **AND** `core` SHALL contain subagents, pi-ask-user, pi-skillful,
-  mention-skill, goal, btw, context-usage, and simplify
+  mention-skill, skill-args, goal, btw, context-usage, and simplify
 - **AND** `tools` SHALL contain web-access, memory, mcp, and
   interactive-shell
 - **AND** `research` SHALL contain ralph-wiggum
@@ -47,6 +47,11 @@ MAY carry `legacySources` and `forked`.
 - **THEN** `pi-skillful` SHALL resolve to `npm:pi-skillful`
 - **AND** `mention-skill` SHALL resolve to `npm:@zigai/pi-mention-skill`
 - **AND** the catalog SHALL ship exactly one mention implementation
+
+#### Scenario: Skill arguments source
+
+- **WHEN** the catalog defines `skill-args`
+- **THEN** its `source` SHALL be `npm:@juicesharp/rpiv-args`
 
 ### Requirement: Idempotent Install
 
@@ -134,3 +139,16 @@ a separate manifest, so catalog edits propagate to CI automatically.
 - **THEN** it SHALL find every non-excluded `PACKAGES` source in settings.json
 - **AND** the `status` header SHALL report the expected count over
   `PACKAGES.length`
+
+### Requirement: Skill Arguments
+
+The catalog SHALL provide a skill-parameter package so skill bodies accept
+shell-style arguments and inline command expansion at invocation.
+
+#### Scenario: Parameterized skill
+
+- **WHEN** a skill is invoked with arguments
+- **THEN** the skill body SHALL receive positional placeholders (`$1`, `$2`)
+  and the raw input line
+- **AND** inline `` !`cmd` `` blocks SHALL run and paste their output into
+  the prompt before the model reads it

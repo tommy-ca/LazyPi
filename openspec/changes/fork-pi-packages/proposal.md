@@ -9,7 +9,7 @@ most-trusted path is a small set of owned forks under `@tommy-ca/pi-*`, kept
 in one npm-workspace monorepo with lockstep releases, ship-manifest tests, and
 a clean migration path back into the LazyPi catalog. Owning the forks makes
 the control plane reviewed source, stable-versioned, and customizable to the
-harness (for example provider-pluggable web tools, a live task overlay that is
+harness (for example owned web research with a keyless default, a live task overlay that is
 not a checkbox list).
 
 ## What Changes
@@ -18,7 +18,8 @@ not a checkbox list).
   lockstep versions per the rpiv-mono conventions) housing forked packages
   published as `@tommy-ca/pi-<name>`.
 - Tier 1 forks: `pi-subagents`, `pi-ask-user`, `pi-web-tools` (replaces
-  `pi-web-access` with pluggable providers), `pi-btw`, `pi-todo` (own overlay),
+  `pi-web-access`; provider pluggability already ships upstream, the fork
+  differentiates on ownership/trim and a keyless default), `pi-btw`, `pi-todo` (own overlay),
   `pi-memory` (fork of pi-memory-md → pinned owned source).
 - Tier 2: `pi-goal` and `pi-context-usage` forks (smallest viable surface from
   `@narumitw/pi-goal` and `pi-context-usage`), plus pinning or replacing the

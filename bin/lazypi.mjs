@@ -30,6 +30,7 @@ export const PACKAGES = [
 	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", description: "Ask-user prompts", hint: "Interactive user questions for agent workflows." },
 	{ id: "pi-skillful", category: "core", source: "npm:pi-skillful", description: "Skill visibility", hint: "Discover skills above the git root, hide unused skills, and expand /skill:name inline." },
 	{ id: "mention-skill", category: "core", source: "npm:@zigai/pi-mention-skill", description: "$ skill mention", hint: "Fuzzy-search skills with $ and expand them into the prompt; hidden skills stay reachable." },
+	{ id: "skill-args", category: "core", source: "npm:@juicesharp/rpiv-args", description: "Skill arguments", hint: "Shell-style $1 / $ARGUMENTS placeholders and !\u0060cmd\u0060 substitution, expanded into your Pi skills at invocation." },
 	{ id: "goal", category: "core", source: "npm:@narumitw/pi-goal", description: "Long-objective gate", hint: "Stop on done, blocked, or external wait for long tasks." },
 	{
 		id: "btw",
@@ -204,7 +205,7 @@ ${bold("Default behaviour:")}
   - With --yes, --only, or --except the picker is skipped.
 
 ${bold("Categories:")}
-  core         the harness control plane: sub-agents, ask gate, skill visibility, $ mention, goal, side chat, context budget, simplify
+  core         the harness control plane: sub-agents, ask gate, skill visibility, $ mention, skill args, goal, side chat, context budget, simplify
   tools        capability: web access, memory, MCP, shell overlays
   research     long-running iterative dev loops
   themes       the curated dark theme pack
