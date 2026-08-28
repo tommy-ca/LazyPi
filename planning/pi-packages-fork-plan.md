@@ -1,9 +1,16 @@
 # LazyPi — Plan: fork the pi-packages
 
-Status: draft · Executes `requirements.md` (FR-1…FR-10) and `design.md`
-dispositions. Phases are sequential; each ends with acceptance evidence.
+Status: draft · **Execution 2026-08-28: catalog simplification + repo fork DONE (see spec §6). Owned-fork publishing (Phase 0–2 below) still pending.**
+Executes `requirements.md` (FR-1…FR-10) and `design.md` dispositions. Phases are sequential; each ends with acceptance evidence.
 
 ---
+
+## Actually executed (2026-08-28) — 18-package catalog, fork pushed
+
+- Catalog: **core** (subagents, pi-ask-user, goal, btw, context-usage, plan, simplify), **tools** (web-access, memory, mcp, add-dir, interactive-shell, claude-cli, prompt-templates), **research** (ralph-wiggum), **themes** (hackerman, curated-themes, terminal-theme). Dropped 9 packages incl. compound (bun/manifest machinery removed) and the checkbox `todos` anti-pattern (replaced by `@narumitw/pi-goal`). Added `pi-context-usage`.
+- Installer: −425 lines (`bin/lazypi.mjs`); load-order and compound special-cases gone; doctor/status/update simplified; tests green (21/21); packed smoke green.
+- Fork: `tommy-ca/LazyPi` created and pushed (master), release-please gated to manual, docs site trimmed to the catalog with Goal + Context Usage pages.
+- **Not done — the owned forks themselves.** Phase 0–2 below remain the plan; `legacySources` migration is ready to repoint catalog sources to `@tommy-ca/pi-*` once published (D7).
 
 ## Phase 0 — Verify and scaffold (½ day)
 
