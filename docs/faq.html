@@ -24,21 +24,21 @@ extra_css: /assets/css/faq.css
   <div class="faq-item">
     <div class="faq-q">Do I need to install Pi first?</div>
     <div class="faq-a">
-      No. If Pi isn't installed on your machine, LazyPi will install it for you as part of the setup. Just run <code>npx @robzolkos/lazypi</code> and it handles everything.
+      No. If Pi isn't installed on your machine, LazyPi will install it for you as part of the setup. Just run <code>npx @tommy-ca/lazypi</code> and it handles everything.
     </div>
   </div>
 
   <div class="faq-item">
     <div class="faq-q">What does LazyPi install?</div>
     <div class="faq-a">
-      LazyPi installs a curated set of community-built packages: the harness control plane (sub-agents, a structured ask gate, a long-objective gate, side chat, context budgeting, plan, simplify), tools (web access, memory, MCP, directories, shell overlays, model providers), research loops, and themes. You can see the full list on the <a href="/#catalog">catalog</a> section.
+      LazyPi installs a curated set of community-built packages: the harness control plane (sub-agents, a structured ask gate, a long-objective gate, side chat, context budgeting, simplify), tools (web access, memory, MCP, shell overlays), research loops, and the curated dark theme pack. You can see the full list on the <a href="/#catalog">catalog</a> section.
     </div>
   </div>
 
   <div class="faq-item">
     <div class="faq-q">Can I choose what to install?</div>
     <div class="faq-a">
-      Yes. When you run <code>npx @robzolkos/lazypi</code>, you'll be prompted to either install everything (recommended) or open an interactive picker to select exactly which packages you want.
+      Yes. When you run <code>npx @tommy-ca/lazypi</code>, you'll be prompted to either install everything (recommended) or open an interactive picker to select exactly which packages you want.
     </div>
   </div>
 
@@ -59,37 +59,37 @@ extra_css: /assets/css/faq.css
   <div class="faq-item">
     <div class="faq-q">How do I remove a package I don't want?</div>
     <div class="faq-a">
-      Run <code>npx @robzolkos/lazypi remove</code> to open an interactive picker of installed packages. Or pass the package id directly:<br><br>
-      <code>npx @robzolkos/lazypi remove subagents</code><br><br>
-      Raw pi sources also work: <code>npx @robzolkos/lazypi remove npm:pi-subagents@0.13.3</code>
+      Run <code>npx @tommy-ca/lazypi remove</code> to open an interactive picker of installed packages. Or pass the package id directly:<br><br>
+      <code>npx @tommy-ca/lazypi remove subagents</code><br><br>
+      Raw pi sources also work: <code>npx @tommy-ca/lazypi remove npm:pi-subagents@0.13.3</code>
     </div>
   </div>
 
   <div class="faq-item">
     <div class="faq-q">How do I keep everything up to date?</div>
     <div class="faq-a">
-      Run <code>npx @robzolkos/lazypi update</code>. This runs Pi's updater to pull in upstream changes for installed Pi packages.
+      Run <code>npx @tommy-ca/lazypi update</code>. This runs Pi's updater to pull in upstream changes for installed Pi packages.
     </div>
   </div>
 
   <div class="faq-item">
     <div class="faq-q">Something's broken — how do I diagnose it?</div>
     <div class="faq-a">
-      Run <code>npx @robzolkos/lazypi doctor</code>. This checks your environment for common problems and reports anything that looks off. It's the first thing to run if Pi isn't behaving as expected after a LazyPi install.
+      Run <code>npx @tommy-ca/lazypi doctor</code>. This checks your environment for common problems and reports anything that looks off. It's the first thing to run if Pi isn't behaving as expected after a LazyPi install.
     </div>
   </div>
 
   <div class="faq-item">
     <div class="faq-q">I think a package is missing — how do I suggest it?</div>
     <div class="faq-a">
-      If you've found a Pi extension that you think belongs in the catalog, <a href="https://github.com/robzolkos/lazypi/issues" target="_blank">open an issue on GitHub</a> with a link to the package and a quick note on why it's worth including. The bar is quality and usefulness — if it's a well-maintained package that meaningfully improves the Pi experience, it's a good candidate.
+      If you've found a Pi extension that you think belongs in the catalog, <a href="https://github.com/tommy-ca/LazyPi/issues" target="_blank">open an issue on GitHub</a> with a link to the package and a quick note on why it's worth including. The bar is quality and usefulness — if it's a well-maintained package that meaningfully improves the Pi experience, it's a good candidate.
     </div>
   </div>
 
   <div class="faq-item">
     <div class="faq-q">Does it work on Windows, Mac, and Linux?</div>
     <div class="faq-a">
-      LazyPi requires Node.js 18+ and works anywhere Pi does — macOS, Linux, and Windows (via WSL or a Node-compatible shell). If you hit a platform-specific issue, run <code>npx @robzolkos/lazypi doctor</code> first, then <a href="https://github.com/robzolkos/lazypi/issues" target="_blank">open an issue</a>.
+      LazyPi requires Node.js 18+ and works anywhere Pi does — macOS, Linux, and Windows (via WSL or a Node-compatible shell). If you hit a platform-specific issue, run <code>npx @tommy-ca/lazypi doctor</code> first, then <a href="https://github.com/tommy-ca/LazyPi/issues" target="_blank">open an issue</a>.
     </div>
   </div>
 

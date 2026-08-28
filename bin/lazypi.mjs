@@ -29,9 +29,15 @@ export const PACKAGES = [
 	{ id: "subagents", category: "core", source: "npm:pi-subagents", description: "Sub-agent execution", hint: "Run isolated sub-agents for parallel work." },
 	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", description: "Ask-user prompts", hint: "Interactive user questions for agent workflows." },
 	{ id: "goal", category: "core", source: "npm:@narumitw/pi-goal", description: "Long-objective gate", hint: "Stop on done, blocked, or external wait for long tasks." },
-	{ id: "btw", category: "core", source: "npm:pi-btw", description: "Side-chat popover", hint: "Ask quick questions without polluting your conversation history." },
+	{
+		id: "btw",
+		category: "core",
+		source: "npm:@narumitw/pi-btw",
+		legacySources: ["npm:pi-btw"],
+		description: "Side-chat popover",
+		hint: "Ask quick questions without polluting your conversation history.",
+	},
 	{ id: "context-usage", category: "core", source: "npm:pi-context-usage", description: "Context budget", hint: "See what is burning the context window before it fills." },
-	{ id: "plan", category: "core", source: "npm:@devkade/pi-plan", description: "/plan command", hint: "Read-only planning mode with approval-based execution." },
 	{ id: "simplify", category: "core", source: "npm:pi-simplify", description: "Code simplify review", hint: "Reviews recently changed code for clarity, consistency, and maintainability." },
 	{ id: "web-access", category: "tools", source: "npm:pi-web-access", description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
 	{
@@ -43,14 +49,9 @@ export const PACKAGES = [
 		hint: "Persistent memory stored as Markdown files.",
 	},
 	{ id: "mcp", category: "tools", source: "npm:pi-mcp-adapter", description: "MCP server integration", hint: "Connect Pi to any MCP-compatible tool server." },
-	{ id: "add-dir", category: "tools", source: "npm:pi-add-dir", description: "Add external directories", hint: "Load configs and skills from additional project directories in the same Pi session." },
 	{ id: "interactive-shell", category: "tools", source: "npm:pi-interactive-shell", description: "Interactive shell overlays", hint: "Run Pi, Codex, editors, SSH, and long-running CLIs in observable overlays with hands-free and dispatch modes." },
-	{ id: "claude-cli", category: "tools", source: "npm:pi-claude-cli", description: "Claude Code CLI provider", hint: "Use Claude Code CLI auth as a Pi model provider." },
-	{ id: "prompt-templates", category: "tools", source: "npm:pi-prompt-template-model", description: "Prompt template model switching", hint: "Add model, skill, and thinking frontmatter so prompt templates switch modes automatically." },
 	{ id: "ralph-wiggum", category: "research", source: "npm:@tmustier/pi-ralph-wiggum", description: "Ralph Wiggum agent loop", hint: "Long-running iterative dev loops with goals, checklists, and optional self-reflection." },
-	{ id: "hackerman", category: "themes", source: "git:github.com/javierportillo/pi-hackerman@63b0a3ef2c7b14985ffeb6cac44614ba59cd5693", description: "Hackerman theme", hint: "Neon hacker-style color theme ported from the VS Code Hackerman Theme." },
 	{ id: "curated-themes", category: "themes", source: "npm:@victor-software-house/pi-curated-themes", description: "65 curated dark themes", hint: "65 dark terminal themes adapted from iTerm2-Color-Schemes." },
-	{ id: "terminal-theme", category: "themes", source: "npm:pi-terminal-theme", description: "Terminal ANSI theme", hint: "Maps Pi colors to ANSI 0–15 so Pi inherits your terminal's own color palette." },
 ];
 
 const PI_CORE_PACKAGE = "@earendil-works/pi-coding-agent";
@@ -201,10 +202,10 @@ ${bold("Default behaviour:")}
   - With --yes, --only, or --except the picker is skipped.
 
 ${bold("Categories:")}
-  core         the harness control plane: sub-agents, ask gate, goal, side chat, context budget, plan, simplify
-  tools        capability: web access, memory, MCP, directories, shell overlays, providers
+  core         the harness control plane: sub-agents, ask gate, goal, side chat, context budget, simplify
+  tools        capability: web access, memory, MCP, shell overlays
   research     long-running iterative dev loops
-  themes       visual themes
+  themes       the curated dark theme pack
 
 ${bold("Examples:")}
   npx @tommy-ca/lazypi                              # everything (interactive picker on a TTY)

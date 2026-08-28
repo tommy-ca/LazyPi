@@ -5,8 +5,8 @@ extra_css: /assets/css/themes.css
 ---
 <div class="header">
   <p class="header-eyebrow">Installed with LazyPi</p>
-  <h1>67 Themes</h1>
-  <p>Every theme you get with <code style="color:var(--green)">npx @robzolkos/lazypi</code> — click any tile to preview.</p>
+  <h1>65 Themes</h1>
+  <p>Every theme you get with <code style="color:var(--green)">npx @tommy-ca/lazypi</code> — click any tile to preview.</p>
 </div>
 
 <div class="filter-bar" id="filter-bar"></div>
@@ -51,7 +51,6 @@ const themes = [
   { name: "Gruvbox Dark Hard",       pkg: "pi-curated-themes", bg: "#1d2021", fg: "#ebdbb2", swatches: ["#cc241d","#98971a","#d79921","#458588","#b16286","#689d6a"] },
   { name: "Gruvbox Material",        pkg: "pi-curated-themes", bg: "#1d2021", fg: "#d4be98", swatches: ["#ea6926","#c1d041","#eecf75","#6da3ec","#fd9bc1","#fe9d6e"] },
   { name: "Guezwhoz",                pkg: "pi-curated-themes", bg: "#1d1d1d", fg: "#d9d9d9", swatches: ["#e85181","#7ad694","#b7d074","#5aa0d6","#9a90e0","#58d6ce"] },
-  { name: "Hackerman",               pkg: "pi-hackerman",      bg: "#0d0208", fg: "#00ff41", swatches: ["#ff0000","#00ff41","#ffff00","#003b00","#ff00ff","#00ffff"] },
   { name: "Hacktober",               pkg: "pi-curated-themes", bg: "#141414", fg: "#c9c9c9", swatches: ["#b34538","#587744","#d08949","#206ec5","#864651","#ac9166"] },
   { name: "Hardcore",                pkg: "pi-curated-themes", bg: "#121212", fg: "#a0a0a0", swatches: ["#f92672","#a6e22e","#fd971f","#66d9ef","#9e6ffe","#5e7175"] },
   { name: "Havn Skumring",           pkg: "pi-curated-themes", bg: "#111522", fg: "#d6dbeb", swatches: ["#ea563e","#6ead7b","#f8b330","#596cf7","#7c719e","#d588c1"] },
@@ -73,7 +72,6 @@ const themes = [
   { name: "Sea Shells",              pkg: "pi-curated-themes", bg: "#09141b", fg: "#deb88d", swatches: ["#d15123","#027c9b","#fca02f","#1e4950","#68d4f1","#50a3b5"] },
   { name: "Sleepy Hollow",           pkg: "pi-curated-themes", bg: "#121214", fg: "#af9a91", swatches: ["#ba3934","#91773f","#b55600","#5f63b4","#a17c7b","#8faea9"] },
   { name: "Smyck",                   pkg: "pi-curated-themes", bg: "#1b1b1b", fg: "#f7f7f7", swatches: ["#b84131","#7da900","#c4a500","#62a3c4","#ba8acc","#207383"] },
-  { name: "Terminal (ANSI)",         pkg: "pi-terminal-theme", bg: "#000000", fg: "#ffffff", swatches: ["#cc0000","#4e9a06","#c4a000","#3465a4","#75507b","#06989a"] },
   { name: "Tomorrow Night",          pkg: "pi-curated-themes", bg: "#1d1f21", fg: "#c5c8c6", swatches: ["#cc6666","#b5bd68","#f0c674","#81a2be","#b294bb","#8abeb7"] },
   { name: "Tomorrow Night Bright",   pkg: "pi-curated-themes", bg: "#000000", fg: "#eaeaea", swatches: ["#d54e53","#b9ca4a","#e7c547","#7aa6da","#c397d8","#70c0b1"] },
   { name: "Tomorrow Night Burns",    pkg: "pi-curated-themes", bg: "#151515", fg: "#a1b0b8", swatches: ["#832e31","#a63c40","#d3494e","#fc595f","#df9395","#ba8586"] },
@@ -85,14 +83,10 @@ const themes = [
 
 const pkgLabels = {
   "pi-curated-themes": "curated",
-  "pi-hackerman":      "hackerman",
-  "pi-terminal-theme": "terminal",
 };
 
 const pkgColors = {
   "pi-curated-themes": "#7aa2f7",
-  "pi-hackerman":      "#00ff41",
-  "pi-terminal-theme": "#888",
 };
 
 const allPkgs = [...new Set(themes.map(t => t.pkg))];
