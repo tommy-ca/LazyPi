@@ -8,8 +8,8 @@
 ## 2. Specs
 
 - [x] 2.1 Write the harness-extras deltas (installer Catalog Model 12 + source scenarios; installer Idempotent Install versioned-equivalence; harness Control Plane Catalog cover list + twelve)
-- [ ] 2.2 `openspec validate` green; archive the change
-- [ ] 2.3 `npm run spec:validate` green on master after archiving
+- [x] 2.2 `openspec validate` green; archive the change (archived 2026-08-29, main specs updated)
+- [x] 2.3 `npm run spec:validate` green on master after archiving
 
 ## 3. Docs
 
