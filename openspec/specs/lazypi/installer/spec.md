@@ -12,19 +12,16 @@ self-deriving CI contract.
 
 The catalog SHALL be the exported `PACKAGES` array in `bin/lazypi.mjs`; every
 entry SHALL carry `id`, `category`, `source`, `description`, and `hint`, and
-MAY carry `legacySources` and `forked`.
+MAY carry `legacySources`, `forked`, and `essential`.
 
 #### Scenario: Lean catalog shape
 
 - **WHEN** the catalog is loaded
-- **THEN** it SHALL contain exactly 16 entries across the categories `core`,
-  `tools`, `research`, and `themes`
-- **AND** `core` SHALL contain subagents, pi-ask-user, pi-skillful,
-  mention-skill, skill-args, goal, btw, context-usage, and simplify
-- **AND** `tools` SHALL contain web-access, memory, mcp, interactive-shell,
-  and fff
-- **AND** `research` SHALL contain ralph-wiggum
-- **AND** `themes` SHALL contain curated-themes only
+- **THEN** it SHALL contain exactly 10 entries, all in the `core` category
+- **AND** it SHALL contain subagents, pi-ask-user, pi-skillful,
+  mention-skill, goal, btw, context-usage, simplify, web-access, and fff
+- **AND** every entry SHALL be tagged `essential: true`
+- **AND** non-essential packages SHALL NOT be in the catalog
 
 #### Scenario: Side chat best alternative
 
@@ -38,8 +35,9 @@ MAY carry `legacySources` and `forked`.
 - **THEN** it SHALL NOT appear in the catalog
 - **AND** the installer SHALL NOT install or manage compound, todos,
   powerbar, extension-settings, plannotator, slopchop, usage, raw-paste,
-  autoresearch, plan, add-dir, claude-cli, prompt-templates, hackerman, or
-  terminal-theme
+  autoresearch, plan, add-dir, claude-cli, prompt-templates, hackerman,
+  terminal-theme, skill-args, memory, mcp, interactive-shell, ralph-wiggum,
+  or curated-themes
 
 #### Scenario: Essential control plane sources
 
@@ -112,7 +110,7 @@ model.
 
 A catalog source beginning with `git:` SHALL be installed with
 `npm_config_ignore_scripts=true`. Pinned git sources are permitted; unpinned
-git heads are a known risk carried by `memory`.
+git heads are a known risk and the catalog currently carries none.
 
 #### Scenario: Git install
 
@@ -148,8 +146,9 @@ a separate manifest, so catalog edits propagate to CI automatically.
 
 ### Requirement: Skill Arguments
 
-The catalog SHALL provide a skill-parameter package so skill bodies accept
-shell-style arguments and inline command expansion at invocation.
+The catalog MAY provide a skill-parameter package so skill bodies accept
+shell-style arguments and inline command expansion at invocation; when
+cataloged, `skill-args` SHALL resolve to `npm:@juicesharp/rpiv-args`.
 
 #### Scenario: Parameterized skill
 

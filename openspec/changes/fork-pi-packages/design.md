@@ -20,8 +20,6 @@ pi-packages/
     pi-ask-user/          # fork of pi-ask-user        (typed options, ask-gate defaults)
     pi-web-tools/         # fork of pi-web-access      (ownership/trim, keyless default)
     pi-btw/               # fork of pi-btw             (side thread, non-mutating)
-    pi-todo/              # own overlay (rpiv-todo-style, survives /reload; NOT a checkbox list)
-    pi-memory/            # fork of pi-memory-md       (owned memory format)
     pi-goal/              # fork of @narumitw/pi-goal  (smallest viable surface)
     pi-context-usage/     # fork of pi-context-usage   (smallest viable surface)
 ```
@@ -51,13 +49,12 @@ pi-packages/
 | pi-web-tools | pi-web-access | upstream already ships pluggable providers (26 incl. keyless DuckDuckGo) — the owned fork differentiates on ownership, trimming to the harness surface, and a confirmed keyless default (self-hosted SearXNG/Ollama) |
 | pi-args | @juicesharp/rpiv-args | skill parameterization ($1 / $ARGUMENTS, !cmd), cataloged as skill-args |
 | pi-btw | upstream pi-btw | enforce non-mutating side threads |
-| pi-todo | authored (rpiv-todo style) | live overlay surviving /reload + compaction |
-| pi-memory | pi-memory-md | owned storage format; versioned |
 | pi-goal / pi-context-usage | @narumitw + pi-context-usage | smallest viable surface |
 
-Not forked: mcp, plan, simplify, add-dir, interactive-shell, claude-cli,
-prompt-templates, ralph-wiggum, themes — reviewed third-party (spec:
-`harness/control-plane` Security Posture).
+Not forked: the six non-essential extras (skill args, memory, mcp,
+interactive-shell, ralph-wiggum, themes) stay third-party direct installs
+(spec: `harness/control-plane` Security Posture; the catalog only ships the
+ten essentials, all of which are fork candidates).
 
 ## 4. LazyPi integration
 
@@ -77,7 +74,7 @@ prompt-templates, ralph-wiggum, themes — reviewed third-party (spec:
 
 1. Scaffold monorepo; publish a canary fork end-to-end (Phase 0).
 2. Publish Tier 1 (six packages) with ship-manifest tests (Phase 1).
-3. Publish Tier 2 (goal, context-usage); pin or replace `memory` (Phase 2).
+3. Publish Tier 2 (goal, context-usage) (Phase 2).
 4. Repoint the LazyPi catalog; update status/doctor; docs (Phase 3).
 5. Release `@tommy-ca/lazypi` 0.7.x; migrate the operator's own settings
    (Phase 4).
@@ -90,4 +87,4 @@ prompt-templates, ralph-wiggum, themes — reviewed third-party (spec:
 | npm scope not owned | Verify `npm whoami` owns `@tommy-ca` before first publish |
 | Pi core API drift | peer deps `*`; ship-manifest tests load against the installed core |
 | Regressions vs upstream | keep `legacySources` → one-command rollback |
-| Unpinned memory head | fork/pin in Tier 1 (Phase 1) |
+| Catalog drift (optional extras re-added later) | own the extras before re-cataloging; gate on the essential tag |

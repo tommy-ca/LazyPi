@@ -4,7 +4,7 @@
 
 ### Features
 
-* simplify catalog to essential packages (now 16) across core/tools/research/themes; add goal, context-usage, skill visibility, $ mention, and skill args; drop compound, todos, powerbar/extension-settings, plannotator, slopchop, usage, raw-paste, autoresearch
+* trim the catalog to the 10 essential harness-core packages (all tagged essential); optional extras (skill args, memory, MCP, interactive shell, research loops, themes) install directly via pi install
 * remove Compound Engineering and package-load-order machinery from the installer and doctor
 
 ### Docs

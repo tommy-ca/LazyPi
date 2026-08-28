@@ -19,11 +19,11 @@ not a checkbox list).
   published as `@tommy-ca/pi-<name>`.
 - Tier 1 forks: `pi-subagents`, `pi-ask-user`, `pi-web-tools` (replaces
   `pi-web-access`; provider pluggability already ships upstream, the fork
-  differentiates on ownership/trim and a keyless default), `pi-btw`, `pi-todo` (own overlay),
-  `pi-memory` (fork of pi-memory-md → pinned owned source).
+  differentiates on ownership/trim and a keyless default), `pi-btw`.
 - Tier 2: `pi-goal` and `pi-context-usage` forks (smallest viable surface from
-  `@narumitw/pi-goal` and `pi-context-usage`), plus pinning or replacing the
-  remaining unpinned source.
+  `@narumitw/pi-goal` and `pi-context-usage`).
+- Packages dropped from the catalog (memory, mcp, interactive-shell,
+  ralph-wiggum, themes) are optional extras and out of the fork's scope.
 - LazyPi catalog repoints each affected entry: `source` → the fork's npm
   package, `legacySources` → the upstream source(s), `forked: true`.
   Existing migration mechanics handle remove-then-install when the user next

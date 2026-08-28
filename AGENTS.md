@@ -2,7 +2,7 @@
 
 ## Project overview
 
-LazyPi is an opinionated installer for the Pi coding agent. It provides a curated catalog of Pi extensions, themes, skills, and workflow tools so users can run one command and get a complete Pi setup.
+LazyPi is an opinionated installer for the Pi coding agent. It provides the harness-core catalog (10 essential packages) so users can run one command and get a usable Pi setup.
 
 The CLI is published to npm as `@tommy-ca/lazypi` (a fork of `@robzolkos/lazypi`). The main executable is `bin/lazypi.mjs`, with package metadata and install behavior centered around the `PACKAGES` catalog in that file. The `openspec/` tree is the engineering contract; changes land as OpenSpec change specs and `npm run spec:validate` keeps them green.
 
@@ -20,7 +20,7 @@ The site at [lazypi.org](https://lazypi.org) is a Jekyll site in `docs/`, compil
 docs/
   _config.yml          — Jekyll config (title, url, excludes)
   _layouts/
-    default.html       — top-level pages (index, faq, themes): head + nav + content + footer
+    default.html       — top-level pages (index, faq): head + nav + content + footer
     docs.html          — docs sub-pages: head + nav + sidebar + docs-shell + content + footer
   _includes/
     nav.html           — shared site nav; active link detected via page.url
@@ -30,11 +30,11 @@ docs/
     site.css           — CSS variables, body, nav, footer (all pages)
     index.css          — landing page styles
     faq.css            — FAQ page styles
-    themes.css         — themes page styles
+    (themes page removed — no theme package is cataloged)
   docs.css             — docs sub-page layout (sidebar, content, tables, callouts)
   index.html           — landing page
   faq.html             — FAQ page
-  themes.html          — themes gallery page
+  (no themes gallery — themes are optional extras)
   docs/                — docs section
     index.html         — docs overview
     first-steps.html
@@ -148,7 +148,7 @@ GitHub Pages uses the `github-pages` gem (specified in `docs/Gemfile`), which pi
 - **Docs layout styles** (sidebar, content area, tables, callouts) — edit `docs/docs.css`
 - **Landing page styles** — edit `docs/assets/css/index.css`
 - **FAQ styles** — edit `docs/assets/css/faq.css`
-- **Themes page styles** — edit `docs/assets/css/themes.css`
+- (no themes page — the themes category was dropped from the catalog)
 
 CSS variables (colors, spacing tokens) are defined at the top of `docs/assets/css/site.css`.
 
@@ -171,4 +171,4 @@ The YouTube thumbnail is loaded automatically from `img.youtube.com/vi/{id}/mqde
 
 ### Catalog updates on the landing page
 
-The catalog grid on `docs/index.html` and the themes data array in `docs/themes.html` are maintained manually. When adding a package to the CLI catalog (`PACKAGES` in `bin/lazypi.mjs`), update the catalog grid in `docs/index.html` to match.
+The catalog grid on `docs/index.html` is maintained manually. When adding a package to the CLI catalog (`PACKAGES` in `bin/lazypi.mjs`), update the catalog grid in `docs/index.html`, the packages index page, and the sidebar to match.

@@ -73,9 +73,9 @@ Crucially, the sidebar package links are duplicated across many pages. If you ad
 
 ## Themes
 
-### `docs/themes.html`
+### `docs/docs/index.html` (optional extras)
 
-Theme packages are surfaced differently from general package docs.
+Non-essential packages are surfaced in the optional-extras table.
 
 This page contains:
 

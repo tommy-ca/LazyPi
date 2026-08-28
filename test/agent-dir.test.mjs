@@ -133,30 +133,30 @@ test("update and remove inspect the custom global settings", (t) => {
 	const customAgentDir = join(home, ".pi", "lazy");
 	writeFakePi(bin);
 	writeSettings(defaultAgentDir, ["npm:pi-subagents"]);
-	writeSettings(customAgentDir, [POWERBAR_SOURCE, EXTENSION_SETTINGS_SOURCE, "npm:pi-memory-md"]);
+	writeSettings(customAgentDir, [POWERBAR_SOURCE, EXTENSION_SETTINGS_SOURCE, "npm:pi-web-access"]);
 
 	const updateResult = runCli(["update"], { cwd: workspace, home, agentDir: customAgentDir, bin, callsPath });
 	assert.equal(updateResult.status, 0, `STDOUT:\n${updateResult.stdout}\nSTDERR:\n${updateResult.stderr}`);
 	const customSettings = JSON.parse(readFileSync(join(customAgentDir, "settings.json"), "utf8"));
-	assert.deepEqual(customSettings.packages, [POWERBAR_SOURCE, EXTENSION_SETTINGS_SOURCE, "npm:pi-memory-md"]);
+	assert.deepEqual(customSettings.packages, [POWERBAR_SOURCE, EXTENSION_SETTINGS_SOURCE, "npm:pi-web-access"]);
 	assert.deepEqual(JSON.parse(readFileSync(join(defaultAgentDir, "settings.json"), "utf8")).packages, ["npm:pi-subagents"]);
 
-	const removeResult = runCli(["remove", "memory"], { cwd: workspace, home, agentDir: customAgentDir, bin, callsPath });
+	const removeResult = runCli(["remove", "web-access"], { cwd: workspace, home, agentDir: customAgentDir, bin, callsPath });
 	assert.equal(removeResult.status, 0, `STDOUT:\n${removeResult.stdout}\nSTDERR:\n${removeResult.stderr}`);
 	const calls = readFileSync(callsPath, "utf8").trim().split(/\r?\n/).filter(Boolean);
-	assert.deepEqual(calls, ["update", "remove npm:pi-memory-md"]);
+	assert.deepEqual(calls, ["update", "remove npm:pi-web-access"]);
 });
 
 test("--local settings remain independent of PI_CODING_AGENT_DIR", (t) => {
 	const { home, workspace } = createWorkspace(t);
 	const customAgentDir = join(home, ".pi", "lazy");
 	writeSettings(customAgentDir, ["npm:pi-subagents"]);
-	writeSettings(join(workspace, ".pi"), ["npm:pi-mcp-adapter"]);
+	writeSettings(join(workspace, ".pi"), ["npm:@ff-labs/pi-fff"]);
 
 	const result = runCli(["status", "--local"], { cwd: workspace, home, agentDir: customAgentDir });
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.ok(result.stdout.includes(`Settings file: ${join(workspace, ".pi", "settings.json")}`));
-	assert.match(result.stdout, /✓ \[tools\] mcp/);
+	assert.match(result.stdout, /✓ \[core\] fff/);
 	assert.doesNotMatch(result.stdout, /✓ \[core\] subagents/);
 });

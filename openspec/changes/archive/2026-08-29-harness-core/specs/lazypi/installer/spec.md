@@ -15,6 +15,22 @@ MAY carry `legacySources`, `forked`, and `essential`.
 - **AND** every entry SHALL be tagged `essential: true`
 - **AND** non-essential packages SHALL NOT be in the catalog
 
+#### Scenario: Side chat best alternative
+
+- **WHEN** the catalog defines `btw`
+- **THEN** its `source` SHALL be `npm:@narumitw/pi-btw`
+- **AND** the replaced `npm:pi-btw` SHALL remain in `legacySources`
+
+#### Scenario: Dropped packages
+
+- **WHEN** a package was deliberately removed
+- **THEN** it SHALL NOT appear in the catalog
+- **AND** the installer SHALL NOT install or manage compound, todos,
+  powerbar, extension-settings, plannotator, slopchop, usage, raw-paste,
+  autoresearch, plan, add-dir, claude-cli, prompt-templates, hackerman,
+  terminal-theme, skill-args, memory, mcp, interactive-shell, ralph-wiggum,
+  or curated-themes
+
 #### Scenario: Essential control plane sources
 
 - **WHEN** the catalog defines skill visibility and skill mention
@@ -32,36 +48,3 @@ MAY carry `legacySources`, `forked`, and `essential`.
 - **WHEN** the catalog defines `fff`
 - **THEN** its `source` SHALL be `npm:@ff-labs/pi-fff`
 - **AND** its default mode SHALL be additive (`tools-and-ui`)
-
-#### Scenario: Side chat best alternative
-
-- **WHEN** the catalog defines `btw`
-- **THEN** its `source` SHALL be `npm:@narumitw/pi-btw`
-- **AND** the replaced `npm:pi-btw` SHALL remain in `legacySources`
-
-#### Scenario: Dropped packages
-
-- **WHEN** a package was deliberately removed
-- **THEN** it SHALL NOT appear in the catalog
-- **AND** the installer SHALL NOT install or manage compound, todos,
-  powerbar, extension-settings, plannotator, slopchop, usage, raw-paste,
-  autoresearch, plan, add-dir, claude-cli, prompt-templates, hackerman,
-  terminal-theme, skill-args, memory, mcp, interactive-shell, ralph-wiggum,
-  or curated-themes
-
-#### Scenario: Repointed fork sources
-
-- **WHEN** a fork is published for a catalog entry
-- **THEN** `source` SHALL be `npm:@tommy-ca/pi-<name>`
-- **AND** the replaced upstream source SHALL remain in `legacySources`
-
-### Requirement: Git Sources
-
-A catalog source beginning with `git:` SHALL be installed with
-`npm_config_ignore_scripts=true`. Pinned git sources are permitted; unpinned
-git heads are not.
-
-#### Scenario: Git install
-
-- **WHEN** the installer runs `pi install` for a `git:` source
-- **THEN** the install SHALL run with `npm_config_ignore_scripts=true`

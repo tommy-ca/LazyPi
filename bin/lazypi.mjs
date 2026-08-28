@@ -23,39 +23,27 @@ import {
 // Categories. LazyPi installs every package by default — "lazy" means you get
 // the whole thing without thinking. Use the interactive picker or --only /
 // --except to narrow it.
-const CATEGORIES = ["core", "tools", "research", "themes"];
+const CATEGORIES = ["core"];
 
 export const PACKAGES = [
-	{ id: "subagents", category: "core", source: "npm:pi-subagents", description: "Sub-agent execution", hint: "Run isolated sub-agents for parallel work." },
-	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", description: "Ask-user prompts", hint: "Interactive user questions for agent workflows." },
-	{ id: "pi-skillful", category: "core", source: "npm:pi-skillful", description: "Skill visibility", hint: "Discover skills above the git root, hide unused skills, and expand /skill:name inline." },
-	{ id: "mention-skill", category: "core", source: "npm:@zigai/pi-mention-skill", description: "$ skill mention", hint: "Fuzzy-search skills with $ and expand them into the prompt; hidden skills stay reachable." },
-	{ id: "skill-args", category: "core", source: "npm:@juicesharp/rpiv-args", description: "Skill arguments", hint: "Shell-style $1 / $ARGUMENTS placeholders and !\u0060cmd\u0060 substitution, expanded into your Pi skills at invocation." },
-	{ id: "goal", category: "core", source: "npm:@narumitw/pi-goal", description: "Long-objective gate", hint: "Stop on done, blocked, or external wait for long tasks." },
+	{ id: "subagents", category: "core", source: "npm:pi-subagents", essential: true, description: "Sub-agent execution", hint: "Run isolated sub-agents for parallel work." },
+	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", essential: true, description: "Ask-user prompts", hint: "Interactive user questions for agent workflows." },
+	{ id: "pi-skillful", category: "core", source: "npm:pi-skillful", essential: true, description: "Skill visibility", hint: "Discover skills above the git root, hide unused skills, and expand /skill:name inline." },
+	{ id: "mention-skill", category: "core", source: "npm:@zigai/pi-mention-skill", essential: true, description: "$ skill mention", hint: "Fuzzy-search skills with $ and expand them into the prompt; hidden skills stay reachable." },
+	{ id: "goal", category: "core", source: "npm:@narumitw/pi-goal", essential: true, description: "Long-objective gate", hint: "Stop on done, blocked, or external wait for long tasks." },
 	{
 		id: "btw",
 		category: "core",
 		source: "npm:@narumitw/pi-btw",
 		legacySources: ["npm:pi-btw"],
+		essential: true,
 		description: "Side-chat popover",
 		hint: "Ask quick questions without polluting your conversation history.",
 	},
-	{ id: "context-usage", category: "core", source: "npm:pi-context-usage", description: "Context budget", hint: "See what is burning the context window before it fills." },
-	{ id: "simplify", category: "core", source: "npm:pi-simplify", description: "Code simplify review", hint: "Reviews recently changed code for clarity, consistency, and maintainability." },
-	{ id: "web-access", category: "tools", source: "npm:pi-web-access", description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
-	{
-		id: "memory",
-		category: "tools",
-		source: "git:github.com/VandeeFeng/pi-memory-md",
-		legacySources: ["npm:pi-memory-md"],
-		description: "Markdown-backed memory",
-		hint: "Persistent memory stored as Markdown files.",
-	},
-	{ id: "mcp", category: "tools", source: "npm:pi-mcp-adapter", description: "MCP server integration", hint: "Connect Pi to any MCP-compatible tool server." },
-	{ id: "interactive-shell", category: "tools", source: "npm:pi-interactive-shell", description: "Interactive shell overlays", hint: "Run Pi, Codex, editors, SSH, and long-running CLIs in observable overlays with hands-free and dispatch modes." },
-	{ id: "fff", category: "tools", source: "npm:@ff-labs/pi-fff", description: "FFF fuzzy search", hint: "Additive fffind / ffgrep / fff-multi-grep beside the built-in tools; /fff-health checks the index." },
-	{ id: "ralph-wiggum", category: "research", source: "npm:@tmustier/pi-ralph-wiggum", description: "Ralph Wiggum agent loop", hint: "Long-running iterative dev loops with goals, checklists, and optional self-reflection." },
-	{ id: "curated-themes", category: "themes", source: "npm:@victor-software-house/pi-curated-themes", description: "65 curated dark themes", hint: "65 dark terminal themes adapted from iTerm2-Color-Schemes." },
+	{ id: "context-usage", category: "core", source: "npm:pi-context-usage", essential: true, description: "Context budget", hint: "See what is burning the context window before it fills." },
+	{ id: "simplify", category: "core", source: "npm:pi-simplify", essential: true, description: "Code simplify review", hint: "Reviews recently changed code for clarity, consistency, and maintainability." },
+	{ id: "web-access", category: "core", source: "npm:pi-web-access", essential: true, description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
+	{ id: "fff", category: "core", source: "npm:@ff-labs/pi-fff", essential: true, description: "FFF fuzzy search", hint: "Additive fffind / ffgrep / fff-multi-grep beside the built-in tools; /fff-health checks the index." },
 ];
 
 const PI_CORE_PACKAGE = "@earendil-works/pi-coding-agent";
@@ -205,16 +193,15 @@ ${bold("Default behaviour:")}
   - With --yes, --only, or --except the picker is skipped.
 
 ${bold("Categories:")}
-  core         the harness control plane: sub-agents, ask gate, skill visibility, $ mention, skill args, goal, side chat, context budget, simplify
-  tools        capability: web access, memory, MCP, shell overlays, fff search
-  research     long-running iterative dev loops
-  themes       the curated dark theme pack
+  core         the harness control plane: sub-agents, ask gate, skill visibility, $ mention, goal, side chat, context budget, simplify, web research, fff search
+  Non-catalog extras (pi install npm:<source>): skill-args, memory, mcp,
+  interactive-shell, ralph-wiggum, curated-themes (65 dark themes)
 
 ${bold("Examples:")}
   npx @tommy-ca/lazypi                              # everything (interactive picker on a TTY)
   npx @tommy-ca/lazypi --yes                        # everything, no prompt
   npx @tommy-ca/lazypi --only core                  # just the core category
-  npx @tommy-ca/lazypi --only subagents,mcp         # individual package ids also work
+  npx @tommy-ca/lazypi --only subagents,fff         # individual package ids also work
   npx @tommy-ca/lazypi --only core --local          # core into the current project
   npx @tommy-ca/lazypi status
   npx @tommy-ca/lazypi doctor`);

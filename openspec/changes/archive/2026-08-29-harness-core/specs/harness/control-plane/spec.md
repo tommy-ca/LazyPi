@@ -20,8 +20,16 @@ tools, and a search substrate; it SHALL NOT include a checkbox todo list.
   packages
 - **AND** optional extras SHALL be installable on demand with `pi install`
 
-#### Scenario: Web research providers
+### Requirement: Skill Parameters
 
-- **WHEN** web research tools are installed
-- **THEN** fetch/search SHALL support pluggable providers with a keyless
-  default provider so research works before an API key is configured
+The harness SHALL support shell-style skill parameters when a parameters
+package is installed.
+
+#### Scenario: Parameters and command output
+
+- **WHEN** a parameters package is installed and a skill is invoked with
+  arguments
+- **THEN** positional placeholders (`$1`, `$2`, `$ARGUMENTS`) SHALL expand in
+  the skill body
+- **AND** inline `` !`cmd` `` blocks SHALL execute and paste their output into
+  the prompt before the model reads it

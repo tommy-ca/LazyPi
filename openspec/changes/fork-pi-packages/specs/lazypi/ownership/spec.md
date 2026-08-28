@@ -42,13 +42,10 @@ pass a ship-manifest test that loads under a minimal Pi-API harness.
 
 ### Requirement: No Unpinned Git Heads
 
-After this change lands, no catalog source SHALL be an unpinned git head;
-`memory` SHALL resolve to a pinned or owned source.
+After this change lands, no catalog source SHALL be an unpinned git head.
 
-#### Scenario: Memory resolution
+#### Scenario: Catalog evaluation
 
 - **WHEN** the catalog is evaluated
-- **THEN** `memory` SHALL carry a commit-pin or `npm:@tommy-ca/pi-memory`
-  source
-- **AND** no entry SHALL have a `git:github.com/<owner>/<repo>` source without
-  an `@<sha>` suffix
+- **THEN** no entry SHALL carry a `git:github.com/<owner>/<repo>` source
+  without an `@<sha>` suffix

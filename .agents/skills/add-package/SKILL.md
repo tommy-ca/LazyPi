@@ -36,7 +36,7 @@ Always read these files first:
 - `.github/workflows/test.yml`
 - `docs/docs/index.html`
 - `docs/docs/packages/index.html`
-- `docs/themes.html`
+- `docs/docs/index.html` (optional-extras table)
 
 Then read the repository map:
 
@@ -73,7 +73,7 @@ Work out the following before editing:
 - short `hint`
 - docs title
 - docs slug / filename
-- whether the package needs a dedicated docs page, a themes-page update, or both
+- whether the package needs a dedicated docs page or belongs in the docs-overview optional-extras table
 
 Use the repository's current naming style, not the upstream project's exact wording, if that wording is inconsistent with LazyPi.
 
@@ -133,7 +133,7 @@ Work out the right documentation surface based on how this repo is already organ
 Typical cases:
 
 - user-facing non-theme package → add `docs/docs/packages/<slug>.html`
-- theme package → update `docs/themes.html`, and add package docs only if the existing docs structure suggests it belongs there
+- optional extra (non-essential) package → document it in the docs-overview optional-extras table with its direct install source, rather than adding a catalog entry or dedicated page
 - support/auxiliary package → decide whether it deserves its own page or should be documented indirectly through a related page
 
 When creating a dedicated package page, match the structure of existing pages:
@@ -162,7 +162,7 @@ Check and update as needed:
 - sidebars in docs pages that list package pages
 - `docs/docs/index.html`
 - `README.md`
-- `docs/themes.html`
+- `docs/docs/index.html` (optional-extras table)
 - any package-count text such as "23 packages" or theme counts
 
 ### 6) Validate before finishing

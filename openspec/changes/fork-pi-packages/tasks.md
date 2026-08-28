@@ -13,8 +13,6 @@
 - [ ] 2.2 Fork `pi-ask-user` (typed options, ask-gate defaults) with ship-manifest test
 - [ ] 2.3 Fork `pi-web-tools` (ownership/trim, keyless default; pluggability already upstream) with ship-manifest test
 - [ ] 2.4 Fork `pi-btw` (non-mutating side thread) with ship-manifest test
-- [ ] 2.5 Author `pi-todo` overlay (survives /reload; not a checkbox list) with ship-manifest test
-- [ ] 2.6 Fork/pin `pi-memory` (removes the unpinned git head) with ship-manifest test
 
 ## 3. Tier 2 forks
 
