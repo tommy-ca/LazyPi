@@ -25,7 +25,8 @@
   },
   "scripts": {
     "docs:serve": "cd docs && bundle exec jekyll serve --livereload",
-    "test": "node --test"
+    "test": "node --test",
+    "spec:validate": "openspec validate --all && openspec validate --changes --archived"
   },
   "dependencies": {
     "@clack/prompts": "^1.2.0"
@@ -37,5 +38,8 @@
     "installer",
     "npx",
     "extensions"
-  ]
+  ],
+  "devDependencies": {
+    "@fission-ai/openspec": "^1.11.0"
+  }
 }

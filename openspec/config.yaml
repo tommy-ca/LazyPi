@@ -1,0 +1,33 @@
+schema: spec-driven
+
+context: |
+  LazyPi is the operator's fork of the Pi coding-agent installer CLI
+  (targets @earendil-works/pi-coding-agent). One self-contained ESM script
+  (bin/lazypi.mjs), Node.js >= 20, @clack/prompts, no build step.
+
+  Pi packages install via `pi install npm:<name>` or
+  `git:github.com/<owner>/<repo>[@<sha>]` and are recorded in settings.json
+  under `packages` as strings or {source} objects. This repo's PACKAGES array
+  is the catalog contract; CI assertions derive from it.
+
+  Harness philosophy (see explorations/harness-spec-audit.md): three layers —
+  AGENTS.md discipline, skills capability, packages control plane. Ask-gate on
+  ambiguity, single-writer sub-agents with fresh reviewers, research off the
+  writer, side threads that never mutate the main session, context hygiene.
+  Pi is maximum privilege; third-party packages are reviewed before install.
+
+  Fork direction (see explorations/rpiv-mono-audit.md): own the control plane
+  as a small @tommy-ca/pi-* monorepo following rpiv-mono conventions (npm
+  workspaces, lockstep versions, sibling registry, ship-manifest tests,
+  readme-standard, raw .ts publish with a `pi` package field).
+
+rules:
+  specs:
+    - State observable behavior; put internal mechanics in design.md or tasks.md
+    - One statement per SHOULD/MUST; no "and also" chaining
+    - Reflect the repo as it is (specs are the truth), not the aspirational state
+  tasks:
+    - "Close a task only with evidence: npm test, packed CLI smoke, or a manual run"
+  design:
+    - Reuse the existing legacySources migration; do not invent parallel mechanisms
+    - Keep package ids stable when only the source changes
