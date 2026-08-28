@@ -6,7 +6,7 @@ import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { PACKAGES } from "../bin/lazypi.mjs";
+import { PACKAGES, parseList } from "../bin/lazypi.mjs";
 
 export function packageSourcesFromSettings(settings) {
 	return new Set(
@@ -41,11 +41,6 @@ function parseArgs(args) {
 	}
 
 	return flags;
-}
-
-function parseList(value) {
-	if (!value) return [];
-	return value.split(",").map((entry) => entry.trim()).filter(Boolean);
 }
 
 function assertStatusCount(expectedCount) {

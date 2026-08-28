@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { homedir, platform } from "node:os";
-import { basename, dirname, join, posix, resolve, win32 } from "node:path";
+import { dirname, join, posix, resolve, win32 } from "node:path";
 import { spawnSync } from "node:child_process";
 import { argv, cwd, exit, stdout, stderr } from "node:process";
 import { pathToFileURL } from "node:url";
@@ -59,7 +59,6 @@ export const PACKAGES = [
 ];
 
 const PI_CORE_PACKAGE = "@earendil-works/pi-coding-agent";
-const PI_CORE_LATEST_SPEC = `${PI_CORE_PACKAGE}@latest`;
 
 // ---------------------------------------------------------------------------
 // Output helpers
@@ -141,7 +140,7 @@ function parseArgs(args) {
 	return flags;
 }
 
-function parseList(value) {
+export function parseList(value) {
 	if (!value) return [];
 	return value
 		.split(",")
@@ -234,7 +233,7 @@ export function buildSpawnOptions(options = {}, platformName = platform()) {
 	return resolved;
 }
 
-export function spawnCommand(command, args = [], options = {}) {
+function spawnCommand(command, args = [], options = {}) {
 	return spawnSync(command, args, buildSpawnOptions(options));
 }
 
@@ -335,111 +334,6 @@ function commandPath(name) {
 	if (probe.status !== 0) return null;
 	const first = String(probe.stdout ?? "").split(/\r?\n/).map((line) => line.trim()).find(Boolean);
 	return first || null;
-}
-
-function findPackageRoot(startPath, packageName = PI_CORE_PACKAGE) {
-	let current = startPath;
-	try {
-		if (existsSync(current) && !statSync(current).isDirectory()) current = dirname(current);
-	} catch {
-		current = dirname(current);
-	}
-
-	while (current && dirname(current) !== current) {
-		const packageJsonPath = join(current, "package.json");
-		if (existsSync(packageJsonPath)) {
-			try {
-				const pkg = JSON.parse(readFileSync(packageJsonPath, "utf8"));
-				if (pkg?.name === packageName) return current;
-			} catch {
-				// Keep walking; a malformed package.json should not break update fallback.
-			}
-		}
-		current = dirname(current);
-	}
-	return null;
-}
-
-export function inferNpmPrefixFromPiPackageRoot(packageRoot, packageName = PI_CORE_PACKAGE) {
-	const normalizedRoot = resolve(packageRoot).split("\\").join("/");
-	if (normalizedRoot.includes("/.pnpm/")) return null;
-	const suffixes = [
-		`/lib/node_modules/${packageName}`,
-		`/node_modules/${packageName}`,
-	];
-	for (const suffix of suffixes) {
-		if (normalizedRoot.endsWith(suffix)) {
-			return normalizedRoot.slice(0, -suffix.length) || null;
-		}
-	}
-	return null;
-}
-
-function isNamedPackageRoot(path, packageName = PI_CORE_PACKAGE) {
-	const packageJsonPath = join(path, "package.json");
-	if (!existsSync(packageJsonPath)) return false;
-	try {
-		const pkg = JSON.parse(readFileSync(packageJsonPath, "utf8"));
-		return pkg?.name === packageName;
-	} catch {
-		return false;
-	}
-}
-
-function isPiShimInNpmPrefix(piPath, prefix) {
-	const shimDir = resolve(dirname(piPath)).split("\\").join("/");
-	const normalizedPrefix = resolve(prefix).split("\\").join("/");
-	return shimDir === `${normalizedPrefix}/bin` || shimDir === normalizedPrefix;
-}
-
-function inferNpmPrefixFromPiShim(piPath) {
-	const shimDir = dirname(piPath);
-	const candidates = basename(shimDir) === "bin"
-		? [dirname(shimDir)]
-		: [shimDir];
-	for (const prefix of candidates) {
-		for (const packageRoot of [
-			join(prefix, "lib", "node_modules", PI_CORE_PACKAGE),
-			join(prefix, "node_modules", PI_CORE_PACKAGE),
-		]) {
-			if (isNamedPackageRoot(packageRoot)) return prefix;
-		}
-	}
-	return null;
-}
-
-function getActivePiNpmPrefix() {
-	const piPath = commandPath("pi");
-	if (!piPath) return null;
-	let resolvedPiPath = piPath;
-	try {
-		resolvedPiPath = realpathSync(piPath);
-	} catch {
-		// Fall back to the PATH result; findPackageRoot can still walk real files.
-	}
-	const packageRoot = findPackageRoot(resolvedPiPath);
-	const packagePrefix = packageRoot ? inferNpmPrefixFromPiPackageRoot(packageRoot) : null;
-	if (packagePrefix && isPiShimInNpmPrefix(piPath, packagePrefix)) return packagePrefix;
-	return inferNpmPrefixFromPiShim(piPath);
-}
-
-function updatePiCoreViaNpmLatest() {
-	const prefix = getActivePiNpmPrefix();
-	if (!prefix) {
-		console.log(`${yellow("  !")} Could not determine the npm prefix for the active pi command; falling back to \`pi update\`.`);
-		return null;
-	}
-
-	console.log(`\n→ npm --prefix ${prefix} install -g ${PI_CORE_LATEST_SPEC}`);
-	const status = spawnCommand("npm", ["--prefix", prefix, "install", "-g", PI_CORE_LATEST_SPEC], { stdio: "inherit" }).status ?? 1;
-	return status;
-}
-
-function updatePiCoreAndExtensions() {
-	const coreStatus = updatePiCoreViaNpmLatest();
-	if (coreStatus == null) return runPi(["update"]);
-	if (coreStatus !== 0) return coreStatus;
-	return runPi(["update", "--extensions"]);
 }
 
 function legacySourcesForPackage(pkg) {
@@ -691,7 +585,6 @@ async function cmdInstall(flags) {
 
 	const piArgs = flags.local ? ["install", "-l"] : ["install"];
 	const failed = [];
-	const skipped = [];
 
 	for (const pkg of toInstall) {
 		const legacySources = findLegacyInstalledSources(pkg, installedSources);
@@ -724,16 +617,8 @@ async function cmdInstall(flags) {
 		}
 	}
 
-	const installedCount = toInstall.length - failed.length - skipped.length;
+	const installedCount = toInstall.length - failed.length;
 	if (failed.length === 0) {
-		if (skipped.length > 0) {
-			const skipList = skipped.map((p) => `- ${p.id} (${p.source})`).join("\n");
-			if (interactive) note(skipList, "Skipped");
-			else {
-				console.log(yellow("\nSkipped packages:"));
-				console.log(skipList);
-			}
-		}
 		printCheatsheet(selected, interactive);
 		const authState = detectAuth();
 		printNextSteps(authState, installedCount, interactive);
@@ -807,7 +692,7 @@ function cmdStatus(flags) {
 	const installed = PACKAGES.filter((pkg) => packageInstallStatus(pkg, sources, flags.local).installed);
 	const legacy = PACKAGES.filter((pkg) => packageInstallStatus(pkg, sources, flags.local).legacy);
 	const missing = PACKAGES.filter((pkg) => !packageInstallStatus(pkg, sources, flags.local).present);
-	const others = [...sources].filter((src) => !piCatalogSources.has(src) && !PACKAGES.some((pkg) => isLegacySourceForPackage(pkg, src)));
+	const others = [...sources].filter((src) => !piCatalogSources.has(src));
 
 	printHeader(`Installed from LazyPi catalog (${installed.length}/${PACKAGES.length}):`);
 	if (installed.length === 0) console.log(dim("  none"));
@@ -835,27 +720,15 @@ function cmdStatus(flags) {
 	return 0;
 }
 
-function resolveUpdateCatalogIds(flags) {
-	const { sources, error } = readInstalledSources(flags.local);
-	if (error) return { ids: [], error };
-	const selectedIds = resolveSelection(flags);
-	return {
-		ids: PACKAGES
-			.filter((pkg) => selectedIds.has(pkg.id) && isPackagePresent(pkg, sources, flags.local))
-			.map((pkg) => pkg.id),
-		error: null,
-	};
-}
-
 // ---------------------------------------------------------------------------
 // update
 // ---------------------------------------------------------------------------
 async function cmdUpdate(flags) {
 	if (!(await ensurePi(flags))) return 127;
 
-	const updateSelection = resolveUpdateCatalogIds(flags);
-	if (updateSelection.error) {
-		console.error(red(`Could not parse ${settingsPath(flags.local)} — ${updateSelection.error}`));
+	const settings = readSettings(flags.local);
+	if (settings.error) {
+		console.error(red(`Could not parse ${settingsPath(flags.local)} — ${settings.error}`));
 		return 1;
 	}
 
@@ -883,8 +756,8 @@ function cmdDoctor(flags) {
 
 	printHeader("Environment");
 	const nodeMajor = Number(process.versions.node.split(".")[0]);
-	if (Number.isFinite(nodeMajor) && nodeMajor >= 18) pass(`Node ${process.versions.node}`);
-	else fail(`Node ${process.versions.node} — LazyPi requires Node >= 18`);
+	if (Number.isFinite(nodeMajor) && nodeMajor >= 20) pass(`Node ${process.versions.node}`);
+	else fail(`Node ${process.versions.node} — LazyPi requires Node >= 20`);
 
 	if (hasCmd("npm")) pass("npm is on PATH");
 	else fail("npm is not on PATH — LazyPi can't install Pi for you");

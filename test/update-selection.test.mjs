@@ -64,5 +64,5 @@ test("update delegates to pi update without installing the full catalog", () => 
 
 	const calls = readFileSync(callsPath, "utf8").trim().split(/\r?\n/).filter(Boolean);
 	assert.deepEqual(calls, ["update"]);
-	assert.doesNotMatch(calls.join("\n"), /install|npm:pi-mcp-adapter|npm:pi-web-access|npm:@devkade\/pi-plan/);
+	assert.doesNotMatch(calls.join("\n"), /install|npm:pi-mcp-adapter|npm:pi-web-access/);
 });
