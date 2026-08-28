@@ -49,10 +49,10 @@ pi</code></pre>
       This shows one of the clearest differences between base Pi and a LazyPi setup: Pi investigates first, blocks edits, and gives you a reviewable plan before doing any implementation.
     </p>
 
-    <h3>Check the plan's task list</h3>
-    <pre><code>/todos</code></pre>
+    <h3>Set a long-task objective</h3>
+    <pre><code>/goal ship the webhook idempotency fix</code></pre>
     <p>
-      The todo widget becomes especially useful on multi-step tasks. You'll see what Pi thinks is done, what is in progress, and what comes next.
+      On multi-step tasks, give Pi an explicit objective. It reports done, blocked, or waiting on an external event — instead of drifting between steps.
     </p>
 
     <h3>Try web research</h3>
@@ -77,22 +77,22 @@ pi</code></pre>
     <p>
       If you want to confirm what LazyPi is currently managing on your machine, run:
     </p>
-    <pre><code>npx @robzolkos/lazypi status</code></pre>
+    <pre><code>npx @tommy-ca/lazypi status</code></pre>
 
     <h2>5. Remove anything you don't want</h2>
-    <pre><code>npx @robzolkos/lazypi remove</code></pre>
+    <pre><code>npx @tommy-ca/lazypi remove</code></pre>
     <p>
       LazyPi is intentionally reversible. If part of the catalog doesn't fit your workflow, remove it from the interactive picker or remove a package directly by ID. Start opinionated, then trim down to the setup you actually want.
     </p>
 
     <h2>6. Update later</h2>
-    <pre><code>npx @robzolkos/lazypi update</code></pre>
+    <pre><code>npx @tommy-ca/lazypi update</code></pre>
     <p>
       Run Pi's updater to pull in upstream updates for installed packages.
     </p>
 
     <h2>7. Diagnose issues</h2>
-    <pre><code>npx @robzolkos/lazypi doctor</code></pre>
+    <pre><code>npx @tommy-ca/lazypi doctor</code></pre>
     <p>
       If Pi or a package behaves unexpectedly, start here. It checks your environment and points out the most common setup problems.
     </p>

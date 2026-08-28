@@ -1,0 +1,53 @@
+---
+layout: docs
+title: "Goal — LazyPi Docs"
+---
+<h1>Goal</h1>
+    <p class="page-desc">An explicit long-objective gate: Pi stops on done, blocked, or an external wait.</p>
+
+    <h2>What it does</h2>
+    <p>
+      <code>/goal &lt;objective&gt;</code> sets an explicit session objective. While a goal is active, Pi reports progress with three tools instead of drifting between steps:
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Tool</th>
+          <th>When</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>goal_complete</code></td>
+          <td>Evidence-backed summary for the active goal id</td>
+        </tr>
+        <tr>
+          <td><code>goal_blocked</code></td>
+          <td>Repeated impasse, with reason, evidence, and repeated turns ≥ 3</td>
+        </tr>
+        <tr>
+          <td><code>goal_wait</code></td>
+          <td>External event arranged; optional <code>resume_after_ms</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Why it's included</h2>
+    <p>
+      Long tasks fail by slow drift, not sudden error. A goal gate replaces the checkbox todo anti-pattern: the agent stops when the objective is met, stalls, or waits on the world — and says which, with evidence. Config lives in <code>~/.pi/agent/pi-goal.json</code> (<code>automaticTurns</code>, <code>noProgressTurns</code>).
+    </p>
+
+    <div class="learn-more">
+      <a href="https://github.com/narumitw/pi-goal" target="_blank" rel="noopener">→ GitHub — narumitw/pi-goal</a>
+    </div>
+
+    <nav class="prev-next">
+      <a href="/docs/packages/claude-cli.html" class="prev-next-link">
+        <span class="prev-next-label">Previous</span>
+        ← Previous
+      </a>
+      <a href="/docs/packages/btw.html" class="prev-next-link next">
+        <span class="prev-next-label">Next</span>
+        Next →
+      </a>
+    </nav>

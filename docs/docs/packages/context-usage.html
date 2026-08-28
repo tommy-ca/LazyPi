@@ -1,0 +1,31 @@
+---
+layout: docs
+title: "Context Usage — LazyPi Docs"
+---
+<h1>Context Usage</h1>
+    <p class="page-desc">See what is burning the context window before it fills.</p>
+
+    <h2>What it does</h2>
+    <p>
+      <code>/context</code> shows a dot grid of context consumption and <code>/context details</code> breaks down what is resident (system prompt, tools, turns). When the window is close to full, compact, or move work onto a fresh lane (an isolated <code>fresh</code> child or a new session) instead of stuffing the same transcript.
+    </p>
+
+    <h2>Why it's included</h2>
+    <p>
+      Context budget is the silent failure mode of long agent sessions: the transcript fills, quality drops, and the cause is invisible until it's too late. A live budget view makes compaction a deliberate act instead of a surprise.
+    </p>
+
+    <div class="learn-more">
+      <a href="https://github.com/championswimmer/pi-context-usage" target="_blank" rel="noopener">→ GitHub — championswimmer/pi-context-usage</a>
+    </div>
+
+    <nav class="prev-next">
+      <a href="/docs/packages/btw.html" class="prev-next-link">
+        <span class="prev-next-label">Previous</span>
+        ← Previous
+      </a>
+      <a href="/docs/packages/interactive-shell.html" class="prev-next-link next">
+        <span class="prev-next-label">Next</span>
+        Next →
+      </a>
+    </nav>

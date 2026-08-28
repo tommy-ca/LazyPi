@@ -10,7 +10,7 @@ title: "Plan — LazyPi Docs"
       Pi-plan enforces a two-phase workflow: investigate first, then execute. When plan mode is active, mutating tools and bash write commands are blocked. Pi can read files, search code, and reason about the problem — but it cannot make changes until you approve.
     </p>
     <p>
-      Once you review the plan and give approval, Pi exits plan mode and proceeds with implementation. The <code>/todos</code> command tracks plan progress as a checklist, showing which steps are complete and which are pending.
+      Once you review the plan and give approval, Pi exits plan mode and proceeds with implementation. For long objectives, pair plan mode with the <code>/goal</code> gate so Pi stops on done, blocked, or external wait.
     </p>
 
     <h2>Why it's included</h2>
@@ -45,8 +45,8 @@ title: "Plan — LazyPi Docs"
           <td>Enable plan mode and start planning the specified task immediately</td>
         </tr>
         <tr>
-          <td><code>/todos</code></td>
-          <td>Show tracked plan progress as a checklist of completed and pending steps</td>
+          <td><code>/goal &lt;objective&gt;</code></td>
+          <td>Track a long objective; Pi stops on done, blocked, or external wait</td>
         </tr>
       </tbody>
     </table>
@@ -58,10 +58,10 @@ title: "Plan — LazyPi Docs"
     <nav class="prev-next">
       <a href="/docs/packages/memory.html" class="prev-next-link">
         <span class="prev-next-label">Previous</span>
-        ← Memory
+        ← Previous
       </a>
       <a href="/docs/packages/simplify.html" class="prev-next-link next">
         <span class="prev-next-label">Next</span>
-        Simplify →
+        Next →
       </a>
     </nav>
