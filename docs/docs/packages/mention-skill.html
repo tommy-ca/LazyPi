@@ -1,0 +1,33 @@
+---
+layout: docs
+title: "Mention Skill — LazyPi Docs"
+---
+<h1>Mention Skill</h1>
+    <p class="page-desc">$ skill mention: hidden skills stay reachable from the prompt.</p>
+
+    <h2>What it does</h2>
+    <p>
+      Type <code>$</code> for fuzzy skill autocomplete, then <code>$skill-name</code> expands the skill's content into the prompt before the model sees it. Slash-command skill entries stay out of autocomplete clutter, and settings are configurable via the package's settings schema.
+    </p>
+    <pre><code>$tdd implement the parser
+$research + $code-review after the change</code></pre>
+
+    <h2>Why it's included</h2>
+    <p>
+      The harness keeps skill bodies out of the system prompt — which only works if hidden skills stay explicitly reachable. The <code>$</code> mention is that handoff: skills stay invisible to automatic discovery and still invokable on demand. The harness spec installs exactly one mention implementation; this is it.
+    </p>
+
+    <div class="learn-more">
+      <a href="https://www.npmjs.com/package/@zigai/pi-mention-skill" target="_blank" rel="noopener">→ npm — @zigai/pi-mention-skill</a>
+    </div>
+
+    <nav class="prev-next">
+      <a href="/docs/packages/pi-skillful.html" class="prev-next-link">
+        <span class="prev-next-label">Previous</span>
+        ← Previous
+      </a>
+      <a href="/docs/packages/goal.html" class="prev-next-link next">
+        <span class="prev-next-label">Next</span>
+        Next →
+      </a>
+    </nav>

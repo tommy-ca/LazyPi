@@ -28,6 +28,8 @@ const CATEGORIES = ["core", "tools", "research", "themes"];
 export const PACKAGES = [
 	{ id: "subagents", category: "core", source: "npm:pi-subagents", description: "Sub-agent execution", hint: "Run isolated sub-agents for parallel work." },
 	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", description: "Ask-user prompts", hint: "Interactive user questions for agent workflows." },
+	{ id: "pi-skillful", category: "core", source: "npm:pi-skillful", description: "Skill visibility", hint: "Discover skills above the git root, hide unused skills, and expand /skill:name inline." },
+	{ id: "mention-skill", category: "core", source: "npm:@zigai/pi-mention-skill", description: "$ skill mention", hint: "Fuzzy-search skills with $ and expand them into the prompt; hidden skills stay reachable." },
 	{ id: "goal", category: "core", source: "npm:@narumitw/pi-goal", description: "Long-objective gate", hint: "Stop on done, blocked, or external wait for long tasks." },
 	{
 		id: "btw",
@@ -202,7 +204,7 @@ ${bold("Default behaviour:")}
   - With --yes, --only, or --except the picker is skipped.
 
 ${bold("Categories:")}
-  core         the harness control plane: sub-agents, ask gate, goal, side chat, context budget, simplify
+  core         the harness control plane: sub-agents, ask gate, skill visibility, $ mention, goal, side chat, context budget, simplify
   tools        capability: web access, memory, MCP, shell overlays
   research     long-running iterative dev loops
   themes       the curated dark theme pack
@@ -905,6 +907,8 @@ function cmdDoctor(flags) {
 	else if (error) fail(`${path} is not valid JSON — ${error}`);
 	else {
 		pass(`${path} is readable`);
+		const unpinnedGit = [...sources].filter((src) => /^git:github\.com\/[^/@]+\/[^@\s]+$/.test(src));
+		for (const src of unpinnedGit) warn(`${src} is an unpinned git head — pin it or wait for the owned-fork migration`, { fatal: false });
 	}
 
 	printHeader("Auth");

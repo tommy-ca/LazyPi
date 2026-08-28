@@ -18,13 +18,6 @@ MAY carry `legacySources` and `forked`.
 - **AND** `research` SHALL contain ralph-wiggum
 - **AND** `themes` SHALL contain curated-themes only
 
-#### Scenario: Essential control plane sources
-
-- **WHEN** the catalog defines skill visibility and skill mention
-- **THEN** `pi-skillful` SHALL resolve to `npm:pi-skillful`
-- **AND** `mention-skill` SHALL resolve to `npm:@zigai/pi-mention-skill`
-- **AND** the catalog SHALL ship exactly one mention implementation
-
 #### Scenario: Side chat best alternative
 
 - **WHEN** the catalog defines `btw`
@@ -40,19 +33,9 @@ MAY carry `legacySources` and `forked`.
   autoresearch, plan, add-dir, claude-cli, prompt-templates, hackerman, or
   terminal-theme
 
-#### Scenario: Repointed fork sources
+#### Scenario: Essential control plane sources
 
-- **WHEN** a fork is published for a catalog entry
-- **THEN** `source` SHALL be `npm:@tommy-ca/pi-<name>`
-- **AND** the replaced upstream source SHALL remain in `legacySources`
-
-### Requirement: Git Sources
-
-A catalog source beginning with `git:` SHALL be installed with
-`npm_config_ignore_scripts=true`. Pinned git sources are permitted; unpinned
-git heads are not.
-
-#### Scenario: Git install
-
-- **WHEN** the installer runs `pi install` for a `git:` source
-- **THEN** the install SHALL run with `npm_config_ignore_scripts=true`
+- **WHEN** the catalog defines skill visibility and skill mention
+- **THEN** `pi-skillful` SHALL resolve to `npm:pi-skillful`
+- **AND** `mention-skill` SHALL resolve to `npm:@zigai/pi-mention-skill`
+- **AND** the catalog SHALL ship exactly one mention implementation

@@ -28,5 +28,7 @@ MAY carry `legacySources` and `forked`.
 
 - **WHEN** a package was deliberately removed
 - **THEN** it SHALL NOT appear in the catalog
-- **AND** the installer SHALL NOT install or manage plan, add-dir,
-  claude-cli, prompt-templates, hackerman, or terminal-theme
+- **AND** the installer SHALL NOT install or manage compound, todos,
+  powerbar, extension-settings, plannotator, slopchop, usage, raw-paste,
+  autoresearch, plan, add-dir, claude-cli, prompt-templates, hackerman, or
+  terminal-theme

@@ -1,0 +1,34 @@
+---
+layout: docs
+title: "Ask User — LazyPi Docs"
+---
+<h1>Ask User</h1>
+    <p class="page-desc">The structured ask gate: Pi stops and asks instead of guessing.</p>
+
+    <h2>What it does</h2>
+    <p>
+      <code>ask_user</code> presents one focused, multiple-choice question when the target file, create-vs-edit, acceptance criteria, or a mutually exclusive implementation option is undefined. One avoided rewrite pays for the pause.
+    </p>
+    <p>
+      Related workflow: when a request is ambiguous, Pi asks before producing a large diff. This is an efficiency feature — a cheap structured question in exchange for not generating the wrong thing.
+    </p>
+
+    <h2>Why it's included</h2>
+    <p>
+      Agents that guess on ambiguity generate confident, costly, hard-to-reverse changes. The ask gate forces the cheap clarification first and pairs with the harness coding loop: clarify → scout → worker → fresh reviewers.
+    </p>
+
+    <div class="learn-more">
+      <a href="https://pi.dev/packages/pi-ask-user" target="_blank" rel="noopener">→ Pi packages — pi-ask-user</a>
+    </div>
+
+    <nav class="prev-next">
+      <a href="/docs/packages/simplify.html" class="prev-next-link">
+        <span class="prev-next-label">Previous</span>
+        ← Previous
+      </a>
+      <a href="/docs/packages/pi-skillful.html" class="prev-next-link next">
+        <span class="prev-next-label">Next</span>
+        Next →
+      </a>
+    </nav>

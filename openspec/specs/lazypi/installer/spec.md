@@ -17,10 +17,10 @@ MAY carry `legacySources` and `forked`.
 #### Scenario: Lean catalog shape
 
 - **WHEN** the catalog is loaded
-- **THEN** it SHALL contain exactly 12 entries across the categories `core`,
+- **THEN** it SHALL contain exactly 14 entries across the categories `core`,
   `tools`, `research`, and `themes`
-- **AND** `core` SHALL contain subagents, pi-ask-user, goal, btw,
-  context-usage, and simplify
+- **AND** `core` SHALL contain subagents, pi-ask-user, pi-skillful,
+  mention-skill, goal, btw, context-usage, and simplify
 - **AND** `tools` SHALL contain web-access, memory, mcp, and
   interactive-shell
 - **AND** `research` SHALL contain ralph-wiggum
@@ -40,6 +40,13 @@ MAY carry `legacySources` and `forked`.
   powerbar, extension-settings, plannotator, slopchop, usage, raw-paste,
   autoresearch, plan, add-dir, claude-cli, prompt-templates, hackerman, or
   terminal-theme
+
+#### Scenario: Essential control plane sources
+
+- **WHEN** the catalog defines skill visibility and skill mention
+- **THEN** `pi-skillful` SHALL resolve to `npm:pi-skillful`
+- **AND** `mention-skill` SHALL resolve to `npm:@zigai/pi-mention-skill`
+- **AND** the catalog SHALL ship exactly one mention implementation
 
 ### Requirement: Idempotent Install
 

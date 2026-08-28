@@ -1,0 +1,39 @@
+---
+layout: docs
+title: "Pi Skillful — LazyPi Docs"
+---
+<h1>Pi Skillful</h1>
+    <p class="page-desc">Skill visibility: discover skills above the git root and hide unused ones.</p>
+
+    <h2>What it does</h2>
+    <p>
+      Stock Pi stops <code>.agents/skills/</code> discovery at the git repo root. <code>pi-skillful</code> walks ancestors to the filesystem root — matching how <code>AGENTS.md</code> layers — and lets you hide unused skills so they never enter the automatic skill-discovery prompt. It also expands <code>/skill:name</code> inline anywhere in a prompt.
+    </p>
+    <p>
+      Hide skills you don't want visible:
+    </p>
+    <pre><code>{
+  "skillful": {
+    "hiddenSkills": ["resume", "pptx", "xlsx"]
+  }
+}</code></pre>
+
+    <h2>Why it's included</h2>
+    <p>
+      The harness rules say only name + description of 4–6 weekly skills should sit in the system prompt. Visibility control is how that stays true: hidden skills load on demand, so prompt drift and wrong-skill routing stay out of the picture.
+    </p>
+
+    <div class="learn-more">
+      <a href="https://pi.dev/packages/pi-skillful" target="_blank" rel="noopener">→ Pi packages — pi-skillful</a>
+    </div>
+
+    <nav class="prev-next">
+      <a href="/docs/packages/ask-user.html" class="prev-next-link">
+        <span class="prev-next-label">Previous</span>
+        ← Previous
+      </a>
+      <a href="/docs/packages/mention-skill.html" class="prev-next-link next">
+        <span class="prev-next-label">Next</span>
+        Next →
+      </a>
+    </nav>

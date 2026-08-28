@@ -331,6 +331,7 @@ h2 {
 
 .catalog-tag.core { color: var(--green); border-color: var(--green-dim); }
 .catalog-tag.ui { color: #7aa2f7; border-color: #1e2d5a; }
+.catalog-tag.tools { color: #7aa2f7; border-color: #1e2d5a; }
 .catalog-tag.research { color: #e0af68; border-color: #4a3800; }
 .catalog-tag.frameworks { color: #bb9af7; border-color: #3a2060; }
 .catalog-tag.themes { color: #f7768e; border-color: #4a1020; }

@@ -275,6 +275,7 @@
 }
 .pkg-tag.core { color: var(--green); border-color: var(--green-dim); }
 .pkg-tag.ui { color: #7aa2f7; border-color: #1e2d5a; }
+.pkg-tag.tools { color: #7aa2f7; border-color: #1e2d5a; }
 .pkg-tag.research { color: #e0af68; border-color: #4a3800; }
 .pkg-tag.frameworks { color: #bb9af7; border-color: #3a2060; }
 
