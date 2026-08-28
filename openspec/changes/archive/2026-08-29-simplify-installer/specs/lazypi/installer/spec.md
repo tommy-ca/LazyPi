@@ -1,12 +1,6 @@
 # Installer Specification (lazypi)
 
-## Purpose
-
-The `lazypi` CLI SHALL install, report, update, check, and remove a curated
-catalog of Pi packages with idempotent, reproducible behavior and a
-self-deriving CI contract.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Catalog Model
 
@@ -163,3 +157,24 @@ fuzzy file and content search tools alongside Pi's built-in find/grep.
 
 - **WHEN** a content search returns more matches than a page
 - **THEN** the result SHALL include a cursor for fetching the next page
+
+## REMOVED Requirements
+
+### Requirement: Git Sources
+
+A catalog source beginning with `git:` SHALL be installed with
+`npm_config_ignore_scripts=true`. Pinned git sources are permitted; unpinned
+git heads are a known risk and the catalog currently carries none.
+
+#### Scenario: Git install
+
+- **WHEN** the installer runs `pi install` for a `git:` source
+- **THEN** the install SHALL run with `npm_config_ignore_scripts=true`
+- **AND** an unpinned git source SHALL be flagged as a known-risk carryover
+  until the fork change lands
+
+**Reason:** The catalog ships only pinned npm sources and the owned-fork
+migration was discarded, so no `git:` path is reachable.
+
+**Migration:** None — git sources were never cataloged; `doctor` still
+warns about unpinned git heads among out-of-catalog installed sources.

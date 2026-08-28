@@ -46,8 +46,6 @@ export const PACKAGES = [
 	{ id: "fff", category: "core", source: "npm:@ff-labs/pi-fff", essential: true, description: "FFF fuzzy search", hint: "Additive fffind / ffgrep / fff-multi-grep beside the built-in tools; /fff-health checks the index." },
 ];
 
-const PI_CORE_PACKAGE = "@earendil-works/pi-coding-agent";
-
 // ---------------------------------------------------------------------------
 // Output helpers
 // ---------------------------------------------------------------------------
@@ -225,8 +223,7 @@ function spawnCommand(command, args = [], options = {}) {
 }
 
 function hasCmd(name) {
-	const probe = spawnCommand(platform() === "win32" ? "where" : "which", [name], { stdio: "ignore" });
-	return probe.status === 0;
+	return commandPath(name) !== null;
 }
 
 export function resolveAgentConfigDir(configured, home = homedir(), platformName = platform()) {
@@ -335,7 +332,7 @@ function findLegacyInstalledSources(pkg, installedPiSources) {
 	return [...installedPiSources].filter((source) => isLegacySourceForPackage(pkg, source));
 }
 
-function packageInstallStatus(pkg, installedPiSources, local) {
+function packageInstallStatus(pkg, installedPiSources) {
 	const legacySources = findLegacyInstalledSources(pkg, installedPiSources);
 	return {
 		installed: installedPiSources.has(pkg.source),
@@ -344,12 +341,12 @@ function packageInstallStatus(pkg, installedPiSources, local) {
 	};
 }
 
-function isPackageInstalled(pkg, installedPiSources, local) {
-	return packageInstallStatus(pkg, installedPiSources, local).installed;
+function isPackageInstalled(pkg, installedPiSources) {
+	return packageInstallStatus(pkg, installedPiSources).installed;
 }
 
-function isPackagePresent(pkg, installedPiSources, local) {
-	return packageInstallStatus(pkg, installedPiSources, local).present;
+function isPackagePresent(pkg, installedPiSources) {
+	return packageInstallStatus(pkg, installedPiSources).present;
 }
 
 // ---------------------------------------------------------------------------
@@ -524,13 +521,13 @@ async function cmdInstall(flags) {
 	if (settingsError) log.warn(`Could not parse ${settingsPath(flags.local)} — ${settingsError}`);
 
 	const toInstall = selected.filter((pkg) => {
-		return !isPackageInstalled(pkg, installedSources, flags.local);
+		return !isPackageInstalled(pkg, installedSources);
 	});
 	const alreadyInstalled = selected.filter((pkg) => {
-		return isPackageInstalled(pkg, installedSources, flags.local);
+		return isPackageInstalled(pkg, installedSources);
 	});
 	const legacyInstalled = selected.filter((pkg) => {
-		return !isPackageInstalled(pkg, installedSources, flags.local) && isPackagePresent(pkg, installedSources, flags.local);
+		return !isPackageInstalled(pkg, installedSources) && isPackagePresent(pkg, installedSources);
 	});
 	const installLabel = legacyInstalled.length > 0 ? `${toInstall.length} (${legacyInstalled.length} migration${legacyInstalled.length === 1 ? "" : "s"})` : String(toInstall.length);
 	const scope = flags.local ? "project (.pi/settings.json)" : `global (${settingsPath(false)})`;
@@ -593,10 +590,7 @@ async function cmdInstall(flags) {
 		const action = `pi install ${pkg.source}`;
 		if (interactive) log.step(action);
 		else console.log(`\n→ ${action}`);
-		const env = pkg.source.startsWith("git:")
-			? { ...process.env, npm_config_ignore_scripts: "true" }
-			: process.env;
-		const status = spawnCommand("pi", [...piArgs, pkg.source], { stdio: "inherit", env }).status;
+		const status = spawnCommand("pi", [...piArgs, pkg.source], { stdio: "inherit" }).status;
 		if (status !== 0) {
 			failed.push(pkg);
 			if (interactive) log.error(`failed to install ${pkg.id}`);
@@ -676,9 +670,9 @@ function cmdStatus(flags) {
 	}
 
 	const piCatalogSources = new Set(PACKAGES.flatMap((p) => [p.source, ...legacySourcesForPackage(p)]));
-	const installed = PACKAGES.filter((pkg) => packageInstallStatus(pkg, sources, flags.local).installed);
-	const legacy = PACKAGES.filter((pkg) => packageInstallStatus(pkg, sources, flags.local).legacy);
-	const missing = PACKAGES.filter((pkg) => !packageInstallStatus(pkg, sources, flags.local).present);
+	const installed = PACKAGES.filter((pkg) => packageInstallStatus(pkg, sources).installed);
+	const legacy = PACKAGES.filter((pkg) => packageInstallStatus(pkg, sources).legacy);
+	const missing = PACKAGES.filter((pkg) => !packageInstallStatus(pkg, sources).present);
 	const others = [...sources].filter((src) => !piCatalogSources.has(src));
 
 	printHeader(`Installed from LazyPi catalog (${installed.length}/${PACKAGES.length}):`);
@@ -770,7 +764,7 @@ function cmdDoctor(flags) {
 	else {
 		pass(`${path} is readable`);
 		const unpinnedGit = [...sources].filter((src) => /^git:github\.com\/[^/@]+\/[^@\s]+$/.test(src));
-		for (const src of unpinnedGit) warn(`${src} is an unpinned git head — pin it or wait for the owned-fork migration`, { fatal: false });
+		for (const src of unpinnedGit) warn(`${src} is an unpinned git head — pin it to a commit for reproducible installs`, { fatal: false });
 	}
 
 	printHeader("Auth");
@@ -802,7 +796,7 @@ async function cmdRemove(flags, targets) {
 			return 2;
 		}
 		const { sources } = readInstalledSources(flags.local);
-		const installedPkgs = PACKAGES.filter((p) => isPackagePresent(p, sources, flags.local));
+		const installedPkgs = PACKAGES.filter((p) => isPackagePresent(p, sources));
 		if (installedPkgs.length === 0) {
 			console.log(yellow("No catalog packages are installed."));
 			return 0;
