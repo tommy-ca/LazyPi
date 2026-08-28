@@ -25,4 +25,4 @@
 ## 5. Ship
 
 - [x] 5.1 Fresh review of the diff; fix findings (reviewer: 0 blocking, 4 P2 findings fixed — cmdRemove versioned-source resolution, proposal 21-id list wording, AGENTS.md count, compare-table rows + og/description)
-- [ ] 5.2 Commit and push to the fork; CI green
+- [x] 5.2 Commit and push to the fork; CI green (7b31252 pushed; test workflow 33221335829 dispatched on the commit: all jobs pass, incl. packed-CLI e2e 7/7 — note push events do not trigger Actions on this fork, dispatch is the CI path)
