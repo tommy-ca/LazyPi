@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tommy-ca/LazyPi"
+    "url": "git+https://github.com/tommy-ca/LazyPi.git"
   },
   "bugs": {
     "url": "https://github.com/tommy-ca/LazyPi/issues"
@@ -41,5 +41,8 @@
   ],
   "devDependencies": {
     "@fission-ai/openspec": "^1.11.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
