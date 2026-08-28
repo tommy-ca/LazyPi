@@ -82,9 +82,9 @@ Use the repository's current naming style, not the upstream project's exact word
 LazyPi currently uses these categories in `bin/lazypi.mjs`:
 
 - `core`
-- `ui`
+- `tools`
 - `research`
-- `frameworks`
+- `themes`
 - `themes`
 
 Choose the single best fit.
