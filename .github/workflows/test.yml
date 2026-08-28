@@ -39,3 +39,6 @@ jobs:
 
       - name: Assert expected packages for full install
         run: node scripts/assert-installed-packages.mjs --check-status
+
+      - name: Run packed-CLI e2e harness (real pi, sandboxed)
+        run: node scripts/e2e-install.mjs

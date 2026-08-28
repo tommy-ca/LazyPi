@@ -80,6 +80,13 @@ extra_css: /assets/css/faq.css
   </div>
 
   <div class="faq-item">
+    <div class="faq-q">Why is bunx running an old version after a release?</div>
+    <div class="faq-a">
+      bun caches resolved package versions, so a bare <code>bunx @tommy-ca/lazypi</code> can keep serving the previous release until the cache is cleared. Run <code>bun pm cache rm</code>, pin <code>@tommy-ca/lazypi@latest</code>, and check <code>npx @tommy-ca/lazypi --version</code> to see which release is actually running.
+    </div>
+  </div>
+
+  <div class="faq-item">
     <div class="faq-q">I think a package is missing — how do I suggest it?</div>
     <div class="faq-a">
       If you've found a Pi extension that you think belongs in the catalog, <a href="https://github.com/tommy-ca/LazyPi/issues" target="_blank">open an issue on GitHub</a> with a link to the package and a quick note on why it's worth including. The bar is quality and usefulness — if it's a well-maintained package that meaningfully improves the Pi experience, it's a good candidate.

@@ -96,6 +96,7 @@ function parseArgs(args) {
 		yes: false,
 		help: false,
 		badArg: false,
+		version: false,
 		only: null,
 		except: null,
 		targets: [],
@@ -111,6 +112,7 @@ function parseArgs(args) {
 		const arg = args[i];
 		if (arg === "-l" || arg === "--local") flags.local = true;
 		else if (arg === "-y" || arg === "--yes") flags.yes = true;
+		else if (arg === "-V" || arg === "--version") flags.version = true;
 		else if (arg === "-h" || arg === "--help") flags.help = true;
 		else if (arg === "--only") flags.only = parseList(args[++i]);
 		else if (arg.startsWith("--only=")) flags.only = parseList(arg.slice("--only=".length));
@@ -185,6 +187,7 @@ ${bold("Install options:")}
   -l, --local         Install into the current project (.pi/settings.json)
   -y, --yes           Skip the picker and any confirmation prompt
   -h, --help          Show this help
+  -V, --version       Show the installed version
 
 ${bold("Default behaviour:")}
   - Every catalog package is installed (lazy on purpose).
@@ -210,6 +213,7 @@ ${bold("Examples:")}
 // ---------------------------------------------------------------------------
 // Pi / settings plumbing
 // ---------------------------------------------------------------------------
+const VERSION = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
 // On Windows, package-manager CLIs and global Node bins are usually `.cmd`
 // shims. Node's child_process docs note that those need to be launched via a
 // shell, so we route spawned commands through the platform shell there while
@@ -872,6 +876,10 @@ async function cmdRemove(flags, targets) {
 // ---------------------------------------------------------------------------
 async function main() {
 	const flags = parseArgs(argv.slice(2));
+	if (flags.version) {
+		console.log(`@tommy-ca/lazypi ${VERSION}`);
+		return 0;
+	}
 	if (flags.help) {
 		printHelp();
 		return flags.badArg ? 2 : 0;

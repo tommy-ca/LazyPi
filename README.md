@@ -54,6 +54,12 @@ There is nothing to "uninstall" for LazyPi itself — `npx` doesn't leave it aro
 
 Run the built-in health check with `npx @tommy-ca/lazypi doctor`.
 
+**Stale `bunx` after a release?** bun caches resolved package versions, so a
+bare `bunx @tommy-ca/lazypi` can keep serving the previous release until the
+cache is cleared. Run `bun pm cache rm`, pin `@tommy-ca/lazypi@latest`, and
+check `npx @tommy-ca/lazypi --version` to see which release is actually
+running.
+
 ## Site / docs
 
 The site at [lazypi.org](https://lazypi.org) lives in `docs/` and is a Jekyll site compiled by GitHub Pages automatically on push to `master`.

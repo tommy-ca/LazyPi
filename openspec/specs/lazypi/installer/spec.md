@@ -122,6 +122,12 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 - **WHEN** the CLI receives an unknown command or argument
 - **THEN** it SHALL print help and exit 2
 
+#### Scenario: Version flag
+
+- **WHEN** `-V` or `--version` is passed
+- **THEN** the CLI SHALL print the package version (from `package.json`) and
+  exit 0
+
 ### Requirement: Subagent Overrides
 
 When `subagents` is selected, `install` SHALL write empty-model overrides for
@@ -160,6 +166,14 @@ a separate manifest, so catalog edits propagate to CI automatically.
 - **THEN** it SHALL find every non-excluded `PACKAGES` source in settings.json
 - **AND** the `status` header SHALL report the expected count over
   `PACKAGES.length`
+
+#### Scenario: E2E regression
+
+- **WHEN** CI runs the packed-CLI e2e harness
+- **THEN** `scripts/e2e-install.mjs` SHALL drive the packed artifact against a
+  real `pi` in a sandboxed agent dir
+- **AND** it SHALL assert fresh install, idempotency, legacy migration,
+  removal, status, and doctor
 
 ### Requirement: Skill Arguments
 
