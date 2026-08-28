@@ -95,6 +95,7 @@ function parseArgs(args) {
 		local: false,
 		yes: false,
 		help: false,
+		badArg: false,
 		only: null,
 		except: null,
 		targets: [],
@@ -119,6 +120,7 @@ function parseArgs(args) {
 		else {
 			console.error(red(`Unknown argument: ${arg}`));
 			flags.help = true;
+			flags.badArg = true;
 			break;
 		}
 	}
@@ -338,7 +340,7 @@ function removeLegacy(pkg, installedPiSources, local, interactive) {
 		const action = `pi remove ${legacySource}`;
 		if (interactive) log.step(action);
 		else console.log(`\n→ ${action}`);
-		status = spawnCommand("pi", local ? ["remove", "-l", legacySource] : ["remove", legacySource], { stdio: "inherit" }).status ?? 1;
+		status = spawnCommand("pi", local ? ["remove", "-l", "--approve", legacySource] : ["remove", legacySource], { stdio: "inherit" }).status ?? 1;
 		if (status !== 0) break;
 	}
 	return status;
@@ -595,7 +597,7 @@ async function cmdInstall(flags) {
 		return 0;
 	}
 
-	const piArgs = flags.local ? ["install", "-l"] : ["install"];
+	const piArgs = flags.local ? ["install", "-l", "--approve"] : ["install"];
 
 	for (const pkg of toInstall) {
 		const migrationStatus = removeLegacy(pkg, installedSources, flags.local, interactive);
@@ -853,7 +855,7 @@ async function cmdRemove(flags, targets) {
 			: [source];
 		const uniqueSources = [...new Set(sourcesToRemove.length > 0 ? sourcesToRemove : [source])];
 		for (const resolvedSource of uniqueSources) {
-			const piArgs = flags.local ? ["remove", "-l", resolvedSource] : ["remove", resolvedSource];
+			const piArgs = flags.local ? ["remove", "-l", "--approve", resolvedSource] : ["remove", resolvedSource];
 			const result = spawnCommand("pi", piArgs, { stdio: "inherit" });
 			if (result.status !== 0) {
 				console.error(red(`Failed to remove ${target}`));
@@ -872,7 +874,7 @@ async function main() {
 	const flags = parseArgs(argv.slice(2));
 	if (flags.help) {
 		printHelp();
-		return 0;
+		return flags.badArg ? 2 : 0;
 	}
 	switch (flags.command) {
 		case "install":

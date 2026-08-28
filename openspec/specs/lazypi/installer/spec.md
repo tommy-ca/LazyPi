@@ -109,6 +109,19 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
   sources outside the catalog
 - **AND** `package.json` SHALL declare `engines.node >= 20` to match
 
+#### Scenario: Local install trust
+
+- **WHEN** `install --local` or `remove --local` targets a project Pi
+  settings file
+- **THEN** every `pi install` / `pi remove` spawn SHALL include `--approve`
+  so un-approved projects accept the change
+- **AND** global (non-local) spawns SHALL NOT include `--approve`
+
+#### Scenario: Unknown argument
+
+- **WHEN** the CLI receives an unknown command or argument
+- **THEN** it SHALL print help and exit 2
+
 ### Requirement: Subagent Overrides
 
 When `subagents` is selected, `install` SHALL write empty-model overrides for
