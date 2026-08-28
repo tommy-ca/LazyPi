@@ -70,6 +70,15 @@ installed.
   `pi install <source>`
 - **AND** a failed migration SHALL fail the entry without installing
 
+#### Scenario: Legacy convergence
+
+- **WHEN** a catalog entry's legacy source is installed alongside its
+  replacement source
+- **THEN** `install` SHALL remove the legacy source without reinstalling the
+  replacement
+- **AND** a failed removal SHALL fail the run for that entry
+- **AND** the summary SHALL count it as a migration
+
 #### Scenario: Re-run
 
 - **WHEN** `install` runs with every selected source already installed
@@ -91,6 +100,14 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 
 - **WHEN** `--only core` or `--except <id>` is passed
 - **THEN** only matching categories or package ids are selected
+
+#### Scenario: Doctor environment
+
+- **WHEN** `doctor` runs
+- **THEN** it SHALL fail when the Node version is below 20
+- **AND** it SHALL warn non-fatally about unpinned git heads among installed
+  sources outside the catalog
+- **AND** `package.json` SHALL declare `engines.node >= 20` to match
 
 ### Requirement: Subagent Overrides
 
