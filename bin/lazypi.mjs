@@ -332,6 +332,18 @@ function findLegacyInstalledSources(pkg, installedPiSources) {
 	return [...installedPiSources].filter((source) => isLegacySourceForPackage(pkg, source));
 }
 
+function removeLegacy(pkg, installedPiSources, local, interactive) {
+	let status = 0;
+	for (const legacySource of findLegacyInstalledSources(pkg, installedPiSources)) {
+		const action = `pi remove ${legacySource}`;
+		if (interactive) log.step(action);
+		else console.log(`\n→ ${action}`);
+		status = spawnCommand("pi", local ? ["remove", "-l", legacySource] : ["remove", legacySource], { stdio: "inherit" }).status ?? 1;
+		if (status !== 0) break;
+	}
+	return status;
+}
+
 function packageInstallStatus(pkg, installedPiSources) {
 	const legacySources = findLegacyInstalledSources(pkg, installedPiSources);
 	return {
@@ -529,7 +541,9 @@ async function cmdInstall(flags) {
 	const legacyInstalled = selected.filter((pkg) => {
 		return !isPackageInstalled(pkg, installedSources) && isPackagePresent(pkg, installedSources);
 	});
-	const installLabel = legacyInstalled.length > 0 ? `${toInstall.length} (${legacyInstalled.length} migration${legacyInstalled.length === 1 ? "" : "s"})` : String(toInstall.length);
+	const migrateOnly = alreadyInstalled.filter((pkg) => findLegacyInstalledSources(pkg, installedSources).length > 0);
+	const migrations = legacyInstalled.length + migrateOnly.length;
+	const installLabel = migrations > 0 ? `${toInstall.length} (${migrations} migration${migrations === 1 ? "" : "s"})` : String(toInstall.length);
 	const scope = flags.local ? "project (.pi/settings.json)" : `global (${settingsPath(false)})`;
 
 	const preInstallAuth = detectAuth();
@@ -557,9 +571,23 @@ async function cmdInstall(flags) {
 		}
 	}
 
-	if (toInstall.length === 0) {
+	const failed = [];
+
+	// Remove stale legacy sources even when the replacement is already installed.
+	for (const pkg of migrateOnly) {
+		const status = removeLegacy(pkg, installedSources, flags.local, interactive);
+		if (status !== 0) {
+			failed.push(pkg);
+			if (interactive) log.error(`failed to migrate ${pkg.id}`);
+			else console.error(red(`  ✗ failed to migrate ${pkg.id}`));
+		}
+	}
+
+	if (toInstall.length === 0 && failed.length === 0) {
 		printCheatsheet(selected, interactive);
-		const done = "Nothing to do — every selected package is already installed.";
+		const done = migrations === 0
+			? "Nothing to do — every selected package is already installed."
+			: "Nothing new to install — stale legacy sources removed.";
 		if (interactive) log.success(green(done));
 		else console.log(green(done));
 		const authState = detectAuth();
@@ -568,18 +596,9 @@ async function cmdInstall(flags) {
 	}
 
 	const piArgs = flags.local ? ["install", "-l"] : ["install"];
-	const failed = [];
 
 	for (const pkg of toInstall) {
-		const legacySources = findLegacyInstalledSources(pkg, installedSources);
-		let migrationStatus = 0;
-		for (const legacySource of legacySources) {
-			const removeAction = `pi remove ${legacySource}`;
-			if (interactive) log.step(removeAction);
-			else console.log(`\n→ ${removeAction}`);
-			migrationStatus = spawnCommand("pi", flags.local ? ["remove", "-l", legacySource] : ["remove", legacySource], { stdio: "inherit" }).status ?? 1;
-			if (migrationStatus !== 0) break;
-		}
+		const migrationStatus = removeLegacy(pkg, installedSources, flags.local, interactive);
 		if (migrationStatus !== 0) {
 			failed.push(pkg);
 			if (interactive) log.error(`failed to migrate ${pkg.id}`);
