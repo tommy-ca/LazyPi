@@ -2,7 +2,7 @@
 
 ## Project overview
 
-LazyPi is an opinionated installer for the Pi coding agent. It provides the harness-core catalog (10 essential packages) so users can run one command and get a usable Pi setup.
+LazyPi is an opinionated installer for the Pi coding agent. It provides the harness-core catalog (12 essential packages) so users can run one command and get a usable Pi setup.
 
 The CLI is published to npm as `@tommy-ca/lazypi` (a fork of `@robzolkos/lazypi`). The main executable is `bin/lazypi.mjs`, with package metadata and install behavior centered around the `PACKAGES` catalog in that file. The `openspec/` tree is the engineering contract; changes land as OpenSpec change specs and `npm run spec:validate` keeps them green.
 

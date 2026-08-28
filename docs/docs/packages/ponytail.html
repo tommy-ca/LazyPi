@@ -1,0 +1,67 @@
+---
+layout: docs
+title: "Ponytail — LazyPi Docs"
+---
+<h1>Ponytail</h1>
+    <p class="page-desc">Lazy senior dev mode: minimal, stdlib-first code with /ponytail review, audit, and a debt ledger.</p>
+
+    <h2>What it does</h2>
+    <p>
+      Ponytail puts a lazy senior dev inside your agent: a discipline mode that makes the agent stop at the first rung of a stdlib-first ladder before writing code — does this need to exist, is it already in this codebase, does the stdlib or a native platform feature cover it, is it an installed dependency, can it be one line — and only then write the minimum that works. The result is minimal diffs, never golfed: validation, error handling, security, and accessibility are never on the chopping block.
+    </p>
+    <p>
+      Deferred shortcuts are marked with <code>ponytail:</code> annotations and harvested into a debt ledger, so "later" doesn't become "never". Review, audit, gain, and help modes round it out: review the current diff for over-engineering, audit the whole repo, show the measured impact scoreboard, or get a quick reference. Level switches (<code>/ponytail lite|full|ultra</code>) tune how aggressively the ruleset is enforced, and the ruleset is injected into subagents too.
+    </p>
+
+    <h2>Why it's included</h2>
+    <p>
+      LazyPi ships a deliberately lean catalog — a curated core instead of everything the ecosystem has to offer. Ponytail codifies that anti-over-engineering ethos as an always-on discipline: it keeps the agent from rebuilding what's already in the harness and holds the line against speculative scaffolding creeping back in.
+    </p>
+
+    <h2>Commands</h2>
+    <table>
+      <thead>
+        <tr><th>Command</th><th>What it does</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>/ponytail lite|full|ultra</code></td>
+          <td>Set the enforcement intensity (no argument reports the current level)</td>
+        </tr>
+        <tr>
+          <td><code>/ponytail-review</code></td>
+          <td>Review the current diff for over-engineering and hand back a delete-list</td>
+        </tr>
+        <tr>
+          <td><code>/ponytail-audit</code></td>
+          <td>Audit the whole repo for over-engineering, not just the diff</td>
+        </tr>
+        <tr>
+          <td><code>/ponytail-debt</code></td>
+          <td>Harvest the <code>ponytail:</code> shortcuts you've deferred into a debt ledger</td>
+        </tr>
+        <tr>
+          <td><code>/ponytail-gain</code></td>
+          <td>Show the measured impact scoreboard — less code, less cost, more speed</td>
+        </tr>
+        <tr>
+          <td><code>/ponytail-help</code></td>
+          <td>Quick reference for the commands above</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="learn-more">
+      <a href="https://github.com/DietrichGebert/ponytail" target="_blank" rel="noopener">→ GitHub — DietrichGebert/ponytail</a>
+    </div>
+
+    <nav class="prev-next">
+      <a href="/docs/packages/dynamic-workflows.html" class="prev-next-link">
+        <span class="prev-next-label">Previous</span>
+        ← Previous
+      </a>
+      <a href="/docs/packages/subagents.html" class="prev-next-link next">
+        <span class="prev-next-label">Next</span>
+        Next →
+      </a>
+    </nav>

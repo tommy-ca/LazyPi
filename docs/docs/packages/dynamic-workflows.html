@@ -1,0 +1,55 @@
+---
+layout: docs
+title: "Dynamic Workflows — LazyPi Docs"
+---
+<h1>Dynamic Workflows</h1>
+    <p class="page-desc">Intent-driven fan-out workflows over pi-subagents: the /workflows TUI, /deep-research, resume from run IDs, token/cost accounting, and optional git-worktree isolation.</p>
+
+    <h2>What it does</h2>
+    <p>
+      Dynamic workflows turns one request into a JavaScript orchestration script that fans work out across isolated subagents, routes each task to the right model, cross-checks the results, and returns one synthesized answer. Instead of one agent holding a huge task in a single context window, workflows run concurrent subagent sessions — up to 16 at a time — and keep intermediate work in script variables.
+    </p>
+    <p>
+      Intent-driven by default: mention <code>workflow</code> or <code>workflows</code> in a message and Pi handles a decomposable request by fanning it out across agents — or run the built-in patterns directly. Runs are resumable from a run ID (<code>resumeFromRunId</code>) with journaled replay, so unchanged agent calls replay from cache instead of re-spending tokens. Real token and cost accounting is reported per run, and parallel agents can edit safely on throwaway branches with <code>isolation: "worktree"</code>.
+    </p>
+
+    <h2>Why it's included</h2>
+    <p>
+      The harness you get from LazyPi is meant to be driven — and its operator runs fan-out workflows daily. This engine sits on top of the cataloged pi-subagents substrate, turning a bare fleet of subagents into a deterministic, resumable, cross-checked choreography for codebase-wide audits, multi-perspective review, and source-checked research.
+    </p>
+
+    <h2>Commands</h2>
+    <table>
+      <thead>
+        <tr><th>Command</th><th>What it does</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>/workflows</code></td>
+          <td>Open the interactive run navigator — browse phases, agents, models, token usage, and cost; pause, stop, restart, or save runs</td>
+        </tr>
+        <tr>
+          <td><code>/deep-research</code></td>
+          <td>Source-checked web research with citations, run as a fan-out workflow</td>
+        </tr>
+        <tr>
+          <td><code>workflow</code></td>
+          <td>Runtime tool: Pi invokes it to start a workflow script, manage background runs, or call a saved workflow inline</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="learn-more">
+      <a href="https://github.com/QuintinShaw/pi-dynamic-workflows" target="_blank" rel="noopener">→ GitHub — QuintinShaw/pi-dynamic-workflows</a>
+    </div>
+
+    <nav class="prev-next">
+      <a href="/docs/packages/fff.html" class="prev-next-link">
+        <span class="prev-next-label">Previous</span>
+        ← Previous
+      </a>
+      <a href="/docs/packages/ponytail.html" class="prev-next-link next">
+        <span class="prev-next-label">Next</span>
+        Next →
+      </a>
+    </nav>

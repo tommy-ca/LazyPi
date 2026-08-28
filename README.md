@@ -13,7 +13,7 @@ LazyPi will:
 1. Install `pi` for you if it isn't installed yet.
 2. Ask if you want to install all the packages or choose which to install.
 
-That setup is the harness core — isolated sub-agents, a structured ask gate, skill visibility, $ skill mention, a long-objective gate, side chat, context budgeting, code simplification review, web research, and FFF search. Optional extras (skill arguments, memory, MCP, interactive shell overlays, research loops, themes) install on demand with `pi install`.
+That setup is the harness core — isolated sub-agents, a structured ask gate, skill visibility, $ skill mention, a long-objective gate, side chat, context budgeting, code simplification review, web research, FFF search, a workflow engine for sub-agent fan-out, and ponytail discipline review. Optional extras (skill arguments, memory, MCP, interactive shell overlays, research loops, themes) install on demand with `pi install`.
 
 That's it.  Once done - run `pi` and experience a feature rich coding agent experience.
 

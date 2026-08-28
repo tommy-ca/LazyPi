@@ -12,14 +12,15 @@ self-deriving CI contract.
 
 The catalog SHALL be the exported `PACKAGES` array in `bin/lazypi.mjs`; every
 entry SHALL carry `id`, `category`, `source`, `description`, and `hint`, and
-MAY carry `legacySources` and `essential`.
+MAY carry `legacySources`, `forked`, and `essential`.
 
 #### Scenario: Lean catalog shape
 
 - **WHEN** the catalog is loaded
-- **THEN** it SHALL contain exactly 10 entries, all in the `core` category
+- **THEN** it SHALL contain exactly 12 entries, all in the `core` category
 - **AND** it SHALL contain subagents, pi-ask-user, pi-skillful,
-  mention-skill, goal, btw, context-usage, simplify, web-access, and fff
+  mention-skill, goal, btw, context-usage, simplify, web-access, fff,
+  dynamic-workflows, and ponytail
 - **AND** every entry SHALL be tagged `essential: true`
 - **AND** non-essential packages SHALL NOT be in the catalog
 
@@ -57,6 +58,16 @@ MAY carry `legacySources` and `essential`.
 - **THEN** its `source` SHALL be `npm:@ff-labs/pi-fff`
 - **AND** its default mode SHALL be additive (`tools-and-ui`)
 
+#### Scenario: Workflow engine source
+
+- **WHEN** the catalog defines `dynamic-workflows`
+- **THEN** its `source` SHALL be `npm:@quintinshaw/pi-dynamic-workflows`
+
+#### Scenario: Discipline review source
+
+- **WHEN** the catalog defines `ponytail`
+- **THEN** its `source` SHALL be `npm:@dietrichgebert/ponytail`
+
 ### Requirement: Idempotent Install
 
 `install` SHALL read the Pi settings file, skip every source already present,
@@ -78,6 +89,15 @@ installed.
   replacement
 - **AND** a failed removal SHALL fail the run for that entry
 - **AND** the summary SHALL count it as a migration
+
+#### Scenario: Versioned npm equivalence
+
+- **WHEN** an installed source is `npm:pkg@<version>` (or a pinned `git:`
+  source) and a catalog or legacy source is the unpinned `npm:pkg` (or
+  unpinned `git:` source)
+- **THEN** `status` SHALL count the entry as installed
+- **AND** `install` SHALL skip it as already present
+- **AND** the versioned source SHALL NOT appear under "Other Pi packages"
 
 #### Scenario: Re-run
 

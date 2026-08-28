@@ -44,6 +44,8 @@ export const PACKAGES = [
 	{ id: "simplify", category: "core", source: "npm:pi-simplify", essential: true, description: "Code simplify review", hint: "Reviews recently changed code for clarity, consistency, and maintainability." },
 	{ id: "web-access", category: "core", source: "npm:pi-web-access", essential: true, description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
 	{ id: "fff", category: "core", source: "npm:@ff-labs/pi-fff", essential: true, description: "FFF fuzzy search", hint: "Additive fffind / ffgrep / fff-multi-grep beside the built-in tools; /fff-health checks the index." },
+	{ id: "dynamic-workflows", category: "core", source: "npm:@quintinshaw/pi-dynamic-workflows", essential: true, description: "Workflow engine", hint: "Fan work out across subagents: /workflows TUI, deep-research, resume, token accounting." },
+	{ id: "ponytail", category: "core", source: "npm:@dietrichgebert/ponytail", essential: true, description: "Lazy senior dev mode", hint: "Enforces minimal, stdlib-first code; /ponytail review, audit, and a debt ledger." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -196,7 +198,7 @@ ${bold("Default behaviour:")}
   - With --yes, --only, or --except the picker is skipped.
 
 ${bold("Categories:")}
-  core         the harness control plane: sub-agents, ask gate, skill visibility, $ mention, goal, side chat, context budget, simplify, web research, fff search
+  core         the harness control plane: sub-agents, workflows, ask gate, skill visibility, $ mention, goal, side chat, context budget, simplify, web research, fff search, ponytail discipline
   Non-catalog extras (pi install npm:<source>): skill-args, memory, mcp,
   interactive-shell, ralph-wiggum, curated-themes (65 dark themes)
 
@@ -330,8 +332,15 @@ function legacySourcesForPackage(pkg) {
 	return Array.isArray(pkg.legacySources) ? pkg.legacySources : [];
 }
 
+// An npm source matches a catalog source when equal or when the installed
+// source is a version-pinned form of it (npm:pkg vs npm:pkg@x.y.z). Git
+// sources stay exact: pins are meaningful SHAs.
+export function sourcesMatch(catalogSource, installedSource) {
+	return catalogSource === installedSource || installedSource.startsWith(`${catalogSource}@`);
+}
+
 function isLegacySourceForPackage(pkg, source) {
-	return legacySourcesForPackage(pkg).includes(source);
+	return legacySourcesForPackage(pkg).some((legacy) => sourcesMatch(legacy, source));
 }
 
 function findLegacyInstalledSources(pkg, installedPiSources) {
@@ -353,9 +362,9 @@ function removeLegacy(pkg, installedPiSources, local, interactive) {
 function packageInstallStatus(pkg, installedPiSources) {
 	const legacySources = findLegacyInstalledSources(pkg, installedPiSources);
 	return {
-		installed: installedPiSources.has(pkg.source),
+		installed: [...installedPiSources].some((src) => sourcesMatch(pkg.source, src)),
 		legacy: legacySources.length > 0,
-		present: installedPiSources.has(pkg.source) || legacySources.length > 0,
+		present: [...installedPiSources].some((src) => sourcesMatch(pkg.source, src)) || legacySources.length > 0,
 	};
 }
 
@@ -694,11 +703,12 @@ function cmdStatus(flags) {
 		return 1;
 	}
 
-	const piCatalogSources = new Set(PACKAGES.flatMap((p) => [p.source, ...legacySourcesForPackage(p)]));
 	const installed = PACKAGES.filter((pkg) => packageInstallStatus(pkg, sources).installed);
 	const legacy = PACKAGES.filter((pkg) => packageInstallStatus(pkg, sources).legacy);
 	const missing = PACKAGES.filter((pkg) => !packageInstallStatus(pkg, sources).present);
-	const others = [...sources].filter((src) => !piCatalogSources.has(src));
+	const others = [...sources].filter(
+		(src) => !PACKAGES.some((pkg) => sourcesMatch(pkg.source, src) || legacySourcesForPackage(pkg).some((legacy) => sourcesMatch(legacy, src))),
+	);
 
 	printHeader(`Installed from LazyPi catalog (${installed.length}/${PACKAGES.length}):`);
 	if (installed.length === 0) console.log(dim("  none"));
@@ -853,7 +863,7 @@ async function cmdRemove(flags, targets) {
 
 		const sourcesToRemove = pkg
 			? [
-				...(installedSources.has(pkg.source) ? [pkg.source] : []),
+				...[...installedSources].filter((src) => sourcesMatch(pkg.source, src)),
 				...findLegacyInstalledSources(pkg, installedSources),
 			]
 			: [source];
