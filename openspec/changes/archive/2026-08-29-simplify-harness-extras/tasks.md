@@ -24,4 +24,4 @@
 ## 5. Ship
 
 - [x] 5.1 Archived (2026-08-29); `npm run spec:validate` green on master
-- [ ] 5.2 Commit and push; CI green via dispatch (push events do not trigger Actions on this fork)
+- [x] 5.2 Committed 29c50bc and pushed; CI green via dispatch (run 33222326055) — push events do not trigger Actions on this fork
