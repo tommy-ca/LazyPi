@@ -49,9 +49,9 @@ try {
 	console.log("Stage 1: fresh install --yes");
 	let r = lazypi("install --yes");
 	assert.equal(r.status, 0, `install failed\n${r.stdout}\n${r.stderr}`);
-	assert.match(r.stdout, /Will install:\s+12/);
-	assert.match(r.stdout, /Installed 12 package\(s\)/);
-	check("exit 0, 12 packages installed", () => {
+	assert.match(r.stdout, new RegExp(`Will install:\\s+${PACKAGES.length}`));
+	assert.match(r.stdout, new RegExp(`Installed ${PACKAGES.length} package\\(s\\)`));
+	check(`exit 0, ${PACKAGES.length} packages installed`, () => {
 		const settings = readSettings(agentDir);
 		assert.deepEqual(settings.packages, expectedPackageSources());
 	});

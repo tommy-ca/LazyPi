@@ -332,9 +332,9 @@ function legacySourcesForPackage(pkg) {
 	return Array.isArray(pkg.legacySources) ? pkg.legacySources : [];
 }
 
-// An npm source matches a catalog source when equal or when the installed
-// source is a version-pinned form of it (npm:pkg vs npm:pkg@x.y.z). Git
-// sources stay exact: pins are meaningful SHAs.
+// An installed source matches a catalog source when equal or when it is the
+// same source with a version/pin suffix (npm:pkg vs npm:pkg@x.y.z,
+// git:... vs git:...@sha).
 export function sourcesMatch(catalogSource, installedSource) {
 	return catalogSource === installedSource || installedSource.startsWith(`${catalogSource}@`);
 }
@@ -361,10 +361,11 @@ function removeLegacy(pkg, installedPiSources, local, interactive) {
 
 function packageInstallStatus(pkg, installedPiSources) {
 	const legacySources = findLegacyInstalledSources(pkg, installedPiSources);
+	const installed = [...installedPiSources].some((src) => sourcesMatch(pkg.source, src));
 	return {
-		installed: [...installedPiSources].some((src) => sourcesMatch(pkg.source, src)),
+		installed,
 		legacy: legacySources.length > 0,
-		present: [...installedPiSources].some((src) => sourcesMatch(pkg.source, src)) || legacySources.length > 0,
+		present: installed || legacySources.length > 0,
 	};
 }
 
@@ -707,7 +708,7 @@ function cmdStatus(flags) {
 	const legacy = PACKAGES.filter((pkg) => packageInstallStatus(pkg, sources).legacy);
 	const missing = PACKAGES.filter((pkg) => !packageInstallStatus(pkg, sources).present);
 	const others = [...sources].filter(
-		(src) => !PACKAGES.some((pkg) => sourcesMatch(pkg.source, src) || legacySourcesForPackage(pkg).some((legacy) => sourcesMatch(legacy, src))),
+		(src) => !PACKAGES.some((pkg) => sourcesMatch(pkg.source, src) || isLegacySourceForPackage(pkg, src)),
 	);
 
 	printHeader(`Installed from LazyPi catalog (${installed.length}/${PACKAGES.length}):`);

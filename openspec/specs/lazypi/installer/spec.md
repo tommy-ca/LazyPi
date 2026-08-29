@@ -195,6 +195,12 @@ a separate manifest, so catalog edits propagate to CI automatically.
 - **AND** it SHALL assert fresh install, idempotency, legacy migration,
   removal, status, and doctor
 
+#### Scenario: Derived e2e counts
+
+- **WHEN** the e2e harness asserts install counts
+- **THEN** the expected counts SHALL derive from `PACKAGES.length`
+- **AND** count assertions SHALL NOT be hardcoded literals
+
 ### Requirement: Skill Arguments
 
 The catalog MAY provide a skill-parameter package so skill bodies accept
