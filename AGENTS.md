@@ -2,9 +2,14 @@
 
 ## Project overview
 
-LazyPi is an opinionated installer for the Pi coding agent. It provides the harness-core catalog (12 essential packages) so users can run one command and get a usable Pi setup.
+LazyPi is an opinionated installer for the Pi coding agent. It provides a curated catalog — 12 harness-core packages plus an optional tier (installed on request) — so users can run one command and get a usable Pi setup.
 
 The CLI is published to npm as `@tommy-ca/lazypi` (a fork of `@robzolkos/lazypi`). The main executable is `bin/lazypi.mjs`, with package metadata and install behavior centered around the `PACKAGES` catalog in that file. The `openspec/` tree is the engineering contract; changes land as OpenSpec change specs and `npm run spec:validate` keeps them green.
+
+## Change discipline
+
+- Any change touching `PACKAGES` data, CLI behavior, or release mechanics MUST carry a spec delta — grep for the touched data before declaring `skip_specs` (a missed delta caused the `essential` field drift, caught by the 2026-08-29 re-audit).
+- Releasing follows the spec's Release Flow requirement and README "Releasing": gates (`npm test`, `npm run spec:validate`) → `npm version <semver> --no-git-tag-version` → `<semver>` commit + `v<semver>` tag → interactive `npm publish` (2FA needs a TTY; a 404 on publish means the stored token expired — `npm login` again).
 
 ## Git guidance
 

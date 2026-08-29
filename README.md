@@ -84,13 +84,21 @@ Shared nav and footer are in `docs/_includes/`. Layouts are in `docs/_layouts/`.
 
 ## Releasing
 
-LazyPi uses **Release Please** and **npm trusted publishing**.
+LazyPi ships from `master` with a manual, gate-checked release flow:
 
-To release a new version:
+- Run the gates: `npm test` and `npm run spec:validate`
+- Bump: `npm version <semver> --no-git-tag-version`, commit `<semver>`,
+  tag `v<semver>`, push commit and tag
+- Publish interactively (`npm publish --access public`) — the npm account
+  enforces 2FA, so publish needs a TTY for the OTP or device-auth flow.
+  If publish 404s on the scoped package, the stored token has expired:
+  clear it and `npm login` again (npm masks invalid tokens as 404)
+- Create the GitHub release for the tag
 
-- Merge your normal PRs into `master`
-- Merge the Release Please release PR when you are ready to publish
-- GitHub creates the tag/release and publishes to npm automatically
+The repo also carries a release-please workflow intended for CI trusted
+publishing, but it is **not provisioned** (no `NPM_TOKEN` secret), so it
+is not the current publish path. Wire the secret and test the workflow
+before treating releases as automated.
 
 ---
 
