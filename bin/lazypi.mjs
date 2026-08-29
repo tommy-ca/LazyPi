@@ -206,7 +206,7 @@ ${bold("Default behaviour:")}
 ${bold("Categories:")}
   core         the harness control plane: sub-agents, workflows, ask gate, skill visibility, $ mention, goal, side chat, context budget, simplify, web research, fff search, ponytail discipline
   optional     only when selected (--only optional, picker, or the everything flow): lsp diagnostics, interactive-shell overlays, autoresearch loops, todo tracking, markdown memory
-  Non-catalog extras (pi install npm:<source>): skill-args, memory, mcp,
+  Non-catalog extras (pi install npm:<source>): skill-args, mcp,
   ralph-wiggum, curated-themes (65 dark themes)
 
 ${bold("Examples:")}
