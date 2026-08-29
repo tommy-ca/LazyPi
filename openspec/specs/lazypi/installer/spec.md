@@ -26,9 +26,14 @@ MAY carry `legacySources`.
 
 - **WHEN** a package installed outside the catalog is considered for
   promotion
-- **THEN** it SHALL be an active daily driver in the operator's install
+- **THEN** it SHALL be an active daily driver in the operator's install —
+  installed and exercised in real sessions before any promotion decision
+- **AND** it SHALL be currently maintained (recent releases on its primary
+  distribution channel)
 - **AND** it SHALL align with the lean harness philosophy (control plane or
   discipline layer, not meal-prep, chrome, or single-use conveniences)
+- **AND** any native or install-script machinery SHALL have a demonstrated
+  runtime path (prebuilt bindings or an approved build)
 - **AND** it SHALL NOT be named in the Dropped packages scenario
 - **AND** its promotion SHALL be ratified through a change spec carrying an
   audit trail before the catalog grows
