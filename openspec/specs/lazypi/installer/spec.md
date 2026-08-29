@@ -17,13 +17,13 @@ MAY carry `legacySources`.
 #### Scenario: Lean catalog shape
 
 - **WHEN** the catalog is loaded
-- **THEN** it SHALL contain exactly 16 entries: 12 core and 4 optional
+- **THEN** it SHALL contain exactly 17 entries: 12 core and 5 optional
 - **AND** the categories SHALL be `core` and `optional`
 - **AND** core SHALL contain subagents, pi-ask-user, pi-skillful,
   mention-skill, goal, btw, context-usage, simplify, web-access, fff,
   dynamic-workflows, and ponytail
-- **AND** optional SHALL contain lsp, interactive-shell, autoresearch, and
-  todos
+- **AND** optional SHALL contain lsp, interactive-shell, autoresearch,
+  todos, and memory
 
 #### Scenario: Optional catalog tier
 
@@ -63,7 +63,7 @@ MAY carry `legacySources`.
 - **AND** the installer SHALL NOT install or manage compound,
   powerbar, extension-settings, plannotator, slopchop, usage, raw-paste,
   plan, add-dir, claude-cli, prompt-templates, hackerman, terminal-theme,
-  skill-args, memory, mcp, or ralph-wiggum
+  skill-args, mcp, or ralph-wiggum
 
 #### Scenario: Optional sources
 
@@ -76,6 +76,9 @@ MAY carry `legacySources`.
 - **AND** `todos` SHALL resolve to `npm:pi-manage-todo-list`
 - **AND** the git source `git:github.com/tintinweb/pi-manage-todo-list`
   SHALL remain in `legacySources`
+- **AND** `memory` SHALL resolve to `npm:pi-memory-md`
+- **AND** the git source `git:github.com/VandeeFeng/pi-memory-md` SHALL
+  remain in `legacySources`
 
 #### Scenario: Essential control plane sources
 

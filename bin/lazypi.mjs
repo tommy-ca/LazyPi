@@ -50,6 +50,7 @@ export const PACKAGES = [
 	{ id: "interactive-shell", category: "optional", source: "npm:pi-interactive-shell", description: "Interactive shell overlays", hint: "Run CLIs and agents in TUI overlays: interactive, hands-free, dispatch supervision." },
 	{ id: "autoresearch", category: "optional", source: "npm:pi-autoresearch", legacySources: ["git:github.com/davebcn87/pi-autoresearch"], description: "Autonomous experiment loops", hint: "Iterative optimization runs with hooks, finalize, and convergence tracking." },
 	{ id: "todos", category: "optional", source: "npm:pi-manage-todo-list", legacySources: ["git:github.com/tintinweb/pi-manage-todo-list"], description: "Structured todo tracking", hint: "Track multi-step work with live progress widgets and session persistence." },
+	{ id: "memory", category: "optional", source: "npm:pi-memory-md", legacySources: ["git:github.com/VandeeFeng/pi-memory-md"], description: "Markdown-backed memory", hint: "Letta-like git-backed memory: persistent context, prompt append, multi-project spaces." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -204,7 +205,7 @@ ${bold("Default behaviour:")}
 
 ${bold("Categories:")}
   core         the harness control plane: sub-agents, workflows, ask gate, skill visibility, $ mention, goal, side chat, context budget, simplify, web research, fff search, ponytail discipline
-  optional     only when selected (--only optional, picker, or the everything flow): lsp diagnostics, interactive-shell overlays, autoresearch loops, todo tracking
+  optional     only when selected (--only optional, picker, or the everything flow): lsp diagnostics, interactive-shell overlays, autoresearch loops, todo tracking, markdown memory
   Non-catalog extras (pi install npm:<source>): skill-args, memory, mcp,
   ralph-wiggum, curated-themes (65 dark themes)
 
