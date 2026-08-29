@@ -1,0 +1,46 @@
+---
+layout: docs
+title: "Todos — LazyPi Docs"
+---
+<h1>Todos</h1>
+<p class="page-desc">Structured todo list management: track multi-step work with live progress widgets.</p>
+<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only todos</code> or <code>pi install npm:pi-manage-todo-list</code>; installs of the older git source migrate automatically.</p>
+
+<h2>What it does</h2>
+<p>
+  pi-manage-todo-list gives Pi a structured todo list — VSCode-Copilot-Chat
+  inspired — for multi-step work: live progress widgets, session
+  persistence, and the classic manage-todo-list tool so agents can plan,
+  update, and close out checklists visibly instead of silently.
+</p>
+<p>
+  It is not a verbatim checkbox contract: items reflect the current plan,
+  get marked done the moment their step is finished, and disappear when
+  the work no longer needs them. The plan stays alive, not the paperwork.
+</p>
+
+<h2>Why it's included as optional</h2>
+<p>
+  Re-audited 2026-08-29 on real evidence: 75 tool-call sites across four
+  session histories — the operator's harness genuinely uses structured
+  tracking for multi-step work. It is operator-workflow tooling rather than
+  control plane, so it stays in the optional tier (not core), but the
+  catalog now manages install, status, remove, and source migration for
+  it. The earlier "checkbox anti-pattern" drop rationale applied to
+  verbatim checklist contracts, not this tracker's usage pattern.
+</p>
+
+<div class="learn-more">
+  <a href="https://github.com/tintinweb/pi-manage-todo-list" target="_blank" rel="noopener">→ GitHub — tintinweb/pi-manage-todo-list</a>
+</div>
+
+<nav class="prev-next">
+  <a href="/docs/packages/autoresearch.html" class="prev-next-link">
+    <span class="prev-next-label">Previous</span>
+    ← Previous
+  </a>
+  <a href="/docs/packages/subagents.html" class="prev-next-link next">
+    <span class="prev-next-label">Next</span>
+    Next →
+  </a>
+</nav>
