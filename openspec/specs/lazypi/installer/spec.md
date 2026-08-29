@@ -310,3 +310,17 @@ be gated on the spec and test suites before publishing.
 - **THEN** it SHALL NOT be treated as the current publish path until an
   `NPM_TOKEN` secret exists in the repository
 - **AND** releases SHALL be manual until that secret is provisioned
+
+#### Scenario: Post-publish validation
+
+- **WHEN** a release has been published
+- **THEN** `npx -y @tommy-ca/lazypi@<version> --version` and
+  `bunx @tommy-ca/lazypi@<version> --version` SHALL both report the
+  released version
+- **AND** both SHALL run from a directory outside the LazyPi checkout —
+  npm exec resolves a checkout whose package.json is
+  `@tommy-ca/lazypi@<version>` as the package itself and fails with
+  `lazypi: not found`
+- **AND** `status` SHALL report the full catalog installed and
+  `install --yes` SHALL be an idempotent no-op on the operator install
+  through both runners

@@ -48,3 +48,9 @@ requirement (bump convention, interactive publish, token-expiry recovery,
 unprovisioned-CI caveat), README's Releasing section is rewritten to the
 real process, and AGENTS.md records the spec-delta discipline. The dead
 scenario stays (validator-guarded) and is tracked here.
+
+Follow-up change 2026-08-29-post-publish-validation: the Release Flow
+requirement gains the post-publish validation scenario — both runners,
+from a neutral directory (the checkout self-match quirk), version + help +
+status + install idempotency — closing the loop this session proved
+necessary on every release.

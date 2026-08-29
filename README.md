@@ -94,6 +94,10 @@ LazyPi ships from `master` with a manual, gate-checked release flow:
   If publish 404s on the scoped package, the stored token has expired:
   clear it and `npm login` again (npm masks invalid tokens as 404)
 - Create the GitHub release for the tag
+- Validate the published artifact from a neutral directory (outside the
+  checkout): `npx -y @tommy-ca/lazypi@<version> --version` and
+  `bunx @tommy-ca/lazypi@<version> --version` must both report the
+  released version, then `status`/`install --yes` must be idempotent.
 
 The repo also carries a release-please workflow intended for CI trusted
 publishing, but it is **not provisioned** (no `NPM_TOKEN` secret), so it
