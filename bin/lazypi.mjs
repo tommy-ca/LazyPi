@@ -26,26 +26,25 @@ import {
 const CATEGORIES = ["core"];
 
 export const PACKAGES = [
-	{ id: "subagents", category: "core", source: "npm:pi-subagents", essential: true, description: "Sub-agent execution", hint: "Run isolated sub-agents for parallel work." },
-	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", essential: true, description: "Ask-user prompts", hint: "Interactive user questions for agent workflows." },
-	{ id: "pi-skillful", category: "core", source: "npm:pi-skillful", essential: true, description: "Skill visibility", hint: "Discover skills above the git root, hide unused skills, and expand /skill:name inline." },
-	{ id: "mention-skill", category: "core", source: "npm:@zigai/pi-mention-skill", essential: true, description: "$ skill mention", hint: "Fuzzy-search skills with $ and expand them into the prompt; hidden skills stay reachable." },
-	{ id: "goal", category: "core", source: "npm:@narumitw/pi-goal", essential: true, description: "Long-objective gate", hint: "Stop on done, blocked, or external wait for long tasks." },
+	{ id: "subagents", category: "core", source: "npm:pi-subagents", description: "Sub-agent execution", hint: "Run isolated sub-agents for parallel work." },
+	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", description: "Ask-user prompts", hint: "Interactive user questions for agent workflows." },
+	{ id: "pi-skillful", category: "core", source: "npm:pi-skillful", description: "Skill visibility", hint: "Discover skills above the git root, hide unused skills, and expand /skill:name inline." },
+	{ id: "mention-skill", category: "core", source: "npm:@zigai/pi-mention-skill", description: "$ skill mention", hint: "Fuzzy-search skills with $ and expand them into the prompt; hidden skills stay reachable." },
+	{ id: "goal", category: "core", source: "npm:@narumitw/pi-goal", description: "Long-objective gate", hint: "Stop on done, blocked, or external wait for long tasks." },
 	{
 		id: "btw",
 		category: "core",
 		source: "npm:@narumitw/pi-btw",
 		legacySources: ["npm:pi-btw"],
-		essential: true,
 		description: "Side-chat popover",
 		hint: "Ask quick questions without polluting your conversation history.",
 	},
-	{ id: "context-usage", category: "core", source: "npm:pi-context-usage", essential: true, description: "Context budget", hint: "See what is burning the context window before it fills." },
-	{ id: "simplify", category: "core", source: "npm:pi-simplify", essential: true, description: "Code simplify review", hint: "Reviews recently changed code for clarity, consistency, and maintainability." },
-	{ id: "web-access", category: "core", source: "npm:pi-web-access", essential: true, description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
-	{ id: "fff", category: "core", source: "npm:@ff-labs/pi-fff", essential: true, description: "FFF fuzzy search", hint: "Additive fffind / ffgrep / fff-multi-grep beside the built-in tools; /fff-health checks the index." },
-	{ id: "dynamic-workflows", category: "core", source: "npm:@quintinshaw/pi-dynamic-workflows", essential: true, description: "Workflow engine", hint: "Fan work out across subagents: /workflows TUI, deep-research, resume, token accounting." },
-	{ id: "ponytail", category: "core", source: "npm:@dietrichgebert/ponytail", essential: true, description: "Lazy senior dev mode", hint: "Enforces minimal, stdlib-first code; /ponytail review, audit, and a debt ledger." },
+	{ id: "context-usage", category: "core", source: "npm:pi-context-usage", description: "Context budget", hint: "See what is burning the context window before it fills." },
+	{ id: "simplify", category: "core", source: "npm:pi-simplify", description: "Code simplify review", hint: "Reviews recently changed code for clarity, consistency, and maintainability." },
+	{ id: "web-access", category: "core", source: "npm:pi-web-access", description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
+	{ id: "fff", category: "core", source: "npm:@ff-labs/pi-fff", description: "FFF fuzzy search", hint: "Additive fffind / ffgrep / fff-multi-grep beside the built-in tools; /fff-health checks the index." },
+	{ id: "dynamic-workflows", category: "core", source: "npm:@quintinshaw/pi-dynamic-workflows", description: "Workflow engine", hint: "Fan work out across subagents: /workflows TUI, deep-research, resume, token accounting." },
+	{ id: "ponytail", category: "core", source: "npm:@dietrichgebert/ponytail", description: "Lazy senior dev mode", hint: "Enforces minimal, stdlib-first code; /ponytail review, audit, and a debt ledger." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -313,11 +312,6 @@ function readInstalledSources(local) {
 		if (source) sources.add(source);
 	}
 	return { sources, path: current.path, exists: true };
-}
-
-function runPi(args) {
-	const result = spawnCommand("pi", args, { stdio: "inherit" });
-	return result.status ?? 1;
 }
 
 function commandPath(name) {
@@ -751,7 +745,7 @@ async function cmdUpdate(flags) {
 
 	console.log(bold("pi update"));
 
-	return runPi(flags.local ? ["update", "--extensions"] : ["update"]);
+	return spawnCommand("pi", flags.local ? ["update", "--extensions"] : ["update"], { stdio: "inherit" }).status ?? 1;
 }
 
 // ---------------------------------------------------------------------------
