@@ -69,8 +69,9 @@ MAY carry `legacySources`.
 - **WHEN** the catalog defines `lsp`
 - **THEN** its `source` SHALL be `npm:@narumitw/pi-lsp`
 - **AND** `interactive-shell` SHALL resolve to `npm:pi-interactive-shell`
-- **AND** `autoresearch` SHALL resolve to the pinned git source
-  `git:github.com/davebcn87/pi-autoresearch@00062fb9cc425e71d82e75445dc5b6ad31c32f0e`
+- **AND** `autoresearch` SHALL resolve to `npm:pi-autoresearch`
+- **AND** the git source `git:github.com/davebcn87/pi-autoresearch` SHALL
+  remain in `legacySources`
 
 #### Scenario: Essential control plane sources
 

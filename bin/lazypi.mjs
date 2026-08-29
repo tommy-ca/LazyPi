@@ -48,7 +48,7 @@ export const PACKAGES = [
 	{ id: "ponytail", category: "core", source: "npm:@dietrichgebert/ponytail", description: "Lazy senior dev mode", hint: "Enforces minimal, stdlib-first code; /ponytail review, audit, and a debt ledger." },
 	{ id: "lsp", category: "optional", source: "npm:@narumitw/pi-lsp", description: "Targeted LSP diagnostics and fixes", hint: "lsp_diagnostics / lsp_fix with configurable language servers, started per call." },
 	{ id: "interactive-shell", category: "optional", source: "npm:pi-interactive-shell", description: "Interactive shell overlays", hint: "Run CLIs and agents in TUI overlays: interactive, hands-free, dispatch supervision." },
-	{ id: "autoresearch", category: "optional", source: "git:github.com/davebcn87/pi-autoresearch@00062fb9cc425e71d82e75445dc5b6ad31c32f0e", description: "Autonomous experiment loops", hint: "Iterative optimization runs with hooks, finalize, and convergence tracking." },
+	{ id: "autoresearch", category: "optional", source: "npm:pi-autoresearch", legacySources: ["git:github.com/davebcn87/pi-autoresearch"], description: "Autonomous experiment loops", hint: "Iterative optimization runs with hooks, finalize, and convergence tracking." },
 ];
 
 // ---------------------------------------------------------------------------

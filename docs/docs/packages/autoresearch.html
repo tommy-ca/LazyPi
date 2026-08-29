@@ -4,7 +4,7 @@ title: "Autoresearch — LazyPi Docs"
 ---
 <h1>Autoresearch</h1>
 <p class="page-desc">Autonomous experiment loops: iterate toward a measurable optimization target.</p>
-<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only autoresearch</code> or <code>pi install git:github.com/davebcn87/pi-autoresearch</code> (pinned in the catalog).</p>
+<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only autoresearch</code> or <code>pi install npm:pi-autoresearch</code>; installs of the older git source migrate automatically.</p>
 
 <h2>What it does</h2>
 <p>
@@ -23,9 +23,9 @@ title: "Autoresearch — LazyPi Docs"
 <p>
   Research-loop automation is a convenience layer, not harness control
   plane, so the promotion audit 2026-08-29 kept it out of the core
-  default. It is pinned to a commit in the catalog so installs stay
-  reproducible, and status/install/remove cover it like any other
-  catalog package.
+  default. It ships as a floating npm source (<code>npm:pi-autoresearch</code>,
+  the package from the same repository), and the earlier unpinned git
+  install is treated as a legacy source that migrates automatically.
 </p>
 
 <div class="learn-more">
