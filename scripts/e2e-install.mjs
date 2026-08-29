@@ -45,15 +45,27 @@ let failures = 0;
 try {
 	console.log(`sandbox: ${sandbox}\n`);
 
-	// --- Stage 1: fresh full install ---------------------------------------
-	console.log("Stage 1: fresh install --yes");
+	// --- Stage 1: fresh core install ------------------------------------------
+	console.log("Stage 1: fresh install --yes (core catalog)");
+	const CORE_COUNT = PACKAGES.filter((p) => p.category === "core").length;
+	const coreSources = PACKAGES.filter((p) => p.category === "core").map((p) => p.source);
 	let r = lazypi("install --yes");
 	assert.equal(r.status, 0, `install failed\n${r.stdout}\n${r.stderr}`);
-	assert.match(r.stdout, new RegExp(`Will install:\\s+${PACKAGES.length}`));
-	assert.match(r.stdout, new RegExp(`Installed ${PACKAGES.length} package\\(s\\)`));
-	check(`exit 0, ${PACKAGES.length} packages installed`, () => {
+	assert.match(r.stdout, new RegExp(`Will install:\\s+${CORE_COUNT}`));
+	assert.match(r.stdout, new RegExp(`Installed ${CORE_COUNT} package\\(s\\)`));
+	check(`exit 0, ${CORE_COUNT} core packages installed`, () => {
 		const settings = readSettings(agentDir);
-		assert.deepEqual(settings.packages, expectedPackageSources());
+		assert.deepEqual(settings.packages, coreSources);
+	});
+
+	// --- Stage 1.5: optional tier -------------------------------------------
+	console.log("Stage 1.5: install --yes --only optional");
+	r = lazypi("install --yes --only optional");
+	assert.equal(r.status, 0, `optional install failed\n${r.stdout}\n${r.stderr}`);
+	const OPTIONAL_COUNT = PACKAGES.filter((p) => p.category === "optional").length;
+	assert.match(r.stdout, new RegExp(`Will install:\\s+${OPTIONAL_COUNT}`));
+	check(`exit 0, ${OPTIONAL_COUNT} optional packages installed`, () => {
+		assert.deepEqual(readSettings(agentDir).packages, expectedPackageSources());
 	});
 
 	// --- Stage 2: idempotent re-run ----------------------------------------

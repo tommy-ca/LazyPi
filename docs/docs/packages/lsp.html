@@ -1,0 +1,47 @@
+---
+layout: docs
+title: "LSP — LazyPi Docs"
+---
+<h1>LSP</h1>
+<p class="page-desc">Targeted Language Server Protocol diagnostics and source fixes.</p>
+<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only lsp</code> or <code>pi install npm:@narumitw/pi-lsp</code>.</p>
+
+<h2>What it does</h2>
+<p>
+  pi-lsp exposes <code>lsp_diagnostics</code> and <code>lsp_fix</code>: targeted LSP
+  diagnostics with exact ranges and server-provided source actions (such as
+  fixAll or organizeImports), without running a full-project check for every
+  intermediate edit. Language servers are configured in JSON by command and
+  file extension, start only while a tool call needs them, and shut down
+  afterwards — no editor-like persistent session.
+</p>
+<p>
+  It is most useful when a full lint or typecheck is slow but a few files need
+  intermediate feedback, or when a language server offers a source action
+  worth applying. It does not replace the repository's authoritative format,
+  lint, typecheck, build, and test commands — those stay the final word.
+</p>
+
+<h2>Why it's included as optional</h2>
+<p>
+  Promotion audit 2026-08-29: actively maintained (<code>@narumitw</code>, the
+  same author as BTW and Goal), lean-philosophy aligned, and runtime-verified
+  (prebuilt node-pty bindings). It qualified for the catalog but not the core
+  default — it adds the most value only when your repo's own checks are slow,
+  so it sits in the optional tier pending demonstrated daily-driver use.
+</p>
+
+<div class="learn-more">
+  <a href="https://github.com/narumiruna/pi-extensions" target="_blank" rel="noopener">→ GitHub — narumiruna/pi-extensions</a>
+</div>
+
+<nav class="prev-next">
+  <a href="/docs/packages/ponytail.html" class="prev-next-link">
+    <span class="prev-next-label">Previous</span>
+    ← Previous
+  </a>
+  <a href="/docs/packages/interactive-shell.html" class="prev-next-link next">
+    <span class="prev-next-label">Next</span>
+    Next →
+  </a>
+</nav>

@@ -20,10 +20,11 @@ import {
 // ---------------------------------------------------------------------------
 // Catalog
 // ---------------------------------------------------------------------------
-// Categories. LazyPi installs every package by default — "lazy" means you get
-// the whole thing without thinking. Use the interactive picker or --only /
-// --except to narrow it.
-const CATEGORIES = ["core"];
+// Categories. LazyPi installs the core catalog by default — "lazy" means you
+// get the harness without thinking. The optional category holds evaluated
+// packages worth managing but not part of the default; include them via the
+// interactive picker or --only / --except.
+const CATEGORIES = ["core", "optional"];
 
 export const PACKAGES = [
 	{ id: "subagents", category: "core", source: "npm:pi-subagents", description: "Sub-agent execution", hint: "Run isolated sub-agents for parallel work." },
@@ -45,6 +46,9 @@ export const PACKAGES = [
 	{ id: "fff", category: "core", source: "npm:@ff-labs/pi-fff", description: "FFF fuzzy search", hint: "Additive fffind / ffgrep / fff-multi-grep beside the built-in tools; /fff-health checks the index." },
 	{ id: "dynamic-workflows", category: "core", source: "npm:@quintinshaw/pi-dynamic-workflows", description: "Workflow engine", hint: "Fan work out across subagents: /workflows TUI, deep-research, resume, token accounting." },
 	{ id: "ponytail", category: "core", source: "npm:@dietrichgebert/ponytail", description: "Lazy senior dev mode", hint: "Enforces minimal, stdlib-first code; /ponytail review, audit, and a debt ledger." },
+	{ id: "lsp", category: "optional", source: "npm:@narumitw/pi-lsp", description: "Targeted LSP diagnostics and fixes", hint: "lsp_diagnostics / lsp_fix with configurable language servers, started per call." },
+	{ id: "interactive-shell", category: "optional", source: "npm:pi-interactive-shell", description: "Interactive shell overlays", hint: "Run CLIs and agents in TUI overlays: interactive, hands-free, dispatch supervision." },
+	{ id: "autoresearch", category: "optional", source: "git:github.com/davebcn87/pi-autoresearch@00062fb9cc425e71d82e75445dc5b6ad31c32f0e", description: "Autonomous experiment loops", hint: "Iterative optimization runs with hooks, finalize, and convergence tracking." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -163,7 +167,7 @@ function resolveSelection(flags) {
 		validateSelectors(flags.except, "--except");
 		return new Set(PACKAGES.filter((p) => !matchesSelector(p, flags.except)).map((p) => p.id));
 	}
-	return new Set(PACKAGES.map((p) => p.id));
+	return new Set(PACKAGES.filter((p) => p.category === "core").map((p) => p.id));
 }
 
 // ---------------------------------------------------------------------------
@@ -191,20 +195,23 @@ ${bold("Install options:")}
   -V, --version       Show the installed version
 
 ${bold("Default behaviour:")}
-  - Every catalog package is installed (lazy on purpose).
-  - On a TTY, an interactive picker appears with everything pre-ticked;
+  - Every core catalog package is installed (lazy on purpose); optional
+    category packages are installed only when selected.
+  - On a TTY, an interactive picker appears with core pre-ticked;
     untick categories or packages before confirming.
   - With --yes, --only, or --except the picker is skipped.
 
 ${bold("Categories:")}
   core         the harness control plane: sub-agents, workflows, ask gate, skill visibility, $ mention, goal, side chat, context budget, simplify, web research, fff search, ponytail discipline
+  optional     only when selected (--only optional, picker, or the everything flow): lsp diagnostics, interactive-shell overlays, autoresearch loops
   Non-catalog extras (pi install npm:<source>): skill-args, memory, mcp,
-  interactive-shell, ralph-wiggum, curated-themes (65 dark themes)
+  ralph-wiggum, curated-themes (65 dark themes)
 
 ${bold("Examples:")}
-  npx @tommy-ca/lazypi                              # everything (interactive picker on a TTY)
-  npx @tommy-ca/lazypi --yes                        # everything, no prompt
-  npx @tommy-ca/lazypi --only core                  # just the core category
+  npx @tommy-ca/lazypi                              # core catalog (interactive picker on a TTY)
+  npx @tommy-ca/lazypi --yes                        # core catalog, no prompt
+  npx @tommy-ca/lazypi --only core,optional         # install optional tier too
+  npx @tommy-ca/lazypi --only optional              # just the optional tier
   npx @tommy-ca/lazypi --only subagents,fff         # individual package ids also work
   npx @tommy-ca/lazypi --only core --local          # core into the current project
   npx @tommy-ca/lazypi status
@@ -529,6 +536,8 @@ async function cmdInstall(flags) {
 		const choice = await askLazyOrPick(PACKAGES.length);
 		if (choice === "pick") {
 			selectedIds = await runPicker(selectedIds);
+		} else {
+			selectedIds = new Set(PACKAGES.map((p) => p.id));
 		}
 	}
 

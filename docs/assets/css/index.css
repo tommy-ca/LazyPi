@@ -330,6 +330,7 @@ h2 {
 }
 
 .catalog-tag.core { color: var(--green); border-color: var(--green-dim); }
+.catalog-tag.optional { color: var(--blue); border-color: var(--blue-dim); }
 
 .catalog-name {
   font-size: 0.9rem;

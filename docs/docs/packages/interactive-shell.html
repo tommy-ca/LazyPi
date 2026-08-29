@@ -1,0 +1,45 @@
+---
+layout: docs
+title: "Interactive Shell — LazyPi Docs"
+---
+<h1>Interactive Shell</h1>
+<p class="page-desc">Run interactive CLIs, coding agents, and auth flows in pi TUI overlays.</p>
+<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only interactive-shell</code> or <code>pi install npm:pi-interactive-shell</code>.</p>
+
+<h2>What it does</h2>
+<p>
+  pi-interactive-shell spawns supervised subprocesses in an overlay TUI:
+  interactive mode for typed input and approval, hands-free mode where
+  you can take over at any time, dispatch mode for fire-and-forget
+  delegation with completion notifications, and monitor mode for
+  headless structured event watching.
+</p>
+<p>
+  It is the natural home for CLIs that need live supervision — npm
+  device-auth publish flows, long-running TUI agents, or commands that
+  need a human to approve a step.
+</p>
+
+<h2>Why it's included as optional</h2>
+<p>
+  Re-evaluated under the promotion audit 2026-08-29 and deliberately kept
+  out of the core default: it is operator-workflow tooling (TUI/overlay
+  chrome) rather than harness control plane, and every session doesn't
+  need it. It stays fully managed by the catalog so status, install, and
+  remove cover it.
+</p>
+
+<div class="learn-more">
+  <a href="https://github.com/nicobailon/pi-interactive-shell" target="_blank" rel="noopener">→ GitHub — nicobailon/pi-interactive-shell</a>
+</div>
+
+<nav class="prev-next">
+  <a href="/docs/packages/lsp.html" class="prev-next-link">
+    <span class="prev-next-label">Previous</span>
+    ← Previous
+  </a>
+  <a href="/docs/packages/autoresearch.html" class="prev-next-link next">
+    <span class="prev-next-label">Next</span>
+    Next →
+  </a>
+</nav>

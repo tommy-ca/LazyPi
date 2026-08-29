@@ -274,6 +274,7 @@
   margin-bottom: 0.6rem;
 }
 .pkg-tag.core { color: var(--green); border-color: var(--green-dim); }
+.pkg-tag.optional { color: var(--blue); border-color: var(--blue-dim); }
 
 .pkg-name {
   font-size: 0.9rem;

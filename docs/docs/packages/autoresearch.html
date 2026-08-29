@@ -1,0 +1,44 @@
+---
+layout: docs
+title: "Autoresearch — LazyPi Docs"
+---
+<h1>Autoresearch</h1>
+<p class="page-desc">Autonomous experiment loops: iterate toward a measurable optimization target.</p>
+<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only autoresearch</code> or <code>pi install git:github.com/davebcn87/pi-autoresearch</code> (pinned in the catalog).</p>
+
+<h2>What it does</h2>
+<p>
+  Autoresearch sets up and runs an optimization loop for any measurable
+  target: it gathers what to optimize, then iterates experiments with
+  pre/post-iteration hooks, convergence tracking, and finalize passes
+  that collapse the best candidates into clean, reviewable branches.
+</p>
+<p>
+  Use it when a metric rewards systematic experimentation — clustering
+  quality, search relevance, prompt quality — and you want the loop to
+  run itself while you review the survivors.
+</p>
+
+<h2>Why it's included as optional</h2>
+<p>
+  Research-loop automation is a convenience layer, not harness control
+  plane, so the promotion audit 2026-08-29 kept it out of the core
+  default. It is pinned to a commit in the catalog so installs stay
+  reproducible, and status/install/remove cover it like any other
+  catalog package.
+</p>
+
+<div class="learn-more">
+  <a href="https://github.com/davebcn87/pi-autoresearch" target="_blank" rel="noopener">→ GitHub — davebcn87/pi-autoresearch</a>
+</div>
+
+<nav class="prev-next">
+  <a href="/docs/packages/interactive-shell.html" class="prev-next-link">
+    <span class="prev-next-label">Previous</span>
+    ← Previous
+  </a>
+  <a href="/docs/packages/subagents.html" class="prev-next-link next">
+    <span class="prev-next-label">Next</span>
+    Next →
+  </a>
+</nav>

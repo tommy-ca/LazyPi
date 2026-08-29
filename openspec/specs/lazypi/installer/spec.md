@@ -17,10 +17,21 @@ MAY carry `legacySources`.
 #### Scenario: Lean catalog shape
 
 - **WHEN** the catalog is loaded
-- **THEN** it SHALL contain exactly 12 entries, all in the `core` category
-- **AND** it SHALL contain subagents, pi-ask-user, pi-skillful,
+- **THEN** it SHALL contain exactly 15 entries: 12 core and 3 optional
+- **AND** the categories SHALL be `core` and `optional`
+- **AND** core SHALL contain subagents, pi-ask-user, pi-skillful,
   mention-skill, goal, btw, context-usage, simplify, web-access, fff,
   dynamic-workflows, and ponytail
+- **AND** optional SHALL contain lsp, interactive-shell, and autoresearch
+
+#### Scenario: Optional catalog tier
+
+- **WHEN** install selection is computed without `--only` or `--except`
+- **THEN** the selection SHALL be the 12 core entries only
+- **AND** optional entries SHALL be selected only via `--only optional` (or
+  matching package ids), `--except`, the interactive picker, or the
+  interactive everything flow
+- **AND** status and remove SHALL cover optional entries like core ones
 
 #### Scenario: Catalog membership
 
@@ -50,9 +61,16 @@ MAY carry `legacySources`.
 - **THEN** it SHALL NOT appear in the catalog
 - **AND** the installer SHALL NOT install or manage compound, todos,
   powerbar, extension-settings, plannotator, slopchop, usage, raw-paste,
-  autoresearch, plan, add-dir, claude-cli, prompt-templates, hackerman,
-  terminal-theme, skill-args, memory, mcp, interactive-shell, ralph-wiggum,
-  or curated-themes
+  plan, add-dir, claude-cli, prompt-templates, hackerman, terminal-theme,
+  skill-args, memory, mcp, ralph-wiggum, or curated-themes
+
+#### Scenario: Optional sources
+
+- **WHEN** the catalog defines `lsp`
+- **THEN** its `source` SHALL be `npm:@narumitw/pi-lsp`
+- **AND** `interactive-shell` SHALL resolve to `npm:pi-interactive-shell`
+- **AND** `autoresearch` SHALL resolve to the pinned git source
+  `git:github.com/davebcn87/pi-autoresearch@00062fb9cc425e71d82e75445dc5b6ad31c32f0e`
 
 #### Scenario: Essential control plane sources
 
