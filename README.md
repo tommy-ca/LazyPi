@@ -54,11 +54,20 @@ There is nothing to "uninstall" for LazyPi itself — `npx` doesn't leave it aro
 
 Run the built-in health check with `npx @tommy-ca/lazypi doctor`.
 
-**Stale `bunx` after a release?** bun caches resolved package versions, so a
-bare `bunx @tommy-ca/lazypi` can keep serving the previous release until the
-cache is cleared. Run `bun pm cache rm`, pin `@tommy-ca/lazypi@latest`, and
-check `npx @tommy-ca/lazypi --version` to see which release is actually
-running.
+**Stale cached run after a release?** Both runners cache resolved versions: `bunx`
+serves from its package cache and `npx` reuses the extracted copy in
+`~/.npm/_npx`, so a bare `npx @tommy-ca/lazypi` / `bunx @tommy-ca/lazypi` can
+keep serving the previous release until the cache is cleared. Run
+`bun pm cache rm` (and/or delete the stale `~/.npm/_npx` entry), pin
+`@tommy-ca/lazypi@latest`, and check `npx @tommy-ca/lazypi --version` to see
+which release is actually running.
+
+**`lazypi: not found` when running npx inside the LazyPi repo?** npm exec
+matches the spec against the local tree, and the checkout itself is
+`@tommy-ca/lazypi@<version>` — so it skips the npx install and tries to run
+`lazypi` from `./node_modules/.bin`, which never exists for the project's own
+name. Run npx from any other directory (e.g. `~`); bunx and pinned-version
+specs behave the same way, so `cd` out of the checkout first.
 
 ## Site / docs
 
