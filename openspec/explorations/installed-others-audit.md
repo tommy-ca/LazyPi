@@ -82,3 +82,15 @@ Add `dynamic-workflows` and `ponytail` to the catalog (core + essential,
 remaining 18 stay documented as deliberate. After the change, the operator's
 status readout becomes "Installed from LazyPi catalog (12/12)" with 18
 documented outside-catalog packages.
+
+## Resolution (0.8.1 re-audit, 2026-08-29)
+
+The integration plan executed in 0.8.0: the catalog is now 12/12 with
+`dynamic-workflows` and `ponytail` promoted, and those two are the ONLY
+outside packages ever found off the Dropped list. The 0.8.1 re-audit
+re-confirmed all 18 remaining outside packages map onto the Dropped-packages
+scenario; none qualify for promotion, so the list stays closed. To make
+future re-audits intent-driven, the promotion standard is now encoded in the
+spec as the Catalog membership scenario (see change
+2026-08-29-others-reaudit-catalog-criteria), which also reconciled the
+Catalog Model requirement with the `essential`/`forked` field removal.

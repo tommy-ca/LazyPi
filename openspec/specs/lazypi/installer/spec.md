@@ -12,7 +12,7 @@ self-deriving CI contract.
 
 The catalog SHALL be the exported `PACKAGES` array in `bin/lazypi.mjs`; every
 entry SHALL carry `id`, `category`, `source`, `description`, and `hint`, and
-MAY carry `legacySources`, `forked`, and `essential`.
+MAY carry `legacySources`.
 
 #### Scenario: Lean catalog shape
 
@@ -21,8 +21,17 @@ MAY carry `legacySources`, `forked`, and `essential`.
 - **AND** it SHALL contain subagents, pi-ask-user, pi-skillful,
   mention-skill, goal, btw, context-usage, simplify, web-access, fff,
   dynamic-workflows, and ponytail
-- **AND** every entry SHALL be tagged `essential: true`
-- **AND** non-essential packages SHALL NOT be in the catalog
+
+#### Scenario: Catalog membership
+
+- **WHEN** a package installed outside the catalog is considered for
+  promotion
+- **THEN** it SHALL be an active daily driver in the operator's install
+- **AND** it SHALL align with the lean harness philosophy (control plane or
+  discipline layer, not meal-prep, chrome, or single-use conveniences)
+- **AND** it SHALL NOT be named in the Dropped packages scenario
+- **AND** its promotion SHALL be ratified through a change spec carrying an
+  audit trail before the catalog grows
 
 #### Scenario: Side chat best alternative
 
