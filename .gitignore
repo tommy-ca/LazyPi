@@ -1,5 +1,7 @@
 node_modules/
 .pi/
+.grok/agent-memory/
+.grok/agent-memory-local/
 site/generated-themes/vhs-settings/
 .DS_Store
 docs/_site/
