@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-08-31
+goal: Verify every refreshed catalog plugin loads and exposes its features after
+  the version refresh

@@ -41,6 +41,12 @@
   mention-skill, pi-goal, pi-btw, pi-web-access, pi-fff, dynamic-workflows,
   autoresearch); ratified via change `2026-08-31-catalog-version-refresh`
 
+### Verification
+
+* refreshed plugins verified statically (17/17 manifests + dep footprints)
+  and functionally in a fresh session (8/8 PASS, incl. pi-subagents
+  runs.run); ratified via change `2026-08-31-plugin-feature-verification`
+
 ## [0.10.2](https://github.com/tommy-ca/LazyPi/compare/v0.10.1...v0.10.2) (2026-08-31)
 
 ### Bug Fixes
