@@ -105,6 +105,30 @@ test("valid --only core does not exit 2 from selector usage", (t) => {
 	assert.notEqual(result.status, 2, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 });
 
+test("install with no pi on a non-TTY fails fast with exit 127 instead of prompting", (t) => {
+	if (process.platform === "win32") t.skip("PATH masking differs on Windows");
+	const { home, workspace } = createWorkspace(t);
+	const minimalPath = [dirname(process.execPath), "/usr/bin", "/bin"].join(delimiter);
+	const env = {
+		...process.env,
+		HOME: home,
+		USERPROFILE: home,
+		PATH: minimalPath,
+	};
+	for (const key of AUTH_ENV_VARS) delete env[key];
+	const result = spawnSync(process.execPath, [CLI_PATH, "--local"], {
+		cwd: workspace,
+		env,
+		encoding: "utf8",
+		timeout: 15_000,
+	});
+	if (result.error) throw result.error;
+	const output = `${result.stdout}\n${result.stderr}`;
+	assert.equal(result.status, 127, output);
+	assert.match(output, /Install Pi first/);
+	assert.doesNotMatch(output, /Yes \/ No|Install Pi now with/);
+});
+
 const CORRUPT_COMMANDS = [
 	["status"],
 	["update"],

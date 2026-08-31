@@ -175,7 +175,7 @@ function validateSelectors(list, label) {
 	if (bad.length > 0) {
 		console.error(red(`Unknown ${label}: ${bad.join(", ")}`));
 		console.error(`Valid categories: ${CATEGORIES.join(", ")}`);
-		console.error(`Valid package ids:  ${[...ids].join(", ")}`);
+		console.error(`Valid package ids: ${[...ids].join(", ")}`);
 		return false;
 	}
 	return true;
@@ -231,8 +231,8 @@ ${bold("Default behaviour:")}
 ${bold("Categories:")}
   core         the harness control plane: sub-agents, workflows, ask gate, skill visibility, $ mention, goal, side chat, context budget, simplify, web research, fff search, ponytail discipline
   optional     only when selected (--only optional, picker, or the everything flow): lsp diagnostics, interactive-shell overlays, autoresearch loops, todo tracking, markdown memory
-  Non-catalog extras (pi install npm:<source>): skill-args, mcp,
-  ralph-wiggum, curated-themes (65 dark themes)
+  (Dropped packages such as skill-args, mcp, ralph-wiggum, curated-themes are
+  outside the catalog — pi install npm:<source> still works for them.)
 
 ${bold("Examples:")}
   npx @tommy-ca/lazypi                              # core catalog (interactive picker on a TTY)
@@ -531,6 +531,11 @@ async function ensurePi(flags) {
 	if (hasCmd("pi")) return true;
 
 	log.warn("Could not find the `pi` command on PATH.");
+	if (!flags.yes && !isInteractive()) {
+		log.error("Install Pi first (`npm install -g @earendil-works/pi-coding-agent`), then re-run `npx @tommy-ca/lazypi`.");
+		return false;
+	}
+
 	const ok = flags.yes || (await confirm("Install Pi now with `npm install -g @earendil-works/pi-coding-agent`?", true));
 	if (!ok) {
 		log.error("Install Pi first, then re-run `npx @tommy-ca/lazypi`.");
