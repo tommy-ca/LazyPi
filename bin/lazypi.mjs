@@ -96,6 +96,25 @@ function renderLogo() {
 // ---------------------------------------------------------------------------
 const KNOWN_COMMANDS = new Set(["install", "status", "update", "doctor", "remove"]);
 
+function assignSelector(flags, key, raw) {
+	const list = parseList(raw);
+	if (list.length === 0) {
+		flags.usageError ??= `--${key} requires a non-empty list`;
+		return;
+	}
+	flags[key] = list;
+}
+
+function consumeSelector(args, i, flags, key) {
+	const value = args[i + 1];
+	if (value == null || value.startsWith("-")) {
+		flags.usageError ??= `--${key} requires a non-empty list`;
+		return i;
+	}
+	assignSelector(flags, key, value);
+	return i + 1;
+}
+
 function parseArgs(args) {
 	const flags = {
 		command: "install",
@@ -107,6 +126,7 @@ function parseArgs(args) {
 		only: null,
 		except: null,
 		targets: [],
+		usageError: null,
 	};
 
 	let i = 0;
@@ -121,10 +141,10 @@ function parseArgs(args) {
 		else if (arg === "-y" || arg === "--yes") flags.yes = true;
 		else if (arg === "-V" || arg === "--version") flags.version = true;
 		else if (arg === "-h" || arg === "--help") flags.help = true;
-		else if (arg === "--only") flags.only = parseList(args[++i]);
-		else if (arg.startsWith("--only=")) flags.only = parseList(arg.slice("--only=".length));
-		else if (arg === "--except") flags.except = parseList(args[++i]);
-		else if (arg.startsWith("--except=")) flags.except = parseList(arg.slice("--except=".length));
+		else if (arg === "--only") i = consumeSelector(args, i, flags, "only");
+		else if (arg.startsWith("--only=")) assignSelector(flags, "only", arg.slice("--only=".length));
+		else if (arg === "--except") i = consumeSelector(args, i, flags, "except");
+		else if (arg.startsWith("--except=")) assignSelector(flags, "except", arg.slice("--except=".length));
 		else if (flags.command === "remove" && !arg.startsWith("-")) flags.targets.push(arg);
 		else {
 			console.error(red(`Unknown argument: ${arg}`));
@@ -132,6 +152,10 @@ function parseArgs(args) {
 			flags.badArg = true;
 			break;
 		}
+	}
+
+	if (flags.only && flags.except) {
+		flags.usageError ??= "Use either --only or --except, not both";
 	}
 
 	return flags;
@@ -152,8 +176,9 @@ function validateSelectors(list, label) {
 		console.error(red(`Unknown ${label}: ${bad.join(", ")}`));
 		console.error(`Valid categories: ${CATEGORIES.join(", ")}`);
 		console.error(`Valid package ids:  ${[...ids].join(", ")}`);
-		exit(2);
+		return false;
 	}
+	return true;
 }
 
 function matchesSelector(pkg, selectors) {
@@ -162,11 +187,11 @@ function matchesSelector(pkg, selectors) {
 
 function resolveSelection(flags) {
 	if (flags.only) {
-		validateSelectors(flags.only, "--only");
+		if (!validateSelectors(flags.only, "--only")) return null;
 		return new Set(PACKAGES.filter((p) => matchesSelector(p, flags.only)).map((p) => p.id));
 	}
 	if (flags.except) {
-		validateSelectors(flags.except, "--except");
+		if (!validateSelectors(flags.except, "--except")) return null;
 		return new Set(PACKAGES.filter((p) => !matchesSelector(p, flags.except)).map((p) => p.id));
 	}
 	return new Set(PACKAGES.filter((p) => p.category === "core").map((p) => p.id));
@@ -224,18 +249,13 @@ ${bold("Examples:")}
 // Pi / settings plumbing
 // ---------------------------------------------------------------------------
 const VERSION = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
-// On Windows, package-manager CLIs and global Node bins are usually `.cmd`
-// shims. Node's child_process docs note that those need to be launched via a
-// shell, so we route spawned commands through the platform shell there while
-// keeping direct execution on Unix.
-export function buildSpawnOptions(options = {}, platformName = platform()) {
-	const resolved = { ...options };
-	if (platformName === "win32" && resolved.shell == null) resolved.shell = true;
-	return resolved;
+export function buildSpawnOptions(options = {}, _platformName = platform()) {
+	return { ...options };
 }
 
 function spawnCommand(command, args = [], options = {}) {
-	return spawnSync(command, args, buildSpawnOptions(options));
+	const resolved = command === "pi" || command === "npm" ? commandPath(command) ?? command : command;
+	return spawnSync(resolved, args, buildSpawnOptions(options));
 }
 
 function hasCmd(name) {
@@ -296,11 +316,19 @@ function writeSettings(local, mutate) {
 	return { ok: true, path: current.path, backup, changed: true };
 }
 
-function writeSubagentOverrides(local) {
+export function writeSubagentOverrides(local) {
 	return writeSettings(local, (settings) => {
-		const overrides = {};
-		for (const name of SUBAGENT_BUILTIN_MODELS) overrides[name] = { model: "" };
-		settings.subagents = { ...(settings.subagents ?? {}), agentOverrides: { ...(settings.subagents?.agentOverrides ?? {}), ...overrides } };
+		const existing = settings.subagents?.agentOverrides ?? {};
+		const overrides = { ...existing };
+		let changed = false;
+		for (const name of SUBAGENT_BUILTIN_MODELS) {
+			const current = overrides[name];
+			if (current && typeof current === "object" && !Array.isArray(current) && current.model === "") continue;
+			overrides[name] = { ...(current && typeof current === "object" && !Array.isArray(current) ? current : {}), model: "" };
+			changed = true;
+		}
+		if (!changed) return false;
+		settings.subagents = { ...(settings.subagents ?? {}), agentOverrides: overrides };
 		return true;
 	});
 }
@@ -325,10 +353,14 @@ function readInstalledSources(local) {
 
 function commandPath(name) {
 	const command = platform() === "win32" ? "where" : "which";
-	const probe = spawnCommand(command, [name], { encoding: "utf8" });
+	const probe = spawnSync(command, [name], buildSpawnOptions({ encoding: "utf8" }));
 	if (probe.status !== 0) return null;
 	const first = String(probe.stdout ?? "").split(/\r?\n/).map((line) => line.trim()).find(Boolean);
 	return first || null;
+}
+
+function printSettingsParseError(current) {
+	console.error(red(`Could not parse ${current.path} — ${current.error}`));
 }
 
 function legacySourcesForPackage(pkg) {
@@ -524,6 +556,7 @@ async function ensurePi(flags) {
 // ---------------------------------------------------------------------------
 async function cmdInstall(flags) {
 	let selectedIds = resolveSelection(flags);
+	if (!selectedIds) return 2;
 
 	const usedSelectionFlag = Boolean(flags.only || flags.except);
 	const interactive = !flags.yes && !usedSelectionFlag && isInteractive();
@@ -532,6 +565,18 @@ async function cmdInstall(flags) {
 		console.log(renderLogo());
 		intro(bold("LazyPi"));
 	}
+
+	const settings = readSettings(flags.local);
+	if (settings.error) {
+		if (interactive) {
+			log.error(`Could not parse ${settings.path} — ${settings.error}`);
+			outro(red("Aborted."));
+		} else {
+			printSettingsParseError(settings);
+		}
+		return 2;
+	}
+
 	if (!(await ensurePi(flags))) return 127;
 
 	if (interactive) {
@@ -550,8 +595,7 @@ async function cmdInstall(flags) {
 		return 0;
 	}
 
-	const { sources: installedSources, error: settingsError } = readInstalledSources(flags.local);
-	if (settingsError) log.warn(`Could not parse ${settingsPath(flags.local)} — ${settingsError}`);
+	const { sources: installedSources } = readInstalledSources(flags.local);
 
 	const toInstall = selected.filter((pkg) => {
 		return !isPackageInstalled(pkg, installedSources);
@@ -706,7 +750,7 @@ function cmdStatus(flags) {
 		console.log(yellow("  (not found — Pi has not written settings yet)"));
 	} else if (error) {
 		console.error(red(`  could not parse: ${error}`));
-		return 1;
+		return 2;
 	}
 
 	const installed = PACKAGES.filter((pkg) => packageInstallStatus(pkg, sources).installed);
@@ -746,13 +790,13 @@ function cmdStatus(flags) {
 // update
 // ---------------------------------------------------------------------------
 async function cmdUpdate(flags) {
-	if (!(await ensurePi(flags))) return 127;
-
 	const settings = readSettings(flags.local);
 	if (settings.error) {
-		console.error(red(`Could not parse ${settingsPath(flags.local)} — ${settings.error}`));
-		return 1;
+		printSettingsParseError(settings);
+		return 2;
 	}
+
+	if (!(await ensurePi(flags))) return 127;
 
 	console.log(bold("pi update"));
 
@@ -763,6 +807,12 @@ async function cmdUpdate(flags) {
 // doctor
 // ---------------------------------------------------------------------------
 function cmdDoctor(flags) {
+	const settings = readSettings(flags.local);
+	if (settings.error) {
+		printSettingsParseError(settings);
+		return 2;
+	}
+
 	let problems = 0;
 	let warnings = 0;
 	const pass = (msg) => console.log(`  ${green("✓")} ${msg}`);
@@ -831,12 +881,18 @@ function cmdDoctor(flags) {
 // remove
 // ---------------------------------------------------------------------------
 async function cmdRemove(flags, targets) {
+	const installed = readInstalledSources(flags.local);
+	if (installed.error) {
+		printSettingsParseError(installed);
+		return 2;
+	}
+
 	if (targets.length === 0) {
 		if (!isInteractive()) {
 			console.error(red("Usage: npx @tommy-ca/lazypi remove <id|source> [...]"));
 			return 2;
 		}
-		const { sources } = readInstalledSources(flags.local);
+		const { sources } = installed;
 		const installedPkgs = PACKAGES.filter((p) => isPackagePresent(p, sources));
 		if (installedPkgs.length === 0) {
 			console.log(yellow("No catalog packages are installed."));
@@ -860,7 +916,7 @@ async function cmdRemove(flags, targets) {
 		targets = picked;
 	}
 
-	const { sources: installedSources } = readInstalledSources(flags.local);
+	const { sources: installedSources } = installed;
 	let exitCode = 0;
 	for (const target of targets) {
 		// Resolve a catalog id to its source string, or pass through raw sources
@@ -895,6 +951,11 @@ async function main() {
 	if (flags.version) {
 		console.log(`@tommy-ca/lazypi ${VERSION}`);
 		return 0;
+	}
+	if (flags.usageError) {
+		console.error(red(flags.usageError));
+		printHelp();
+		return 2;
 	}
 	if (flags.help) {
 		printHelp();

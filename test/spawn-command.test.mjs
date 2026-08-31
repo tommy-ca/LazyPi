@@ -7,14 +7,17 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { buildSpawnOptions, resolveEntrypointUrl } from "../bin/lazypi.mjs";
 
-test("buildSpawnOptions enables shell on Windows by default", () => {
+test("buildSpawnOptions does not force shell on Windows by default", () => {
 	assert.deepEqual(buildSpawnOptions({ stdio: "inherit" }, "win32"), {
 		stdio: "inherit",
-		shell: true,
 	});
 });
 
 test("buildSpawnOptions preserves an explicit shell override on Windows", () => {
+	assert.deepEqual(buildSpawnOptions({ stdio: "inherit", shell: true }, "win32"), {
+		stdio: "inherit",
+		shell: true,
+	});
 	assert.deepEqual(buildSpawnOptions({ stdio: "inherit", shell: false }, "win32"), {
 		stdio: "inherit",
 		shell: false,
