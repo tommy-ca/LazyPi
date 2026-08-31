@@ -71,7 +71,7 @@ specs behave the same way, so `cd` out of the checkout first.
 
 ## Site / docs
 
-The site at [lazypi.org](https://lazypi.org) lives in `docs/` and is a Jekyll site compiled by GitHub Pages automatically on push to `master`.
+The Jekyll source lives in `docs/`. This fork does not enable GitHub Pages, and [lazypi.org](https://lazypi.org) still serves the upstream installer.
 
 To preview locally (requires Ruby + Bundler):
 
@@ -106,4 +106,4 @@ before treating releases as automated.
 
 ---
 
-For the full list of included packages and optional extras, see [lazypi.org](https://lazypi.org).
+For the full list of included packages and optional extras, see `docs/` in this repo or run `npx @tommy-ca/lazypi`.
