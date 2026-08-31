@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// End-to-end install test: packs the LazyPi fork and drives it against a real
-// `pi` in an isolated sandbox (PI_CODING_AGENT_DIR). Needs network + `pi` on
-// PATH. Not part of `npm test` (CI has neither); run manually:
+// End-to-end install test: packs the LazyPi fork and drives the packed bin
+// against a real `pi` in an isolated sandbox (PI_CODING_AGENT_DIR). Needs
+// network + `pi` on PATH. CI runs this after `npm test`; locally:
 //   node scripts/e2e-install.mjs
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -38,8 +38,19 @@ const tarball = resolve(REPO, pack.stdout.trim().split(/\r?\n/).at(-1));
 
 const sandbox = mkdtempSync(join(tmpdir(), "lazypi-e2e-"));
 const agentDir = join(sandbox, "agent");
+const packedDir = join(sandbox, "packed");
+mkdirSync(packedDir);
+const extract = run("tar", ["-xzf", tarball, "-C", packedDir]);
+assert.equal(extract.status, 0, `tar extract failed: ${extract.stderr}`);
+const packedBin = join(packedDir, "package", "bin", "lazypi.mjs");
+assert.equal(existsSync(packedBin), true, `packed bin missing at ${packedBin}`);
 const env = { ...process.env, PI_CODING_AGENT_DIR: agentDir };
-const lazypi = (args) => run("npm", ["exec", "--yes", `--package=${tarball}`, "--call", `lazypi ${args}`], { cwd: sandbox, env, timeout: 300_000 });
+const lazypi = (args) =>
+	run(process.execPath, [packedBin, ...args.split(/\s+/).filter(Boolean)], {
+		cwd: sandbox,
+		env,
+		timeout: 300_000,
+	});
 
 let failures = 0;
 try {
