@@ -1,0 +1,68 @@
+---
+layout: docs
+title: "Catalog philosophy — LazyPi Docs"
+description: "Why LazyPi defaults to 12 core packages, keeps 5 optional, and leaves Dropped packages outside the catalog."
+---
+<h1>Catalog philosophy</h1>
+<p class="page-desc">Why the default install is 12, why 5 stay optional, and what it takes to join the catalog.</p>
+
+<h2>The default is 12</h2>
+<p>
+  <code>--yes</code> installs the 12 core packages. That is the harness LazyPi will stand behind without a picker. Core packages are the control plane or a discipline habit. They run in the daily session, not as garnish.
+</p>
+<p>
+  Isolated sub-agents, an ask gate, skill visibility, <code>$</code> mention, a long-objective gate, side chat, context budget, simplify, web fetch, paged search, workflow fan-out, and ponytail. Twelve is already a lot. Adding more by default trains people to skip the catalog.
+</p>
+
+<h2>Five are optional</h2>
+<p>
+  On a TTY, Install everything installs all 17. The extra five are cataloged so LazyPi can install, status, update, and remove them. They are not default because they fail the core bar.
+</p>
+<ul>
+  <li><code>lsp</code> is targeted diagnostics. Useful, not a control-plane primitive.</li>
+  <li><code>interactive-shell</code> is TUI chrome. Chrome is not the control plane.</li>
+  <li><code>autoresearch</code> is experiment loops. Convenience, not core.</li>
+  <li><code>todos</code> is a structured tracker. Core forbids checkbox todos as the default posture.</li>
+  <li><code>memory</code> is git-backed memory. Infrastructure, not a control-plane primitive.</li>
+</ul>
+<p>
+  Pick them with <code>--only optional</code>, the picker, or TTY Install everything.
+</p>
+
+<h2>Membership bar</h2>
+<p>
+  A package joins the catalog only when all of these hold:
+</p>
+<ul>
+  <li>It is a daily driver. Installed and used in real sessions before anyone proposes it.</li>
+  <li>It is maintained. Recent releases on its primary channel.</li>
+  <li>It is control plane or discipline. Not meal-prep, chrome, or one-shot convenience.</li>
+  <li>Native or install-script machinery has a demonstrated runtime path.</li>
+  <li>It is not on the Dropped list.</li>
+  <li>A change spec carries the audit trail before the catalog grows.</li>
+</ul>
+<p>
+  Meal-prep, chrome, and one-shot convenience can be excellent packages. They still do not belong in LazyPi's default or optional tiers.
+</p>
+
+<h2>Dropped packages</h2>
+<p>
+  Dropped ids are outside the catalog. <code>pi install</code> still works. LazyPi does not manage them. Status reports them as other Pi packages when they are present.
+</p>
+<p>
+  The closed list is compound, powerbar, extension-settings, plannotator, slopchop, usage, raw-paste, plan, add-dir, claude-cli, prompt-templates, hackerman, terminal-theme, skill-args, mcp, ralph-wiggum, and curated-themes.
+</p>
+<p>
+  Skill arguments, MCP adapters, ralph-wiggum loops, and themes are in that list. They are not LazyPi extras. They are packages this installer will not grow into.
+</p>
+
+<nav class="prev-next">
+  <a href="/docs/" class="prev-next-link">
+    <span class="prev-next-label">Previous</span>
+    ← Overview
+  </a>
+  <a href="/docs/first-steps.html" class="prev-next-link next">
+    <span class="prev-next-label">Next</span>
+    First Steps →
+  </a>
+</nav>

@@ -18,7 +18,10 @@ description: "LazyPi documentation — one command to get a complete Pi coding a
     </p>
 
     <h2>What it installs</h2>
-    <p>LazyPi installs the 12-package harness core by default, plus a 5-package optional tier when you ask for it:</p>
+    <p>
+      LazyPi installs the 12-package harness core by default, plus a 5-package optional tier when you ask for it.
+      <a href="/docs/philosophy.html">Catalog philosophy</a> explains why 12 is default, why 5 are optional, and what it takes to join.
+    </p>
 
     <table>
       <thead>
@@ -39,37 +42,12 @@ description: "LazyPi documentation — one command to get a complete Pi coding a
       </tbody>
     </table>
 
-    <h2>Optional extras</h2>
+    <h2>Dropped packages</h2>
     <p>
-      Everything else stays installable on demand — it is just not part of the
-      harness core. Run <code>pi install &lt;source&gt;</code> for any of:
+      Skill arguments, MCP, ralph-wiggum, curated-themes, and the rest of the Dropped list are outside the catalog.
+      <code>pi install</code> still works. LazyPi does not manage them.
+      See <a href="/docs/philosophy.html">Catalog philosophy</a> for the membership bar and the closed list.
     </p>
-    <table>
-      <thead>
-        <tr>
-          <th>Extra</th>
-          <th>Install source</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Skill arguments ($1 / $ARGUMENTS in skills)</td>
-          <td><code>npm:@juicesharp/rpiv-args</code></td>
-        </tr>
-        <tr>
-          <td>MCP server integration</td>
-          <td><code>npm:pi-mcp-adapter</code></td>
-        </tr>
-        <tr>
-          <td>Ralph Wiggum research loops</td>
-          <td><code>npm:@tmustier/pi-ralph-wiggum</code></td>
-        </tr>
-        <tr>
-          <td>65 curated dark themes</td>
-          <td><code>npm:@victor-software-house/pi-curated-themes</code></td>
-        </tr>
-      </tbody>
-    </table>
 
     <h2>Quick start</h2>
     <p>LazyPi runs via <code>npx</code> — no global install required:</p>
@@ -119,8 +97,8 @@ description: "LazyPi documentation — one command to get a complete Pi coding a
 
     <nav class="prev-next">
       <span></span>
-      <a href="/docs/first-steps.html" class="prev-next-link next">
+      <a href="/docs/philosophy.html" class="prev-next-link next">
         <span class="prev-next-label">Next</span>
-        First Steps →
+        Catalog philosophy →
       </a>
     </nav>

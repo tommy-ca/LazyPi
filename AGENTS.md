@@ -39,9 +39,10 @@ docs/
   docs.css             — docs sub-page layout (sidebar, content, tables, callouts)
   index.html           — landing page
   faq.html             — FAQ page
-  (no themes gallery — themes are optional extras)
+  (no themes gallery — curated-themes is dropped)
   docs/                — docs section
     index.html         — docs overview
+    philosophy.html    — catalog membership (12 default, 5 optional, Dropped)
     first-steps.html
     installation.html
     updating.html
@@ -176,4 +177,4 @@ The YouTube thumbnail is loaded automatically from `img.youtube.com/vi/{id}/mqde
 
 ### Catalog updates on the landing page
 
-The catalog grid on `docs/index.html` is maintained manually. When adding a package to the CLI catalog (`PACKAGES` in `bin/lazypi.mjs`), update the catalog grid in `docs/index.html`, the packages index page, and the sidebar to match.
+The catalog grid on `docs/index.html` is maintained manually. When adding a package to the CLI catalog (`PACKAGES` in `bin/lazypi.mjs`), update the README catalog table, `docs/docs/philosophy.html` if membership changed, the catalog grid in `docs/index.html`, the packages index page, and the sidebar to match. Keep those lists in `PACKAGES` order.
