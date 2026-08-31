@@ -23,6 +23,25 @@ description: "How to update your LazyPi packages."
       Update preserves your selected catalog footprint.
     </p>
 
+    <h2>Repairing a broken package</h2>
+    <p>
+      A catalog package can be present in <code>settings.json</code> yet fail at
+      runtime with a missing-dependency error (for example
+      <code>Cannot find module 'acorn'</code>) when its dependency footprint is
+      incomplete on disk — typically a stale checkout under
+      <code>~/.pi/agent/extensions/</code> without its <code>node_modules</code>.
+    </p>
+    <ol>
+      <li>Run <code>npx @tommy-ca/lazypi update</code> (or <code>pi update</code>) to repair installed footprints.</li>
+      <li>If the error persists, reinstall the package, or remove the stale
+        checkout directory (for example <code>~/.pi/agent/extensions/subagent</code>) —
+        Pi loads that package from its npm store instead.</li>
+    </ol>
+    <p>
+      Your package settings are preserved; LazyPi does not manage files inside
+      <code>~/.pi/agent/extensions/</code>.
+    </p>
+
     <nav class="prev-next">
       <a href="/docs/installation.html" class="prev-next-link">
         <span class="prev-next-label">Previous</span>

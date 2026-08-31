@@ -35,6 +35,13 @@ extra_css: /assets/css/faq.css
     </div>
   </div>
 
+    <div class="faq-item">
+    <div class="faq-q">Why does Pi error with “Cannot find module ‘acorn’”?</div>
+    <div class="faq-a">
+      A catalog package is broken at runtime even though it is present in settings — its dependency footprint is missing on disk (typically a stale checkout under <code>~/.pi/agent/extensions/</code> without its <code>node_modules</code>). Run <code>npx @tommy-ca/lazypi update</code> to repair footprints, or reinstall the package. If the error persists, remove the stale checkout directory (for example <code>~/.pi/agent/extensions/subagent</code>) — Pi loads that package from its npm store instead. Package settings are preserved.
+    </div>
+  </div>
+
   <div class="faq-item">
     <div class="faq-q">Can I choose what to install?</div>
     <div class="faq-a">

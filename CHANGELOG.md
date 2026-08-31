@@ -17,6 +17,12 @@
 
 * run `npm run spec:validate` in the test job so spec drift fails CI
 
+### Docs
+
+* FAQ and updating pages explain how to repair a catalog package with a
+  broken dependency footprint (the pi-subagents `Cannot find module 'acorn'`
+  case); ratified via change `2026-08-31-extension-deps-troubleshooting`
+
 ## [0.10.2](https://github.com/tommy-ca/LazyPi/compare/v0.10.1...v0.10.2) (2026-08-31)
 
 ### Bug Fixes
