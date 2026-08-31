@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-08-31
+goal: Fail closed on empty selectors and corrupt settings; make no-op install
+  skip settings writes; spawn Windows without shell-joining user sources.
