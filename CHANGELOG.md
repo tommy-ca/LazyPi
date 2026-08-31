@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Bug Fixes
+
+* help no longer lists skill-args, mcp, ralph-wiggum, or curated-themes as
+  installable "extras" with `npm:` sources — those names are not real Pi
+  packages, and the docs already treat them as Dropped (outside the catalog)
+
+### Specs
+
+* pin that the CLI help SHALL NOT advertise Dropped packages as installable
+  extras; re-scope the skill-args source scenario to the promotion path
+
+### CI
+
+* run `npm run spec:validate` in the test job so spec drift fails CI
+
 ## [0.10.2](https://github.com/tommy-ca/LazyPi/compare/v0.10.1...v0.10.2) (2026-08-31)
 
 ### Bug Fixes

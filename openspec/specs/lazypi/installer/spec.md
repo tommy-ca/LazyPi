@@ -64,6 +64,9 @@ MAY carry `legacySources`.
   powerbar, extension-settings, plannotator, slopchop, usage, raw-paste,
   plan, add-dir, claude-cli, prompt-templates, hackerman, terminal-theme,
   skill-args, mcp, ralph-wiggum, or curated-themes
+- **AND** the CLI help SHALL NOT advertise Dropped packages as
+  installable extras; at most it SHALL note that `pi install` still works
+  for them
 
 #### Scenario: Optional sources
 
@@ -89,8 +92,8 @@ MAY carry `legacySources`.
 
 #### Scenario: Skill arguments source
 
-- **WHEN** the catalog defines `skill-args`
-- **THEN** its `source` SHALL be `npm:@juicesharp/rpiv-args`
+- **WHEN** `skill-args` is considered for catalog promotion
+- **THEN** the canonical source SHALL be `npm:@juicesharp/rpiv-args`
 
 #### Scenario: Search substrate source
 
@@ -176,6 +179,14 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 - **WHEN** `--only` or `--except` is passed with no list, an empty list,
   or both flags together
 - **THEN** the CLI SHALL print help and exit 2
+
+#### Scenario: Missing pi
+
+- **WHEN** `install` or `update` runs without a `pi` executable on PATH
+- **THEN** the CLI SHALL NOT block on an interactive prompt when stdin or
+  stdout is not a TTY
+- **AND** on a non-TTY it SHALL print an error and exit 127
+- **AND** on a TTY it SHALL offer to install Pi and exit 127 when declined
 
 #### Scenario: Doctor environment
 
@@ -283,6 +294,7 @@ Model so a missed spec delta cannot stay green.
 - **AND** a test SHALL fail if a Dropped packages id appears in `PACKAGES`
 - **AND** a test SHALL fail if the Windows smoke workflow asserts the full
   catalog without installing the optional tier
+- **AND** CI SHALL run `npm run spec:validate` alongside `npm test`
 
 ### Requirement: Search Tools
 
