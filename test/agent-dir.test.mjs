@@ -106,6 +106,17 @@ test("status reads settings from PI_CODING_AGENT_DIR", (t) => {
 	assert.doesNotMatch(result.stdout, /✓ \[core\] mcp/);
 });
 
+test("status displays the installed source pin, not only the id column", (t) => {
+	const { home, workspace } = createWorkspace(t);
+	writeSettings(join(home, ".pi", "agent"), ["npm:pi-subagents@0.62.0"]);
+
+	const result = runCli(["status"], { cwd: workspace, home });
+
+	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
+	assert.match(result.stdout, /✓ \[core\] subagents/);
+	assert.match(result.stdout, /npm:pi-subagents@0.62.0/);
+});
+
 test("install reads auth and writes settings in PI_CODING_AGENT_DIR", (t) => {
 	const { home, workspace, bin } = createWorkspace(t);
 	const defaultAgentDir = join(home, ".pi", "agent");

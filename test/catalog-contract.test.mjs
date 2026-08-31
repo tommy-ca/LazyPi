@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { PACKAGES } from "../bin/lazypi.mjs";
+
+const CLI_PATH = resolve("bin/lazypi.mjs");
 
 const CORE_IDS = [
 	"subagents",
@@ -85,4 +89,20 @@ test("windows smoke installs the optional tier before the full-catalog assert", 
 	assert.notEqual(optionalAt, -1);
 	assert.notEqual(assertAt, -1);
 	assert.equal(optionalAt < assertAt, true);
+});
+
+test("linux CI runs npm run spec:validate", () => {
+	const workflow = readFileSync(".github/workflows/test.yml", "utf8");
+	assert.match(workflow, /npm run spec:validate/);
+});
+
+test("--help does not advertise dropped extras as installable npm sources", () => {
+	const result = spawnSync(process.execPath, [CLI_PATH, "--help"], {
+		encoding: "utf8",
+		timeout: 15_000,
+	});
+	if (result.error) throw result.error;
+	const output = `${result.stdout}\n${result.stderr}`;
+	assert.equal(result.status, 0, output);
+	assert.doesNotMatch(output, /Non-catalog extras|npm:skill-args|npm:curated-themes/);
 });
