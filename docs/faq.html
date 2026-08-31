@@ -43,6 +43,17 @@ extra_css: /assets/css/faq.css
   </div>
 
   <div class="faq-item">
+    <div class="faq-q">Why do my packages stay on old versions after update?</div>
+    <div class="faq-a">
+      <code>pi update</code> respects the version pins recorded in <code>settings.json</code>
+      (for example <code>npm:pi-subagents@0.58.0</code>) and does not advance them. To move a
+      package explicitly, reinstall at the version you want:
+      <code>pi install npm:&lt;pkg&gt;@&lt;version&gt;</code> (or omit the <code>@version</code> to track
+      latest). <code>npx @tommy-ca/lazypi status</code> shows the installed pins.
+    </div>
+  </div>
+
+  <div class="faq-item">
     <div class="faq-q">Can I choose what to install?</div>
     <div class="faq-a">
       Yes. On a TTY, the first prompt is Install all (the full 17-package catalog) or an interactive picker with core pre-ticked. <code>--yes</code> with no other flags installs the 12 harness-core packages only. Add the optional tier with <code>--only optional</code> or the picker.

@@ -23,6 +23,18 @@
   broken dependency footprint (the pi-subagents `Cannot find module 'acorn'`
   case); ratified via change `2026-08-31-extension-deps-troubleshooting`
 
+### Fixes
+
+* `status` displays the installed source for catalog entries, so version
+  pins (for example `npm:pi-subagents@0.62.0`) are visible instead of being
+  masked by the catalog source
+
+### Docs
+
+* FAQ and updating pages state that `pi update` respects existing version
+  pins and that a persistent failure needs an explicit reinstall at the
+  current version; ratified via change `2026-08-31-pin-visible-recovery`
+
 ## [0.10.2](https://github.com/tommy-ca/LazyPi/compare/v0.10.1...v0.10.2) (2026-08-31)
 
 ### Bug Fixes

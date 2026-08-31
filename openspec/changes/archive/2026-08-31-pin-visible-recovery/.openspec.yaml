@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-08-31
+goal: Make version-pin staleness visible and add recovery guidance after the
+  pi-subagents audit

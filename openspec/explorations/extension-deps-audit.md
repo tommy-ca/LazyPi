@@ -90,3 +90,42 @@ A catalog package can be present in settings yet broken at runtime when its
 dependency footprint is incomplete. Repair: `pi update` (or
 `npx @tommy-ca/lazypi update`), reinstall the package, or remove a stale
 `~/.pi/agent/extensions/<name>` checkout that shadows the npm store.
+## Follow-up audit: workflow child spawn + version pins (2026-08-31)
+
+After the dep fix, the workflow sandbox and validator worked, but every
+`runs.run`/`runs.all` child spawn aborted silently ("Workflow was aborted",
+run status `failed`, total=0, no error surfaced in `workflow_control
+status`/transcripts). Research:
+
+- The abort is not the dependency error: the worker parses and executes
+  scripts (probe_min completed; meta/`agent()` rules enforced with detailed
+  messages).
+- Child launches are gated by an in-realm `workflow-child-permit.ts`
+  (WeakMap-keyed, non-serializable) and a parent-side bridge; failures map
+  to the generic "Workflow was aborted" with no diagnostics.
+- Upstream pi-subagents shipped 121 commits between v0.58.0 and v0.62.0,
+  including a dozen workflow/permit/bridge fixes (scripted-workflow.ts grew
+  ~700 lines) — the abort class is plausibly fixed upstream.
+
+Environment upgrade applied:
+
+- Checkout: `git checkout v0.62.0` + `npm install --omit=dev` —
+  `config.json` preserved (v0.62.0 keeps the
+  `extensions/subagent/config.json` contract, same runtime deps).
+- Store: `pi install npm:pi-subagents@0.62.0` replaced the pinned entry
+  (single settings entry, store now 0.62.0).
+- Both copies now resolve `acorn`; settings pin is
+  `npm:pi-subagents@0.62.0`.
+
+Key finding — `pi update` respects version pins: `pi update
+npm:pi-subagents@0.58.0` printed "Updated" and left 0.58.0 in place. Pinned
+packages never advance through update paths, so upstream fixes are
+invisible to pinned installs. This is now visible too: `lazypi status`
+prints the installed source for each catalog entry (pin shown when it
+differs; all 17 entries here are pinned).
+
+Residual: workflow child spawn in a fresh agent session is
+unverified — this session loaded the old 0.58.0 module at startup and
+cannot pick up the 0.62.0 upgrade. Verify with one minimal `runs.run`
+workflow in the next session; if it still aborts, file against
+pi-subagents with a repro.

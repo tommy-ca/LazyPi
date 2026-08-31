@@ -41,6 +41,14 @@ description: "How to update your LazyPi packages."
       Your package settings are preserved; LazyPi does not manage files inside
       <code>~/.pi/agent/extensions/</code>.
     </p>
+    <p>
+      If a failure persists after a repair, the installed version may simply be
+      old: <code>pi update</code> respects the version pins in
+      <code>settings.json</code> (for example <code>npm:pi-subagents@0.58.0</code>) and does not
+      advance them. Reinstall at the version you want with
+      <code>pi install npm:&lt;pkg&gt;@&lt;version&gt;</code> (or without the pin to track latest).
+      <code>npx @tommy-ca/lazypi status</code> shows the installed pins.
+    </p>
 
     <nav class="prev-next">
       <a href="/docs/installation.html" class="prev-next-link">

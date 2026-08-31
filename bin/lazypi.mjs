@@ -768,7 +768,8 @@ function cmdStatus(flags) {
 	printHeader(`Installed from LazyPi catalog (${installed.length}/${PACKAGES.length}):`);
 	if (installed.length === 0) console.log(dim("  none"));
 	for (const pkg of installed) {
-		console.log(`  ${green("✓")} [${pkg.category}] ${pkg.id.padEnd(20)} ${dim(pkg.source)}`);
+		const installedSource = [...sources].find((src) => sourcesMatch(pkg.source, src)) ?? pkg.source;
+		console.log(`  ${green("✓")} [${pkg.category}] ${pkg.id.padEnd(20)} ${dim(installedSource)}`);
 	}
 
 	printHeader(`Installed with legacy catalog sources (${legacy.length}):`);

@@ -168,6 +168,9 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 - **WHEN** `status` runs
 - **THEN** it SHALL group catalog entries as installed, legacy, missing, and
   other (outside the catalog), with counts derived from `PACKAGES`
+- **AND** it SHALL display the installed source for an installed entry;
+  when that source carries a version pin that differs from the catalog
+  source, the pin SHALL be visible in the output
 
 #### Scenario: Scoped install
 
@@ -448,3 +451,8 @@ without reinstalling Pi or LazyPi.
 - **AND** the docs SHALL mention removing a stale
   `~/.pi/agent/extensions/<name>` checkout that shadows the package in
   the npm store
+- **AND** the docs SHALL state that `pi update` respects existing version
+  pins and does not advance pinned packages
+- **AND** when a failure persists after a footprint repair, the docs SHALL
+  tell the operator to reinstall the package at the catalog's current
+  version (`pi install npm:<pkg>@<version>`)
