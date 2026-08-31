@@ -17,7 +17,7 @@ Use Conventional Commits for commit messages, for example `feat: add package to 
 
 ## Site / docs
 
-The site at [lazypi.org](https://lazypi.org) is a Jekyll site in `docs/`, compiled automatically by GitHub Pages on every push to `master`. Source files are in `docs/`, build output (`docs/_site/`) is gitignored.
+The Jekyll source lives in `docs/`. Build output (`docs/_site/`) is gitignored. This fork does not enable GitHub Pages, and [lazypi.org](https://lazypi.org) still serves the upstream installer.
 
 ### Structure
 
@@ -145,7 +145,7 @@ Then:
 npm run docs:serve   # serves at http://localhost:4000 with livereload
 ```
 
-GitHub Pages uses the `github-pages` gem (specified in `docs/Gemfile`), which pins Jekyll and plugin versions to match what GitHub runs. Local and production output will be identical.
+The `github-pages` gem in `docs/Gemfile` pins Jekyll and plugins to GitHub Pages versions. Use it for local preview. This fork does not publish that build.
 
 ### Changing styles
 
