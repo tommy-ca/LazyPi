@@ -2,14 +2,16 @@
 
 ## Unreleased
 
-### Features
+### Specs
 
-* trim the catalog to the 10 essential harness-core packages (all tagged essential); optional extras (skill args, memory, MCP, interactive shell, research loops, themes) install directly via pi install
-* remove Compound Engineering and package-load-order machinery from the installer and doctor
+* align installer and harness specs with the live 12-core + 5-optional catalog
+* pin `PACKAGES` membership in unit tests; Windows smoke installs the optional tier before the full-catalog assert
 
 ### Docs
 
-* trim package pages, sidebar, and landing catalog to the simplified catalog; add Goal and Context Usage pages
+* landing BTW card matches `npm:@narumitw/pi-btw`; installation copy distinguishes TTY Install all (17) from `--yes` (12)
+
+Fork releases `0.7.0` through `0.10.0` are git tags; this file still heads upstream history at 0.6.4.
 
 ## [0.6.4](https://github.com/robzolkos/LazyPi/compare/v0.6.3...v0.6.4) (2026-07-27)
 

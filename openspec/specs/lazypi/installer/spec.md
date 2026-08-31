@@ -63,7 +63,7 @@ MAY carry `legacySources`.
 - **AND** the installer SHALL NOT install or manage compound,
   powerbar, extension-settings, plannotator, slopchop, usage, raw-paste,
   plan, add-dir, claude-cli, prompt-templates, hackerman, terminal-theme,
-  skill-args, mcp, or ralph-wiggum
+  skill-args, mcp, ralph-wiggum, or curated-themes
 
 #### Scenario: Optional sources
 
@@ -217,13 +217,17 @@ and `auth.json`) so the operator knows whether to run `/login`.
 ### Requirement: Self-Deriving CI
 
 The exact-source assertion used by CI SHALL derive from `PACKAGES` rather than
-a separate manifest, so catalog edits propagate to CI automatically.
+a separate manifest, so catalog edits propagate to CI automatically. Unit
+tests SHALL pin catalog ids, categories, and sources against the Catalog
+Model so a missed spec delta cannot stay green.
 
 #### Scenario: Full-install assertion
 
-- **WHEN** `scripts/assert-installed-packages.mjs --check-status` runs after a
-  full `--yes` install
-- **THEN** it SHALL find every non-excluded `PACKAGES` source in settings.json
+- **WHEN** `scripts/assert-installed-packages.mjs --check-status` runs after
+  a full catalog install
+- **THEN** the install SHALL have been `lazypi --yes` followed by
+  `lazypi --yes --only optional` (core then optional)
+- **AND** it SHALL find every non-excluded `PACKAGES` source in settings.json
 - **AND** the `status` header SHALL report the expected count over
   `PACKAGES.length`
 
@@ -241,19 +245,15 @@ a separate manifest, so catalog edits propagate to CI automatically.
 - **THEN** the expected counts SHALL derive from `PACKAGES.length`
 - **AND** count assertions SHALL NOT be hardcoded literals
 
-### Requirement: Skill Arguments
+#### Scenario: Catalog shape pin
 
-The catalog MAY provide a skill-parameter package so skill bodies accept
-shell-style arguments and inline command expansion at invocation; when
-cataloged, `skill-args` SHALL resolve to `npm:@juicesharp/rpiv-args`.
-
-#### Scenario: Parameterized skill
-
-- **WHEN** a skill is invoked with arguments
-- **THEN** the skill body SHALL receive positional placeholders (`$1`, `$2`)
-  and the raw input line
-- **AND** inline `` !`cmd` `` blocks SHALL run and paste their output into
-  the prompt before the model reads it
+- **WHEN** `npm test` runs
+- **THEN** a test SHALL fail if `PACKAGES` ids, categories, or current
+  sources diverge from the Lean catalog shape and Optional sources
+  scenarios
+- **AND** a test SHALL fail if a Dropped packages id appears in `PACKAGES`
+- **AND** a test SHALL fail if the Windows smoke workflow asserts the full
+  catalog without installing the optional tier
 
 ### Requirement: Search Tools
 

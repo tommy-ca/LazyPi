@@ -1,6 +1,6 @@
 # LazyPi
 
-The [Pi](https://github.com/earendil-works/pi-mono) coding agent is minimal by design. LazyPi is opinionated by design. Run one command and get a complete, curated Pi setup — everything selected by default, nothing to research, nothing to configure. Remove what you don't want later.
+The [Pi](https://github.com/earendil-works/pi-mono) coding agent is minimal by design. LazyPi is opinionated by design. Run one command and get the 12-package harness core. The 5-package optional tier installs when you ask. Remove what you don't want later.
 
 ## Quick start
 
@@ -13,7 +13,7 @@ LazyPi will:
 1. Install `pi` for you if it isn't installed yet.
 2. Ask if you want to install all the packages or choose which to install.
 
-That setup is the harness core — isolated sub-agents, a structured ask gate, skill visibility, $ skill mention, a long-objective gate, side chat, context budgeting, code simplification review, web research, FFF search, a workflow engine for sub-agent fan-out, and ponytail discipline review. A five-package optional tier (targeted LSP diagnostics, interactive shell overlays, autonomous research loops, structured todo tracking, markdown-backed memory) installs on request with `--only optional`. Other extras (skill arguments, MCP, themes) install on demand with `pi install`.
+That setup is the harness core — isolated sub-agents, a structured ask gate, skill visibility, $ skill mention, a long-objective gate, side chat, context budgeting, code simplification review, web research, FFF search, a workflow engine for sub-agent fan-out, and ponytail discipline review. A five-package optional tier (targeted LSP diagnostics, interactive shell overlays, autonomous research loops, structured todo tracking, markdown-backed memory) installs on request with `--only optional`. Other extras (skill arguments, MCP, ralph-wiggum, themes) install on demand with `pi install`.
 
 That's it.  Once done - run `pi` and experience a feature rich coding agent experience.
 

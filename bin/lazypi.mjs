@@ -785,7 +785,7 @@ function cmdDoctor(flags) {
 	else fail("npm is not on PATH — LazyPi can't install Pi for you");
 
 	if (hasCmd("git")) pass("git is on PATH");
-	else warn("git is not on PATH — required by git-based catalog packages");
+	else warn("git is not on PATH — needed to migrate leftover git: legacy sources");
 
 	printHeader("Pi");
 	if (hasCmd("pi")) {

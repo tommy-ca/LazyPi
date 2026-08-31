@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-08-31
+goal: Align installer and harness specs with the live 17-package catalog; pin
+  PACKAGES in tests; fix Windows/docs drift found in the fork audit.
