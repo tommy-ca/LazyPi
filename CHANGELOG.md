@@ -35,6 +35,12 @@
   pins and that a persistent failure needs an explicit reinstall at the
   current version; ratified via change `2026-08-31-pin-visible-recovery`
 
+### Refresh
+
+* installed catalog versions moved to npm `latest` (7 stale packages:
+  mention-skill, pi-goal, pi-btw, pi-web-access, pi-fff, dynamic-workflows,
+  autoresearch); ratified via change `2026-08-31-catalog-version-refresh`
+
 ## [0.10.2](https://github.com/tommy-ca/LazyPi/compare/v0.10.1...v0.10.2) (2026-08-31)
 
 ### Bug Fixes

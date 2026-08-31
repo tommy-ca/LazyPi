@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-08-31
+goal: Move the 7 stale catalog packages to their npm latest versions, closing
+  the audit lesson that pinned packages never advance
+skip_specs: true
