@@ -129,3 +129,19 @@ unverified — this session loaded the old 0.58.0 module at startup and
 cannot pick up the 0.62.0 upgrade. Verify with one minimal `runs.run`
 workflow in the next session; if it still aborts, file against
 pi-subagents with a repro.
+
+### Update: the abort error surfaced
+
+The delayed background probe reported its failure as
+`ReferenceError: runs is not defined` — the sandboxed script could not see
+the `runs` binding. Both v0.58.0 (line 368) and v0.62.0 (line 682) declare
+`const runs = Object.freeze({ ... })` at worker module scope, so the missing
+binding in this session is a worker/sandbox initialization failure of the old
+in-memory module, not a script-shape issue (probe_min, which never reads
+`runs`, completed). This is the concrete symptom behind the generic
+"Workflow was aborted": the sandbox lacked the `runs` symbol entirely.
+
+Fresh-session verification is still required: both on-disk copies are v0.62.0
+now, but this session imported the 0.58.0 module at startup and every probe
+runs against that stale in-memory worker. Verification script to run in a new
+session: a workflow whose body calls `runs.run` once and returns the result.
