@@ -2,52 +2,35 @@
 
 ## Unreleased
 
+## [0.10.3](https://github.com/tommy-ca/LazyPi/compare/v0.10.2...v0.10.3) (2026-08-31)
+
 ### Bug Fixes
 
 * a non-TTY run without `pi` on PATH exits 127 instead of hanging on a
   clack confirm
 * help no longer lists skill-args, mcp, ralph-wiggum, or curated-themes as
-  installable "extras" with `npm:` sources — those names are not real Pi
-  packages, and the docs already treat them as Dropped (outside the catalog)
+  installable extras with `npm:` sources
+* `status` displays the installed source pin (for example
+  `npm:pi-subagents@0.62.0`) instead of only the catalog id
 
 ### Specs
 
-* pin that the CLI help SHALL NOT advertise Dropped packages as installable
-  extras; re-scope the skill-args source scenario to the promotion path
+* pin that CLI help SHALL NOT advertise Dropped packages as installable extras
+* archive catalog documentation, CLI conformance, pin-visible recovery,
+  extension-deps troubleshooting, catalog version refresh, and plugin
+  feature verification into the live installer contract
 
 ### CI
 
-* run `npm run spec:validate` in the test job so spec drift fails CI
+* run `npm run spec:validate` in the test job
 
 ### Docs
 
-* FAQ and updating pages explain how to repair a catalog package with a
-  broken dependency footprint (the pi-subagents `Cannot find module 'acorn'`
-  case); ratified via change `2026-08-31-extension-deps-troubleshooting`
-
-### Fixes
-
-* `status` displays the installed source for catalog entries, so version
-  pins (for example `npm:pi-subagents@0.62.0`) are visible instead of being
-  masked by the catalog source
-
-### Docs
-
-* FAQ and updating pages state that `pi update` respects existing version
-  pins and that a persistent failure needs an explicit reinstall at the
-  current version; ratified via change `2026-08-31-pin-visible-recovery`
-
-### Refresh
-
-* installed catalog versions moved to npm `latest` (7 stale packages:
-  mention-skill, pi-goal, pi-btw, pi-web-access, pi-fff, dynamic-workflows,
-  autoresearch); ratified via change `2026-08-31-catalog-version-refresh`
-
-### Verification
-
-* refreshed plugins verified statically (17/17 manifests + dep footprints)
-  and functionally in a fresh session (8/8 PASS, incl. pi-subagents
-  runs.run); ratified via change `2026-08-31-plugin-feature-verification`
+* README catalog table and `docs/docs/philosophy.html` state the 12+5
+  selection, per-package why, and membership bar
+* FAQ and updating pages cover broken dependency footprints and pin-stuck
+  recovery
+* catalog versions recorded at npm `latest` for the seven stale packages
 
 ## [0.10.2](https://github.com/tommy-ca/LazyPi/compare/v0.10.1...v0.10.2) (2026-08-31)
 
