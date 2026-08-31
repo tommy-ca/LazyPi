@@ -31,6 +31,9 @@ jobs:
       - name: Run test suite
         run: npm test
 
+      - name: Validate openspecs
+        run: npm run spec:validate
+
       - name: Smoke-test packed CLI artifact
         run: node scripts/packed-cli-smoke.mjs
 
