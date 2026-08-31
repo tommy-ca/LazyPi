@@ -1,5 +1,6 @@
 node_modules/
 .pi/
+.worktrees/
 .grok/agent-memory/
 .grok/agent-memory-local/
 site/generated-themes/vhs-settings/
