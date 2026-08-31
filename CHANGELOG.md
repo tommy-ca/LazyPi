@@ -2,10 +2,16 @@
 
 ## Unreleased
 
+## [0.10.1](https://github.com/tommy-ca/LazyPi/compare/v0.10.0...v0.10.1) (2026-08-31)
+
 ### Specs
 
 * align installer and harness specs with the live 12-core + 5-optional catalog
 * pin `PACKAGES` membership in unit tests; Windows smoke installs the optional tier before the full-catalog assert
+
+### Bug Fixes
+
+* install the packed tarball in e2e so the CLI resolves `@clack/prompts` without `npm exec --call`
 
 ### Docs
 
