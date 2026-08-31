@@ -13,17 +13,43 @@ LazyPi will:
 1. Install `pi` for you if it isn't installed yet.
 2. Ask if you want to install all the packages or choose which to install.
 
-That setup is the harness core — isolated sub-agents, a structured ask gate, skill visibility, $ skill mention, a long-objective gate, side chat, context budgeting, code simplification review, web research, FFF search, a workflow engine for sub-agent fan-out, and ponytail discipline review. A five-package optional tier (targeted LSP diagnostics, interactive shell overlays, autonomous research loops, structured todo tracking, markdown-backed memory) installs on request with `--only optional`. Other extras (skill arguments, MCP, ralph-wiggum, themes) install on demand with `pi install`.
+That setup is the 12-package harness core. `--yes` installs those 12. On a TTY, Install everything installs all 17. Packages LazyPi dropped stay installable with `pi install`. LazyPi does not manage them. See the Catalog table and `docs/docs/philosophy.html`.
 
 That's it.  Once done - run `pi` and experience a feature rich coding agent experience.
 
 Install is **idempotent** — LazyPi reads your Pi settings and skips any package that is already installed, so re-running is safe.
 
+## Catalog
+
+`--yes` installs 12 core packages. TTY Install everything installs all 17.
+
+| id | category | why |
+| --- | --- | --- |
+| subagents | core | Isolated specialists instead of one bloated agent |
+| pi-ask-user | core | Stop and ask instead of guessing |
+| pi-skillful | core | Keep 4 to 6 skills visible. Hide the rest |
+| mention-skill | core | `$` mention is the one way to reach hidden skills |
+| goal | core | Long-objective gate. Not a checkbox list |
+| btw | core | Side chat that does not pollute history |
+| context-usage | core | See what is burning the window |
+| simplify | core | Review diffs for clarity after implementation |
+| web-access | core | Search and fetch instead of stale training data |
+| fff | core | Paged fuzzy search so grep does not flood the transcript |
+| dynamic-workflows | core | Fan work out across subagents |
+| ponytail | core | Stdlib-first discipline. Lean catalog as a habit |
+| lsp | optional | Targeted diagnostics. Cataloged, not default |
+| interactive-shell | optional | TUI overlays. Chrome, not control plane |
+| autoresearch | optional | Experiment loops. Convenience, not core |
+| todos | optional | Structured tracker. Optional because core forbids checkbox todos as default |
+| memory | optional | Git-backed memory. Infrastructure, not control plane |
+
+Dropped packages are outside this table. `pi install` still works. LazyPi does not manage them.
+
 ## Commands
 
 | Command | What it does |
 | --- | --- |
-| `npx @tommy-ca/lazypi` | Install all or selected catalog (interactive picker by default) |
+| `npx @tommy-ca/lazypi` | TTY Install everything is 17. `--yes` is the 12 core packages. Picker otherwise. |
 | `npx @tommy-ca/lazypi remove <id>` | Remove a catalog package by id (or pass a raw pi source) |
 | `npx @tommy-ca/lazypi status` | Show which catalog packages are installed, missing, or extra |
 | `npx @tommy-ca/lazypi update` | Run `pi update` for installed Pi packages |
@@ -106,4 +132,4 @@ before treating releases as automated.
 
 ---
 
-For the full list of included packages and optional extras, see `docs/` in this repo or run `npx @tommy-ca/lazypi`.
+The catalog table above is the npm list. `docs/docs/philosophy.html` explains membership. Run `npx @tommy-ca/lazypi` to install.
