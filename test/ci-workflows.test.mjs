@@ -22,3 +22,8 @@ test("windows CI workflow smoke-tests the packed CLI artifact", () => {
 	const hits = workflow.split(PACKED_CLI_SMOKE_COMMAND).length - 1;
 	assert.equal(hits, 1);
 });
+
+test("windows CI workflow installs the optional tier after --yes", () => {
+	const workflow = readWorkflow(".github/workflows/windows-smoke.yml");
+	assert.equal(workflow.includes("bin/lazypi.mjs --yes --only optional"), true);
+});

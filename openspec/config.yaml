@@ -16,10 +16,9 @@ context: |
   writer, side threads that never mutate the main session, context hygiene.
   Pi is maximum privilege; third-party packages are reviewed before install.
 
-  Fork direction (see explorations/rpiv-mono-audit.md): own the control plane
-  as a small @tommy-ca/pi-* monorepo following rpiv-mono conventions (npm
-  workspaces, lockstep versions, sibling registry, ship-manifest tests,
-  readme-standard, raw .ts publish with a `pi` package field).
+  Fork direction: keep a lean 17-package catalog (12 core, 5 optional)
+  managed by this installer. Do not grow a @tommy-ca/pi-* monorepo; that
+  plan was explored and discarded (explorations/rpiv-mono-audit.md).
 
 rules:
   specs:
