@@ -29,7 +29,7 @@
 
 - [x] 4.1 `npm test` green
       Evidence: `npm test` → 35 pass, 0 fail
-- [ ] 4.2 archive the change
-      skip: parent said do not archive
+- [x] 4.2 archive the change
+      Evidence: archived as `2026-08-31-audit-seams`
 - [x] 4.3 `npm run spec:validate` green
       Evidence: `openspec validate --all && openspec validate --changes --archived` → 3 + 26 passed

@@ -919,7 +919,6 @@ async function cmdRemove(flags, targets) {
 	const { sources: installedSources } = installed;
 	let exitCode = 0;
 	for (const target of targets) {
-		// Resolve a catalog id to its source string, or pass through raw sources
 		const pkg = PACKAGES.find((p) => p.id === target);
 		const source = pkg ? pkg.source : target;
 

@@ -112,7 +112,7 @@ MAY carry `legacySources`.
 
 `install` SHALL read the Pi settings file, skip every source already present,
 and apply legacy-source migration when a catalog entry's legacy source is
-installed.
+installed. Invalid settings JSON SHALL fail the run before any `pi` spawn.
 
 #### Scenario: Legacy migration
 
@@ -143,6 +143,16 @@ installed.
 
 - **WHEN** `install` runs with every selected source already installed
 - **THEN** it SHALL report nothing to do and exit 0
+- **AND** it SHALL NOT write `settings.json` or a `.bak` when builtin
+  empty-model overrides are already present for the six pi-subagents
+  agents
+
+#### Scenario: Corrupt settings
+
+- **WHEN** `settings.json` exists and is not valid JSON
+- **THEN** `install`, `status`, `update`, `remove`, and `doctor` SHALL
+  print an error and exit 2
+- **AND** they SHALL NOT spawn `pi`
 
 ### Requirement: Commands
 
@@ -161,6 +171,12 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 - **WHEN** `--only core` or `--except <id>` is passed
 - **THEN** only matching categories or package ids are selected
 
+#### Scenario: Empty selector
+
+- **WHEN** `--only` or `--except` is passed with no list, an empty list,
+  or both flags together
+- **THEN** the CLI SHALL print help and exit 2
+
 #### Scenario: Doctor environment
 
 - **WHEN** `doctor` runs
@@ -176,6 +192,12 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 - **THEN** every `pi install` / `pi remove` spawn SHALL include `--approve`
   so un-approved projects accept the change
 - **AND** global (non-local) spawns SHALL NOT include `--approve`
+
+#### Scenario: Spawn argv
+
+- **WHEN** the CLI spawns `pi` or `npm`
+- **THEN** the source and package arguments SHALL be passed as argv
+  elements, not interpolated into a shell command line
 
 #### Scenario: Unknown argument
 
@@ -193,7 +215,7 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 When `subagents` is selected, `install` SHALL write empty-model overrides for
 the builtin pi-subagents agents (context-builder, planner, researcher,
 reviewer, scout, worker) into Pi settings so they fall back to the session
-model.
+model. Existing extra keys on those override objects SHALL be kept.
 
 #### Scenario: Model fallback
 
@@ -201,6 +223,13 @@ model.
 - **THEN** settings.json SHALL contain empty-model overrides for each builtin
   agent
 - **AND** the overrides SHALL NOT be written when `subagents` is not selected
+
+#### Scenario: Override merge
+
+- **WHEN** a builtin override already has `model` set to an empty string
+- **THEN** a re-run SHALL leave that object in place, including extra keys
+- **AND** settings.json SHALL NOT be rewritten solely to restamp those
+  empty models
 
 ### Requirement: Auth Visibility
 
