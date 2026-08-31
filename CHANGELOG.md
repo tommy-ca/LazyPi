@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## [0.10.2](https://github.com/tommy-ca/LazyPi/compare/v0.10.1...v0.10.2) (2026-08-31)
+
+### Bug Fixes
+
+* empty `--only`/`--except` and combined flags now print help and exit 2 instead of installing the catalog
+* corrupt `settings.json` fails install, status, update, remove, and doctor before any `pi` spawn
+* skip rewriting subagent overrides when the six builtins already have `model: ""`
+* resolve `pi`/`npm` then spawn without a default Windows `shell: true`
+
+### Specs
+
+* archive `2026-08-31-audit-seams` into the live installer contract
+
 ## [0.10.1](https://github.com/tommy-ca/LazyPi/compare/v0.10.0...v0.10.1) (2026-08-31)
 
 ### Specs
