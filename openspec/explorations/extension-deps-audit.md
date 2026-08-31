@@ -141,7 +141,10 @@ in-memory module, not a script-shape issue (probe_min, which never reads
 `runs`, completed). This is the concrete symptom behind the generic
 "Workflow was aborted": the sandbox lacked the `runs` symbol entirely.
 
-Fresh-session verification is still required: both on-disk copies are v0.62.0
-now, but this session imported the 0.58.0 module at startup and every probe
-runs against that stale in-memory worker. Verification script to run in a new
-session: a workflow whose body calls `runs.run` once and returns the result.
+Fresh-session verification: RESOLVED. A fresh pi session (spawned after the
+upgrade) ran `runs.run` with a scout child — launched, replied `ok`, exit 0,
+in ~4.5s. Child fan-out works on v0.62.0. The residual abort was the stale
+0.58.0 in-memory module in the auditing session, not a persistent defect.
+Note: the exact probe script form that failed in this session also fails the
+workflow-tool parse in a fresh session (meta-wrapper/statement-body shape) —
+the successful form follows the tool's documented `agent()`/`runs` contract.
