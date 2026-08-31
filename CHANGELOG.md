@@ -4,6 +4,8 @@
 
 ### Bug Fixes
 
+* a non-TTY run without `pi` on PATH exits 127 instead of hanging on a
+  clack confirm
 * help no longer lists skill-args, mcp, ralph-wiggum, or curated-themes as
   installable "extras" with `npm:` sources — those names are not real Pi
   packages, and the docs already treat them as Dropped (outside the catalog)

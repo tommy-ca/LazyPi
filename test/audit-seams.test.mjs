@@ -108,7 +108,7 @@ test("valid --only core does not exit 2 from selector usage", (t) => {
 test("install with no pi on a non-TTY fails fast with exit 127 instead of prompting", (t) => {
 	if (process.platform === "win32") t.skip("PATH masking differs on Windows");
 	const { home, workspace } = createWorkspace(t);
-	const minimalPath = [dirname(process.execPath), "/usr/bin", "/bin"].join(delimiter);
+	const minimalPath = ["/usr/bin", "/bin"].join(delimiter);
 	const env = {
 		...process.env,
 		HOME: home,
@@ -127,6 +127,7 @@ test("install with no pi on a non-TTY fails fast with exit 127 instead of prompt
 	assert.equal(result.status, 127, output);
 	assert.match(output, /Install Pi first/);
 	assert.doesNotMatch(output, /Yes \/ No|Install Pi now with/);
+	assert.match(output, /Could not find the `pi` command/);
 });
 
 const CORRUPT_COMMANDS = [
