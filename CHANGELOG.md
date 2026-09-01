@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [0.10.4](https://github.com/tommy-ca/LazyPi/compare/v0.10.3...v0.10.4) (2026-09-01)
+
 ### Bug Fixes
 
 * `where` prefers a `.cmd`/`.exe` hit over an extensionless Windows shim
