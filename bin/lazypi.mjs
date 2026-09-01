@@ -265,10 +265,22 @@ export function quoteCmdArg(value, { always = false } = {}) {
 	return `"${text.replaceAll("%", "%%").replaceAll('"', '""')}"`;
 }
 
+export function windowsComSpec(env = process.env) {
+	const comspec = env.ComSpec;
+	if (comspec && /(^|[\\/])cmd\.exe$/i.test(comspec)) return comspec;
+	const root = env.SystemRoot || "C:\\Windows";
+	return `${root}\\System32\\cmd.exe`;
+}
+
+export function pickWindowsWhereHit(stdout) {
+	const lines = String(stdout ?? "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+	return lines.find((line) => /\.(cmd|bat|exe|com)$/i.test(line)) ?? lines[0] ?? null;
+}
+
 export function windowsSpawnArgv(resolved, args = [], platformName = platform()) {
 	if (isWindowsCmdOrBat(resolved, platformName)) {
 		return {
-			command: process.env.ComSpec || "cmd.exe",
+			command: windowsComSpec(),
 			args: ["/d", "/s", "/c", "call", quoteCmdArg(resolved, { always: true }), ...args.map((arg) => quoteCmdArg(arg))],
 		};
 	}
@@ -379,8 +391,9 @@ function readInstalledSources(local) {
 
 function commandPath(name) {
 	const command = platform() === "win32" ? "where" : "which";
-	const probe = spawnCommand(command, [name], { encoding: "utf8" });
+	const probe = spawnSync(command, [name], buildSpawnOptions({ encoding: "utf8" }));
 	if (probe.status !== 0) return null;
+	if (platform() === "win32") return pickWindowsWhereHit(probe.stdout);
 	const first = String(probe.stdout ?? "").split(/\r?\n/).map((line) => line.trim()).find(Boolean);
 	return first || null;
 }
@@ -891,7 +904,10 @@ function cmdDoctor(flags) {
 	else if (error) fail(`${path} is not valid JSON — ${error}`);
 	else {
 		pass(`${path} is readable`);
-		const unpinnedGit = [...sources].filter((src) => /^git:github\.com\/[^/@]+\/[^@\s]+$/.test(src));
+		const unpinnedGit = [...sources].filter((src) => {
+			if (!/^git:github\.com\/[^/@]+\/[^@\s]+$/.test(src)) return false;
+			return !PACKAGES.some((pkg) => sourcesMatch(pkg.source, src) || isLegacySourceForPackage(pkg, src));
+		});
 		for (const src of unpinnedGit) warn(`${src} is an unpinned git head — pin it to a commit for reproducible installs`, { fatal: false });
 	}
 
