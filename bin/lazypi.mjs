@@ -185,7 +185,7 @@ function matchesSelector(pkg, selectors) {
 	return selectors.some((name) => name === pkg.category || name === pkg.id);
 }
 
-function resolveSelection(flags) {
+export function resolveSelection(flags) {
 	if (flags.only) {
 		if (!validateSelectors(flags.only, "--only")) return null;
 		return new Set(PACKAGES.filter((p) => matchesSelector(p, flags.only)).map((p) => p.id));
@@ -253,9 +253,27 @@ export function buildSpawnOptions(options = {}, _platformName = platform()) {
 	return { ...options };
 }
 
+function isWindowsCmdOrBat(resolved, platformName = platform()) {
+	return platformName === "win32" && /\.(cmd|bat)$/i.test(String(resolved));
+}
+
+export function windowsSpawnArgv(resolved, args = [], platformName = platform()) {
+	if (isWindowsCmdOrBat(resolved, platformName)) {
+		return {
+			command: process.env.ComSpec || "cmd.exe",
+			args: ["/d", "/s", "/c", resolved, ...args],
+		};
+	}
+	return { command: resolved, args: [...args] };
+}
+
 function spawnCommand(command, args = [], options = {}) {
 	const resolved = command === "pi" || command === "npm" ? commandPath(command) ?? command : command;
-	return spawnSync(resolved, args, buildSpawnOptions(options));
+	const spawned = windowsSpawnArgv(resolved, args);
+	const spawnOptions = isWindowsCmdOrBat(resolved)
+		? { ...buildSpawnOptions(options), shell: false }
+		: buildSpawnOptions(options);
+	return spawnSync(spawned.command, spawned.args, spawnOptions);
 }
 
 function hasCmd(name) {
@@ -353,7 +371,7 @@ function readInstalledSources(local) {
 
 function commandPath(name) {
 	const command = platform() === "win32" ? "where" : "which";
-	const probe = spawnSync(command, [name], buildSpawnOptions({ encoding: "utf8" }));
+	const probe = spawnCommand(command, [name], { encoding: "utf8" });
 	if (probe.status !== 0) return null;
 	const first = String(probe.stdout ?? "").split(/\r?\n/).map((line) => line.trim()).find(Boolean);
 	return first || null;
@@ -766,6 +784,11 @@ function cmdStatus(flags) {
 	);
 
 	printHeader(`Installed from LazyPi catalog (${installed.length}/${PACKAGES.length}):`);
+	const coreTotal = PACKAGES.filter((pkg) => pkg.category === "core").length;
+	const optionalTotal = PACKAGES.filter((pkg) => pkg.category === "optional").length;
+	const coreInstalled = installed.filter((pkg) => pkg.category === "core").length;
+	const optionalInstalled = installed.filter((pkg) => pkg.category === "optional").length;
+	console.log(dim(`  core ${coreInstalled}/${coreTotal}, optional ${optionalInstalled}/${optionalTotal}`));
 	if (installed.length === 0) console.log(dim("  none"));
 	for (const pkg of installed) {
 		const installedSource = [...sources].find((src) => sourcesMatch(pkg.source, src)) ?? pkg.source;
@@ -822,7 +845,7 @@ function cmdDoctor(flags) {
 	let problems = 0;
 	let warnings = 0;
 	const pass = (msg) => console.log(`  ${green("✓")} ${msg}`);
-	const warn = (msg, { fatal = true } = {}) => {
+	const warn = (msg, { fatal = false } = {}) => {
 		console.log(`  ${yellow("!")} ${msg}`);
 		if (fatal) problems++;
 		else warnings++;
