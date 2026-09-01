@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { buildSpawnOptions, resolveEntrypointUrl, windowsSpawnArgv } from "../bin/lazypi.mjs";
+import { buildSpawnOptions, quoteCmdArg, resolveEntrypointUrl, windowsSpawnArgv } from "../bin/lazypi.mjs";
 
 test("buildSpawnOptions does not force shell on Windows by default", () => {
 	assert.deepEqual(buildSpawnOptions({ stdio: "inherit" }, "win32"), {
@@ -36,7 +36,7 @@ test("windowsSpawnArgv wraps .cmd as ComSpec argv", () => {
 	try {
 		assert.deepEqual(windowsSpawnArgv("C:\\npm.cmd", ["install", "-g", "pkg"], "win32"), {
 			command: "C:\\Windows\\system32\\cmd.exe",
-			args: ["/d", "/s", "/c", "C:\\npm.cmd", "install", "-g", "pkg"],
+			args: ["/d", "/s", "/c", "call", '"C:\\npm.cmd"', "install", "-g", "pkg"],
 		});
 	} finally {
 		if (previous == null) delete process.env.ComSpec;
@@ -47,8 +47,27 @@ test("windowsSpawnArgv wraps .cmd as ComSpec argv", () => {
 test("windowsSpawnArgv wraps .bat as ComSpec argv", () => {
 	assert.deepEqual(windowsSpawnArgv("C:\\pi.bat", ["install", "npm:pkg"], "win32"), {
 		command: process.env.ComSpec || "cmd.exe",
-		args: ["/d", "/s", "/c", "C:\\pi.bat", "install", "npm:pkg"],
+		args: ["/d", "/s", "/c", "call", '"C:\\pi.bat"', "install", "npm:pkg"],
 	});
+});
+
+test("windowsSpawnArgv quotes Program Files paths after call", () => {
+	assert.deepEqual(
+		windowsSpawnArgv("C:\\Program Files\\nodejs\\npm.cmd", ["install", "-g", "pkg"], "win32"),
+		{
+			command: process.env.ComSpec || "cmd.exe",
+			args: ["/d", "/s", "/c", "call", '"C:\\Program Files\\nodejs\\npm.cmd"', "install", "-g", "pkg"],
+		},
+	);
+});
+
+test("windowsSpawnArgv keeps an ampersand source as one quoted argv slot", () => {
+	const source = "npm:pi-subagents & calc.exe";
+	assert.deepEqual(windowsSpawnArgv("C:\\pi.cmd", ["install", source], "win32"), {
+		command: process.env.ComSpec || "cmd.exe",
+		args: ["/d", "/s", "/c", "call", '"C:\\pi.cmd"', "install", `"${source}"`],
+	});
+	assert.equal(quoteCmdArg(source), `"${source}"`);
 });
 
 test("windowsSpawnArgv leaves a non-cmd path as file plus args", () => {

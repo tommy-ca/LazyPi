@@ -224,10 +224,16 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 - **THEN** the source and package arguments SHALL be passed as argv
   elements, not interpolated into a shell command line
 - **AND** on win32, a resolved path matching `.cmd` or `.bat` SHALL be
-  invoked as ComSpec argv (`/d /s /c` plus the program plus the args)
+  invoked as ComSpec argv (`/d /s /c call` plus a quoted program plus the
+  args)
+- **AND** `call` SHALL precede the quoted program so cmd `/s` does not
+  strip quotes on paths with spaces
 - **AND** sources SHALL remain extra argv elements
+- **AND** a source containing cmd metacharacters SHALL stay one quoted
+  argv slot
 - **AND** the CLI SHALL NOT join sources into a shell string
 - **AND** the CLI SHALL NOT default spawnSync `shell: true`
+- **AND** the ComSpec plan SHALL set `windowsVerbatimArguments: true`
 
 #### Scenario: Unknown argument
 

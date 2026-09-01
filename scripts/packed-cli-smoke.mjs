@@ -16,7 +16,7 @@ function run(command, args, options = {}) {
 	const result = spawnSync(spawned.command, spawned.args, {
 		encoding: "utf8",
 		...options,
-		...(isCmd ? { shell: false } : {}),
+		...(isCmd ? { shell: false, windowsVerbatimArguments: true } : {}),
 	});
 	if (result.error) throw result.error;
 	return result;
