@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Docs
+
+* TTY option is Install everything, not recommended; Missing pi 127 is without `--yes` only
+
 ## [0.10.3](https://github.com/tommy-ca/LazyPi/compare/v0.10.2...v0.10.3) (2026-08-31)
 
 ### Bug Fixes
