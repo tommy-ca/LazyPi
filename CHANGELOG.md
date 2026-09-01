@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 
+* spawn Windows `.cmd`/`.bat` as ComSpec argv (`/d /s /c call`) with a quoted program so Program Files paths survive cmd `/s`
 * spawn Windows `.cmd`/`.bat` as ComSpec argv (`/d /s /c`) with sources still extra argv elements
 * `doctor` warnings (missing git, missing settings, unread `pi --version`) no longer fail the run
 * `status` prints core and optional installed counts after the catalog header

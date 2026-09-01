@@ -257,11 +257,19 @@ function isWindowsCmdOrBat(resolved, platformName = platform()) {
 	return platformName === "win32" && /\.(cmd|bat)$/i.test(String(resolved));
 }
 
+const CMD_QUOTE_RE = /[\s&|<>^%!"()]/;
+
+export function quoteCmdArg(value, { always = false } = {}) {
+	const text = String(value);
+	if (!always && text !== "" && !CMD_QUOTE_RE.test(text)) return text;
+	return `"${text.replaceAll("%", "%%").replaceAll('"', '""')}"`;
+}
+
 export function windowsSpawnArgv(resolved, args = [], platformName = platform()) {
 	if (isWindowsCmdOrBat(resolved, platformName)) {
 		return {
 			command: process.env.ComSpec || "cmd.exe",
-			args: ["/d", "/s", "/c", resolved, ...args],
+			args: ["/d", "/s", "/c", "call", quoteCmdArg(resolved, { always: true }), ...args.map((arg) => quoteCmdArg(arg))],
 		};
 	}
 	return { command: resolved, args: [...args] };
@@ -271,7 +279,7 @@ function spawnCommand(command, args = [], options = {}) {
 	const resolved = command === "pi" || command === "npm" ? commandPath(command) ?? command : command;
 	const spawned = windowsSpawnArgv(resolved, args);
 	const spawnOptions = isWindowsCmdOrBat(resolved)
-		? { ...buildSpawnOptions(options), shell: false }
+		? { ...buildSpawnOptions(options), shell: false, windowsVerbatimArguments: true }
 		: buildSpawnOptions(options);
 	return spawnSync(spawned.command, spawned.args, spawnOptions);
 }
