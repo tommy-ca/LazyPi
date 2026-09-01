@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Bug Fixes
+
+* spawn Windows `.cmd`/`.bat` as ComSpec argv (`/d /s /c`) with sources still extra argv elements
+* `doctor` warnings (missing git, missing settings, unread `pi --version`) no longer fail the run
+* `status` prints core and optional installed counts after the catalog header
+
+### Specs
+
+* pin ComSpec argv spawn, non-fatal doctor warn, status tier counts, and `--except` subtracting from the full catalog
+* drop installer Search Tools; Catalog Model and harness search source stay
+
 ### Docs
 
 * TTY option is Install everything, not recommended; Missing pi 127 is without `--yes` only

@@ -33,6 +33,8 @@ MAY carry `legacySources`.
   matching package ids), `--except`, the interactive picker, or the
   interactive everything flow
 - **AND** status and remove SHALL cover optional entries like core ones
+- **AND** `--except` SHALL subtract from the full catalog (16 ids for
+  `--except todos`)
 
 #### Scenario: Catalog membership
 
@@ -171,11 +173,15 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 - **AND** it SHALL display the installed source for an installed entry;
   when that source carries a version pin that differs from the catalog
   source, the pin SHALL be visible in the output
+- **AND** after the `n/PACKAGES.length` header, it SHALL report core and
+  optional installed counts from PACKAGES categories
 
 #### Scenario: Scoped install
 
 - **WHEN** `--only core` or `--except <id>` is passed
 - **THEN** only matching categories or package ids are selected
+- **AND** `--except` SHALL subtract from the full catalog (16 ids for
+  `--except todos`)
 
 #### Scenario: Empty selector
 
@@ -195,6 +201,11 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 
 - **WHEN** `doctor` runs
 - **THEN** it SHALL fail when the Node version is below 20
+- **AND** it SHALL fail when npm is missing
+- **AND** it SHALL fail when pi is missing
+- **AND** `warn()` SHALL be non-fatal by default
+- **AND** missing git, missing settings, and unread `pi --version` SHALL
+  NOT fail the run
 - **AND** it SHALL warn non-fatally about unpinned git heads among installed
   sources outside the catalog
 - **AND** `package.json` SHALL declare `engines.node >= 20` to match
@@ -212,6 +223,11 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 - **WHEN** the CLI spawns `pi` or `npm`
 - **THEN** the source and package arguments SHALL be passed as argv
   elements, not interpolated into a shell command line
+- **AND** on win32, a resolved path matching `.cmd` or `.bat` SHALL be
+  invoked as ComSpec argv (`/d /s /c` plus the program plus the args)
+- **AND** sources SHALL remain extra argv elements
+- **AND** the CLI SHALL NOT join sources into a shell string
+- **AND** the CLI SHALL NOT default spawnSync `shell: true`
 
 #### Scenario: Unknown argument
 
@@ -298,25 +314,6 @@ Model so a missed spec delta cannot stay green.
 - **AND** a test SHALL fail if the Windows smoke workflow asserts the full
   catalog without installing the optional tier
 - **AND** CI SHALL run `npm run spec:validate` alongside `npm test`
-
-### Requirement: Search Tools
-
-The catalog SHALL provide an FFF-based search substrate that registers
-fuzzy file and content search tools alongside Pi's built-in find/grep.
-
-#### Scenario: Additive search
-
-- **WHEN** the search package is installed with its default mode
-- **THEN** `fffind`, `ffgrep`, and `fff-multi-grep` SHALL be registered as
-  additional tools
-- **AND** the built-in `find` and `grep` tool names SHALL remain available
-- **AND** replacing the built-in names SHALL require an explicit override
-  mode
-
-#### Scenario: Paged content search
-
-- **WHEN** a content search returns more matches than a page
-- **THEN** the result SHALL include a cursor for fetching the next page
 
 ### Requirement: Release Flow
 

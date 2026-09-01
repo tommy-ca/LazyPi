@@ -4,12 +4,20 @@ import { existsSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { windowsSpawnArgv } from "../bin/lazypi.mjs";
+
 export function npmExecutable(platformName = process.platform) {
 	return platformName === "win32" ? "npm.cmd" : "npm";
 }
 
 function run(command, args, options = {}) {
-	const result = spawnSync(command, args, { encoding: "utf8", ...options });
+	const spawned = windowsSpawnArgv(command, args);
+	const isCmd = process.platform === "win32" && /\.(cmd|bat)$/i.test(String(command));
+	const result = spawnSync(spawned.command, spawned.args, {
+		encoding: "utf8",
+		...options,
+		...(isCmd ? { shell: false } : {}),
+	});
 	if (result.error) throw result.error;
 	return result;
 }
