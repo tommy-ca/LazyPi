@@ -74,3 +74,12 @@ test("sidebar package hrefs match PACKAGES order with ask-user slug", () => {
 	const expected = PACKAGES.map((pkg) => `/docs/packages/${docsSlug(pkg.id)}.html`);
 	assert.deepEqual(sidebarPackageHrefs(SIDEBAR), expected);
 });
+
+test("installation.html and landing mock do not call Install everything recommended", () => {
+	const installation = readFileSync("docs/docs/installation.html", "utf8");
+	const landing = readFileSync("docs/index.html", "utf8");
+	assert.equal(installation.includes("(recommended)"), false);
+	assert.equal(landing.includes("(recommended)"), false);
+	assert.match(installation, /Install everything/);
+	assert.match(landing, /Install everything/);
+});

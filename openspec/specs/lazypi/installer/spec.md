@@ -188,7 +188,7 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 - **WHEN** `install` or `update` runs without a `pi` executable on PATH
 - **THEN** the CLI SHALL NOT block on an interactive prompt when stdin or
   stdout is not a TTY
-- **AND** on a non-TTY it SHALL print an error and exit 127
+- **AND** on a non-TTY without `--yes` it SHALL print an error and exit 127
 - **AND** on a TTY it SHALL offer to install Pi and exit 127 when declined
 
 #### Scenario: Doctor environment
@@ -379,8 +379,16 @@ category and a rationale.
 
 `README.md` SHALL state that `--yes` installs 12 packages.
 
-`README.md` SHALL state that the TTY Install all or Install everything
-path installs 17 packages.
+`README.md` SHALL state that the TTY Install everything path installs 17
+packages.
+
+The TTY everything option label SHALL be Install everything.
+
+Catalog documentation SHALL NOT call that option recommended.
+
+`docs/docs/installation.html` SHALL NOT contain `(recommended)`.
+
+`docs/index.html` SHALL NOT contain `(recommended)`.
 
 `docs/docs/philosophy.html` SHALL explain why the default install is the
 12 core packages.
@@ -414,8 +422,7 @@ Dropped packages.
 
 - **WHEN** `README.md` describes install counts
 - **THEN** it SHALL state that `--yes` installs 12 packages
-- **AND** it SHALL state that TTY Install all or Install everything
-  installs 17 packages
+- **AND** it SHALL state that TTY Install everything installs 17 packages
 
 #### Scenario: Philosophy page
 
@@ -433,6 +440,12 @@ Dropped packages.
 - **WHEN** `docs/docs/index.html` is read
 - **THEN** it SHALL point at `philosophy.html`
 - **AND** it SHALL NOT feature Dropped ids as optional extras
+
+#### Scenario: TTY option label is not recommended
+
+- **WHEN** `docs/docs/installation.html` or `docs/index.html` is read
+- **THEN** the TTY option label SHALL be Install everything
+- **AND** neither page SHALL contain `(recommended)`
 
 ### Requirement: Troubleshooting
 
