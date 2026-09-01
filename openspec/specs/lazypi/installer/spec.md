@@ -208,6 +208,8 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
   NOT fail the run
 - **AND** it SHALL warn non-fatally about unpinned git heads among installed
   sources outside the catalog
+- **AND** an unpinned git head that matches a catalog `source` or
+  `legacySources` SHALL NOT produce that warning
 - **AND** `package.json` SHALL declare `engines.node >= 20` to match
 
 #### Scenario: Local install trust
@@ -234,6 +236,9 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 - **AND** the CLI SHALL NOT join sources into a shell string
 - **AND** the CLI SHALL NOT default spawnSync `shell: true`
 - **AND** the ComSpec plan SHALL set `windowsVerbatimArguments: true`
+- **AND** on win32, `where` output SHALL prefer a `.cmd`, `.bat`, `.exe`,
+  or `.com` hit over an extensionless shim
+- **AND** the ComSpec executable SHALL be `cmd.exe`, not PowerShell
 
 #### Scenario: Unknown argument
 

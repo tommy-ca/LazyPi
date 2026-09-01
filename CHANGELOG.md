@@ -4,6 +4,9 @@
 
 ### Bug Fixes
 
+* `where` prefers a `.cmd`/`.exe` hit over an extensionless Windows shim
+* ComSpec wrap uses `cmd.exe` even when `ComSpec` is PowerShell
+* `doctor` does not warn on unpinned git heads that match catalog or legacy sources
 * spawn Windows `.cmd`/`.bat` as ComSpec argv (`/d /s /c call`) with a quoted program so Program Files paths survive cmd `/s`
 * spawn Windows `.cmd`/`.bat` as ComSpec argv (`/d /s /c`) with sources still extra argv elements
 * `doctor` warnings (missing git, missing settings, unread `pi --version`) no longer fail the run

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { buildSpawnOptions, quoteCmdArg, resolveEntrypointUrl, windowsSpawnArgv } from "../bin/lazypi.mjs";
+import { buildSpawnOptions, pickWindowsWhereHit, quoteCmdArg, resolveEntrypointUrl, windowsComSpec, windowsSpawnArgv } from "../bin/lazypi.mjs";
 
 test("buildSpawnOptions does not force shell on Windows by default", () => {
 	assert.deepEqual(buildSpawnOptions({ stdio: "inherit" }, "win32"), {
@@ -46,7 +46,7 @@ test("windowsSpawnArgv wraps .cmd as ComSpec argv", () => {
 
 test("windowsSpawnArgv wraps .bat as ComSpec argv", () => {
 	assert.deepEqual(windowsSpawnArgv("C:\\pi.bat", ["install", "npm:pkg"], "win32"), {
-		command: process.env.ComSpec || "cmd.exe",
+		command: windowsComSpec(),
 		args: ["/d", "/s", "/c", "call", '"C:\\pi.bat"', "install", "npm:pkg"],
 	});
 });
@@ -55,7 +55,7 @@ test("windowsSpawnArgv quotes Program Files paths after call", () => {
 	assert.deepEqual(
 		windowsSpawnArgv("C:\\Program Files\\nodejs\\npm.cmd", ["install", "-g", "pkg"], "win32"),
 		{
-			command: process.env.ComSpec || "cmd.exe",
+			command: windowsComSpec(),
 			args: ["/d", "/s", "/c", "call", '"C:\\Program Files\\nodejs\\npm.cmd"', "install", "-g", "pkg"],
 		},
 	);
@@ -64,10 +64,28 @@ test("windowsSpawnArgv quotes Program Files paths after call", () => {
 test("windowsSpawnArgv keeps an ampersand source as one quoted argv slot", () => {
 	const source = "npm:pi-subagents & calc.exe";
 	assert.deepEqual(windowsSpawnArgv("C:\\pi.cmd", ["install", source], "win32"), {
-		command: process.env.ComSpec || "cmd.exe",
+		command: windowsComSpec(),
 		args: ["/d", "/s", "/c", "call", '"C:\\pi.cmd"', "install", `"${source}"`],
 	});
 	assert.equal(quoteCmdArg(source), `"${source}"`);
+});
+
+test("pickWindowsWhereHit prefers .cmd over an extensionless shim", () => {
+	assert.equal(
+		pickWindowsWhereHit("C:\\Users\\Ada\\AppData\\Roaming\\npm\\npm\r\nC:\\Users\\Ada\\AppData\\Roaming\\npm\\npm.cmd\r\n"),
+		"C:\\Users\\Ada\\AppData\\Roaming\\npm\\npm.cmd",
+	);
+});
+
+test("windowsComSpec ignores PowerShell ComSpec", () => {
+	assert.equal(
+		windowsComSpec({ ComSpec: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", SystemRoot: "C:\\Windows" }),
+		"C:\\Windows\\System32\\cmd.exe",
+	);
+	assert.equal(
+		windowsComSpec({ ComSpec: "C:\\Windows\\System32\\cmd.exe" }),
+		"C:\\Windows\\System32\\cmd.exe",
+	);
 });
 
 test("windowsSpawnArgv leaves a non-cmd path as file plus args", () => {

@@ -81,6 +81,27 @@ test("doctor with no settings file warns and exits 0", (t) => {
 	assert.doesNotMatch(output, /problem\(s\) found/);
 });
 
+test("doctor warns on outsider unpinned git and skips catalog legacy git", (t) => {
+	const { home, workspace, bin } = createWorkspace(t);
+	writeFakePi(bin);
+	const agentDir = join(home, ".pi", "agent");
+	mkdirSync(agentDir, { recursive: true });
+	writeFileSync(
+		join(agentDir, "settings.json"),
+		JSON.stringify({
+			packages: [
+				"git:github.com/VandeeFeng/pi-memory-md",
+				"git:github.com/acme/unrelated-tool",
+			],
+		}) + "\n",
+	);
+	const result = runCli(["doctor"], { cwd: workspace, home, agentDir, bin });
+	const output = `${result.stdout}\n${result.stderr}`;
+	assert.equal(result.status, 0, output);
+	assert.doesNotMatch(output, /VandeeFeng\/pi-memory-md is an unpinned git head/);
+	assert.match(output, /acme\/unrelated-tool is an unpinned git head/);
+});
+
 test("status prints core and optional installed counts after the catalog header", (t) => {
 	const { home, workspace, bin } = createWorkspace(t);
 	writeFakePi(bin);
