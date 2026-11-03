@@ -1010,7 +1010,7 @@ async function cmdRemove(flags, targets) {
 // ---------------------------------------------------------------------------
 async function main() {
 	const flags = parseArgs(argv.slice(2));
-	if (flags.version) {
+	if (flags.version && !flags.usageError) {
 		console.log(`@tommy-ca/lazypi ${VERSION}`);
 		return 0;
 	}
