@@ -13,12 +13,12 @@ Branch: `audit/lazypi-safety-stack`. Delivery: auto-chain, stacked-to-master. Ru
 ## Tasks
 
 - T1 [S1,S2,S4] inline synthesis plus delegated read-only swarm/arena; complete; baseline gates and CLI/migration RED observed, Sol plan selected with cross-judge agreement.
-- T2 [S3,S5] inline CLI safety fixes I1/I3/I4 with regression tests and spec delta; implementation checked, independent shipping verdict pending; RED observed, focused/full/spec GREEN; Risk item 3, shared argument handling and behavior contracts.
-- T3 [S3,S5] inline install-first migration I2; implemented in `84a6a14`, focused/full/spec GREEN, independent and native CI pending; Risk item 1, removal of an installed legacy source.
-- T4 [S3,S5] inline documentation corrections I5; commit `3c3affe`, structural readback and docs/full/spec checks passed; independent shipping review pending; passive.
+- T2 [S3,S5] inline CLI safety fixes I1/I3/I4; `8f7ac25` plus `5fd4c27`; implementation and independent recheck passed, Linux CI green; merge pending; Risk item 3, shared behavior contracts.
+- T3 [S3,S5] inline install-first migration I2; `84a6a14`; focused/full/spec, independent probes, and Linux real-Pi CI passed; merge pending; Risk item 1, removal of installed legacy sources.
+- T4 [S3,S5] inline documentation corrections I5; `3c3affe`; structural readback, docs/full/spec, independent review and Linux CI passed; merge pending; passive.
 - T5 [S3,S5] inline portable active-step verification I7/I8 implemented in `8f9892a` plus scoped correction `e017d65`; I6 publisher removal in `5a4f527`; own checks passed, release independent review pending; Risk item 5, CI and publishing mechanics.
 - T6 [S3,S4,S5] delegated independent per-slice verification and interrogate, then parent GitHub delivery; in progress; no merges before verdicts and gates.
-- T7 [S1,S3,S5] inline CRLF README catalog-test correction I10, separate follow-up PR; pending; Risk item 5, native CI portability.
+- T7 [S1,S3,S5] inline CRLF README catalog-test correction I10; RED observed, focused/full/spec GREEN, independent and native CI pending; Risk item 5, native CI portability.
 
 ## Log
 
@@ -145,5 +145,11 @@ graph TD
 - PR #6 is https://github.com/tommy-ca/LazyPi/pull/6. The corrected CI parent was merged into the release branch without rewriting remote history.
 - Native Windows run https://github.com/tommy-ca/LazyPi/actions/runs/41678195347 failed on the existing README catalog parser, which splits LF lines but rejects trailing CR. Its update-delegation fixture passed. Logs `/tmp/lazypi-baseline.jJaVrz/windows-failed.log` show expected catalog rows versus an empty actual list.
 - New finding I10 P2 is a pre-existing native portability defect, not a new reviewer correction. Add T7 as a separate follow-up slice and reproduce CRLF locally before fixing it. A new Windows run remains required; no failing proof is accepted as a pass.
+
+### L14. CRLF follow-up checked
+
+- Added a literal LF/CRLF catalog-table probe. RED reproduced an empty CRLF result instead of the expected rows. The one-line fix splits either newline form. Focused docs checks, full `npm test`, spec validation, and diff checks passed. Final local suite observed 71 passed with no failures. Logs `/tmp/lazypi-baseline.jJaVrz/final-suite.log` and `final-spec.log`.
+- No spec delta is needed for I10: this changes only the test parser to enforce the existing README catalog contract on Windows; it changes neither PACKAGES, CLI behavior, nor release mechanics. Prior release and CI changes each carry their own delta.
+- PR #7 is https://github.com/tommy-ca/LazyPi/pull/7. Release-policy independent review, full-stack interrogate, exact-head Windows rerun, current-head CI, and dependency-ordered merges remain pending. No merge or npm publish is armed.
 
 
