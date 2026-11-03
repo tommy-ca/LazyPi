@@ -15,7 +15,7 @@ Branch: `audit/lazypi-safety-stack`. Delivery: auto-chain, stacked-to-master. Ru
 - T1 [S1,S2,S4] inline synthesis plus delegated read-only swarm/arena; complete; baseline gates and CLI/migration RED observed, Sol plan selected with cross-judge agreement.
 - T2 [S3,S5] inline CLI safety fixes I1/I3/I4 with regression tests and spec delta; implementation checked, independent shipping verdict pending; RED observed, focused/full/spec GREEN; Risk item 3, shared argument handling and behavior contracts.
 - T3 [S3,S5] inline install-first migration I2; implemented in `84a6a14`, focused/full/spec GREEN, independent and native CI pending; Risk item 1, removal of an installed legacy source.
-- T4 [S3,S5] inline documentation corrections I5; pending; passive structural verification.
+- T4 [S3,S5] inline documentation corrections I5; structural readback, docs/full/spec checks passed; independent shipping review pending; passive.
 - T5 [S3,S5] inline portable active-step verification I7/I8, then separate manual-release correction I6; pending; Risk item 5, CI and publishing mechanics.
 - T6 [S3,S4,S5] delegated independent per-slice verification and interrogate, then parent GitHub delivery; pending; no merges before verdicts and gates.
 
@@ -120,5 +120,11 @@ graph TD
 - Stateful CLI regression tests passed in global and local scopes, including failed replacement, failed cleanup, pinned object metadata, and already-installed convergence. `npm test` and `npm run spec:validate` passed. Logs `/tmp/lazypi-baseline.jJaVrz/migration-green.log`, `migration-suite.log`, and `migration-spec.log`.
 - Real-Pi integration stage now removes the seeded replacement before migration and asserts install-before-remove output. Its live registry execution is pending GitHub CI, not claimed locally.
 - PR #3 is https://github.com/tommy-ca/LazyPi/pull/3. CLI version-bypass correction `5fd4c27` was merged into the migration branch without force-pushing; this preserves the stack's parent ancestry.
+
+### L11. Truthful documentation checked
+
+- Corrected the overview, FAQ, installation/removal guides, subagents page, and README. Read back the diff against settings-writing, backup naming, and removal-picker behavior. No executable behavior changed. Passive prose does not have a meaningful RED test.
+- Existing documentation tests, full `npm test`, spec validation, and diff checks passed. Logs `/tmp/lazypi-baseline.jJaVrz/docs-focused.log`, `docs-suite.log`, and `docs-spec.log`. No Jekyll build or visual-layout claim is made.
+- PR #4 is https://github.com/tommy-ca/LazyPi/pull/4. CLI recheck at `5fd4c27` received PASS+NOTES from the independent verifier; parent posted the verdict on PR #3. Current-head CI remains required.
 
 

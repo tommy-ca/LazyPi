@@ -80,7 +80,8 @@ npx @tommy-ca/lazypi remove subagents
 npx @tommy-ca/lazypi remove npm:pi-subagents@0.13.3   # raw pi source also works
 ```
 
-There is nothing to "uninstall" for LazyPi itself — `npx` doesn't leave it around.
+LazyPi needs no global installation. Runner caches, subagent settings overrides,
+and timestamped settings backups can remain after package removal.
 
 ## Troubleshooting
 

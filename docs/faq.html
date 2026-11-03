@@ -63,7 +63,7 @@ extra_css: /assets/css/faq.css
   <div class="faq-item">
     <div class="faq-q">Will it overwrite my existing Pi setup?</div>
     <div class="faq-a">
-      No. LazyPi reads your existing Pi configuration and skips anything already installed. It's fully idempotent — you can run it as many times as you like without worrying about it clobbering your setup.
+      LazyPi skips installed packages, but selecting subagents resets six builtin model overrides to <code>model: ""</code> so they inherit the session model. Other override keys remain. LazyPi creates a timestamped backup before changing an existing settings file. See <a href="/docs/packages/subagents.html">Sub-agents</a> for the affected names.
     </div>
   </div>
 
