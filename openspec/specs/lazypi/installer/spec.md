@@ -361,13 +361,12 @@ be gated on the spec and test suites before publishing.
 - **AND** `npm login` (device auth) SHALL mint a fresh token, after which
   publish SHALL succeed with an OTP or the device-auth flow
 
-#### Scenario: CI trusted publishing
+#### Scenario: Manual-only publishing policy
 
-- **WHEN** the release-please workflow is considered for release
-  production
-- **THEN** it SHALL NOT be treated as the current publish path until an
-  `NPM_TOKEN` secret exists in the repository
-- **AND** releases SHALL be manual until that secret is provisioned
+- **WHEN** repository CI workflows are inspected
+- **THEN** no automated npm publishing workflow SHALL be present
+- **AND** the dormant release-please publisher SHALL be removed
+- **AND** README SHALL describe interactive gated publishing as the current release path
 
 #### Scenario: Post-publish validation
 
