@@ -717,14 +717,6 @@ async function cmdInstall(flags) {
 	const piArgs = flags.local ? ["install", "-l", "--approve"] : ["install"];
 
 	for (const pkg of toInstall) {
-		const migrationStatus = removeLegacy(pkg, installedSources, flags.local, interactive);
-		if (migrationStatus !== 0) {
-			failed.push(pkg);
-			if (interactive) log.error(`failed to migrate ${pkg.id}`);
-			else console.error(red(`  ✗ failed to migrate ${pkg.id}`));
-			continue;
-		}
-
 		const action = `pi install ${pkg.source}`;
 		if (interactive) log.step(action);
 		else console.log(`\n→ ${action}`);
@@ -733,6 +725,14 @@ async function cmdInstall(flags) {
 			failed.push(pkg);
 			if (interactive) log.error(`failed to install ${pkg.id}`);
 			else console.error(red(`  ✗ failed to install ${pkg.id}`));
+			continue;
+		}
+
+		const migrationStatus = removeLegacy(pkg, installedSources, flags.local, interactive);
+		if (migrationStatus !== 0) {
+			failed.push(pkg);
+			if (interactive) log.error(`failed to migrate ${pkg.id}`);
+			else console.error(red(`  ✗ failed to migrate ${pkg.id}`));
 		}
 	}
 

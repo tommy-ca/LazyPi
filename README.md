@@ -58,6 +58,8 @@ Dropped packages are outside this table. `pi install` still works. LazyPi does n
 `--only` and `--except` apply only to `install`. Other commands reject them
 before running Pi. An empty unattended selection does not install Pi or packages.
 `doctor` warns nonfatally when `pi --version` fails or returns no output.
+Legacy migrations install the catalog replacement before removing the old source.
+If the replacement fails to install, LazyPi leaves the legacy package in place.
 
 ## Updating
 
