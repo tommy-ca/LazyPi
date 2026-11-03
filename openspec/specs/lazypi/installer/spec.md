@@ -23,7 +23,7 @@ MAY carry `legacySources`.
   mention-skill, goal, btw, context-usage, simplify, web-access, fff,
   dynamic-workflows, and ponytail
 - **AND** optional SHALL contain lsp, interactive-shell, autoresearch,
-  todos, and memory
+  todos, memory, and verdict
 
 #### Scenario: Optional catalog tier
 

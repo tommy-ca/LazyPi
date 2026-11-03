@@ -60,10 +60,10 @@ function runCli(args, { cwd, home, agentDir, bin } = {}) {
 	return result;
 }
 
-test("--except todos selects 16 ids from the full catalog", () => {
+test("--except todos selects 17 ids from the full catalog", () => {
 	const ids = resolveSelection({ except: ["todos"] });
-	assert.equal(PACKAGES.length, 17);
-	assert.equal(ids.size, 16);
+	assert.equal(PACKAGES.length, 18);
+	assert.equal(ids.size, 17);
 	assert.equal(ids.has("todos"), false);
 	assert.equal(ids.has("subagents"), true);
 	assert.equal(ids.has("memory"), true);
@@ -125,6 +125,6 @@ test("status prints core and optional installed counts after the catalog header"
 	const result = runCli(["status"], { cwd: workspace, home, agentDir, bin });
 	const output = `${result.stdout}\n${result.stderr}`;
 	assert.equal(result.status, 0, output);
-	assert.match(output, /Installed from LazyPi catalog \(0\/17\):/);
-	assert.match(output, /core 0\/12, optional 0\/5/);
+	assert.match(output, /Installed from LazyPi catalog \(0\/18\):/);
+	assert.match(output, /core 0\/12, optional 0\/6/);
 });

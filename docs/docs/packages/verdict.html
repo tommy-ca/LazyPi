@@ -1,0 +1,45 @@
+---
+layout: docs
+title: "Pi Verdict — LazyPi Docs"
+---
+<h1>Pi Verdict</h1>
+<p class="page-desc">Claude Code-style permission gate: allow, deny, or ask per tool call with an LLM classifier.</p>
+
+<h2>What it does</h2>
+<p>
+  Pi Verdict adds a permission gate to Pi that runs before every tool call. It classifies each action as allow, deny, or ask, using built-in dangerous rules, your own allow/deny rules, and an LLM classifier that carries session context. Uncertain or failed classifications always fail closed.
+</p>
+<p>
+  The gate protects itself against tampering and inspection. It is a permission gate, not a sandbox: use OS-level isolation on top of it.
+</p>
+
+<h2>Why it's included</h2>
+<p>
+  Pi has no built-in per-tool permission confirmation. Every tool call runs with Pi's own privileges. Pi Verdict adds the missing safety layer, modeled on Claude Code's auto mode, so routine actions flow through while dangerous or ambiguous ones stop for review.
+</p>
+
+<h2>Commands</h2>
+<table>
+  <thead>
+    <tr><th>Command</th><th>What it does</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>/verdict</code></td>
+      <td>Open the permission gate status and configuration</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="learn-more">
+  <a href="https://github.com/jesset/pi-verdict" target="_blank" rel="noopener">→ GitHub — jesset/pi-verdict</a>
+</div>
+
+<nav class="prev-next">
+  <a href="/docs/packages/memory.html" class="prev-next-link">
+    <span class="prev-next-label">Previous</span>← Previous
+  </a>
+  <a href="/docs/packages/index.html" class="prev-next-link next">
+    <span class="prev-next-label">Next</span>Packages →
+  </a>
+</nav>
