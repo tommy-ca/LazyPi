@@ -76,9 +76,25 @@ test("doctor with no settings file warns and exits 0", (t) => {
 	const result = runCli(["doctor"], { cwd: workspace, home, agentDir, bin });
 	const output = `${result.stdout}\n${result.stderr}`;
 	assert.equal(result.status, 0, output);
+	assert.match(output, /pi --version: pi test/);
 	assert.match(output, /does not exist yet/);
 	assert.match(output, /warning\(s\) found/);
 	assert.doesNotMatch(output, /problem\(s\) found/);
+});
+
+test("doctor warns when Pi version exits unsuccessfully with error output", (t) => {
+	const { home, workspace, bin } = createWorkspace(t);
+	if (process.platform === "win32") {
+		writeFileSync(join(bin, "pi.cmd"), "@echo off\r\necho Error: missing dependency 1>&2\r\nexit /b 1\r\n");
+	} else {
+		const piPath = join(bin, "pi");
+		writeFileSync(piPath, "#!/bin/sh\necho 'Error: missing dependency' >&2\nexit 1\n");
+		chmodSync(piPath, 0o755);
+	}
+	const result = runCli(["doctor"], { cwd: workspace, home, agentDir: join(home, ".pi", "agent"), bin });
+	assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+	assert.match(result.stdout, /Could not read `pi --version` output/);
+	assert.doesNotMatch(result.stdout, /✓ pi --version: Error/);
 });
 
 test("doctor warns on outsider unpinned git and skips catalog legacy git", (t) => {

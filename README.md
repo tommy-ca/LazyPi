@@ -55,6 +55,10 @@ Dropped packages are outside this table. `pi install` still works. LazyPi does n
 | `npx @tommy-ca/lazypi update` | Run `pi update` for installed Pi packages |
 | `npx @tommy-ca/lazypi doctor` | Check your environment for common problems |
 
+`--only` and `--except` apply only to `install`. Other commands reject them
+before running Pi. An empty unattended selection does not install Pi or packages.
+`doctor` warns nonfatally when `pi --version` fails or returns no output.
+
 ## Updating
 
 ```bash
