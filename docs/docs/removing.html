@@ -9,7 +9,7 @@ description: "How to remove LazyPi packages."
     <h2>Interactive picker</h2>
     <pre><code>npx @tommy-ca/lazypi remove</code></pre>
     <p>
-      Opens a multi-select picker showing all installed LazyPi packages. Use space to deselect and enter to confirm removal.
+      Opens a multi-select picker showing installed LazyPi packages with nothing selected. Use space to select packages to remove, then enter to confirm. An empty selection removes nothing.
     </p>
 
     <h2>Remove by ID</h2>
@@ -26,7 +26,7 @@ description: "How to remove LazyPi packages."
 
     <h2>Removing LazyPi itself</h2>
     <p>
-      LazyPi leaves nothing behind after running — it's downloaded on demand via <code>npx</code> and not stored anywhere. Removing your installed packages via the commands above is all that's needed.
+      LazyPi does not require a global installation. Removing packages does not remove runner caches, subagent settings overrides, or LazyPi's timestamped settings backups. See <a href="/docs/installation.html">Installation</a> for the persisted settings and backup names, and the <a href="/faq.html">FAQ</a> for cache troubleshooting.
     </p>
 
     <nav class="prev-next">
