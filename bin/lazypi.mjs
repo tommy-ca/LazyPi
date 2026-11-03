@@ -57,7 +57,14 @@ export const PACKAGES = [
 		description: "Persistent todo overlay",
 		hint: "Task list that survives reload and compaction; /todos command with live panel.",
 	},
-	{ id: "memory", category: "optional", source: "npm:pi-memory-md", legacySources: ["git:github.com/VandeeFeng/pi-memory-md"], description: "Markdown-backed memory", hint: "Letta-like git-backed memory: persistent context, prompt append, multi-project spaces." },
+	{
+		id: "memory",
+		category: "optional",
+		source: "npm:@henryqw/pi-memory",
+		legacySources: ["npm:pi-memory-md", "git:github.com/VandeeFeng/pi-memory-md"],
+		description: "Auto-managed markdown memory",
+		hint: "Capped MEMORY.md/USER.md stores with frozen session snapshots; auto-managed.",
+	},
 	{ id: "verdict", category: "optional", source: "npm:pi-verdict", description: "Permission gate", hint: "Claude Code-style auto mode: allow, deny, or ask per tool call with an LLM classifier; fail-closed." },
 ];
 

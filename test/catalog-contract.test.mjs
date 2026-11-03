@@ -40,7 +40,7 @@ const CURRENT_SOURCES = {
 	"interactive-shell": "npm:pi-interactive-shell",
 	autoresearch: "npm:pi-autoresearch",
 	todos: "npm:@juicesharp/rpiv-todo",
-	memory: "npm:pi-memory-md",
+	memory: "npm:@henryqw/pi-memory",
 	verdict: "npm:pi-verdict",
 };
 
