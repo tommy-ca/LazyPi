@@ -132,10 +132,8 @@ LazyPi ships from `master` with a manual, gate-checked release flow:
   `bunx @tommy-ca/lazypi@<version> --version` must both report the
   released version, then `status`/`install --yes` must be idempotent.
 
-The repo also carries a release-please workflow intended for CI trusted
-publishing, but it is **not provisioned** (no `NPM_TOKEN` secret), so it
-is not the current publish path. Wire the secret and test the workflow
-before treating releases as automated.
+There is no automated npm publishing workflow. CI verifies the artifact;
+publishing remains an interactive, gate-checked maintainer action.
 
 ---
 
