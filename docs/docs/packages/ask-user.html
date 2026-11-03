@@ -7,10 +7,13 @@ title: "Ask User — LazyPi Docs"
 
     <h2>What it does</h2>
     <p>
-      <code>ask_user</code> presents one focused, multiple-choice question when the target file, create-vs-edit, acceptance criteria, or a mutually exclusive implementation option is undefined. One avoided rewrite pays for the pause.
+      <code>ask_user</code> presents one focused, multiple-choice question — or a batch of 2-4 independent questions with a review page — when the target file, create-vs-edit, acceptance criteria, or a mutually exclusive implementation option is undefined. One avoided rewrite pays for the pause.
     </p>
     <p>
       Related workflow: when a request is ambiguous, Pi asks before producing a large diff. This is an efficiency feature — a cheap structured question in exchange for not generating the wrong thing.
+    </p>
+    <p>
+      Defaults can be persisted in <code>~/.pi/agent/ask-user.json</code> (display mode, layout, comments, context expansion, and shortcut keys); environment variables override the file. See the upstream README for the full parameter and event reference.
     </p>
 
     <h2>Why it's included</h2>
