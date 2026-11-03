@@ -154,6 +154,9 @@ function parseArgs(args) {
 		}
 	}
 
+	if (flags.command !== "install" && (flags.only || flags.except)) {
+		flags.usageError ??= "--only and --except are only supported by install";
+	}
 	if (flags.only && flags.except) {
 		flags.usageError ??= "Use either --only or --except, not both";
 	}
@@ -227,6 +230,8 @@ ${bold("Default behaviour:")}
   - On a TTY, an interactive picker appears with core pre-ticked;
     untick categories or packages before confirming.
   - With --yes, --only, or --except the picker is skipped.
+  - --only and --except are install-only; other commands reject them.
+  - An empty unattended selection does not install Pi or packages.
 
 ${bold("Categories:")}
   core         the harness control plane: sub-agents, workflows, ask gate, skill visibility, $ mention, goal, side chat, context budget, simplify, web research, fff search, ponytail discipline
@@ -621,6 +626,11 @@ async function cmdInstall(flags) {
 		return 2;
 	}
 
+	if (!interactive && selectedIds.size === 0) {
+		console.log(yellow("Nothing selected — nothing to install."));
+		return 0;
+	}
+
 	if (!(await ensurePi(flags))) return 127;
 
 	if (interactive) {
@@ -892,7 +902,7 @@ function cmdDoctor(flags) {
 		pass("`pi` is on PATH");
 		const v = spawnCommand("pi", ["--version"], { encoding: "utf8" });
 		const vout = (v.stdout ?? "").trim() || (v.stderr ?? "").trim();
-		if (vout) pass(`pi --version: ${vout}`);
+		if (v.status === 0 && vout) pass(`pi --version: ${vout}`);
 		else warn("Could not read `pi --version` output");
 	} else {
 		fail("`pi` is not on PATH — run `npx @tommy-ca/lazypi` to install it");
@@ -1000,7 +1010,7 @@ async function cmdRemove(flags, targets) {
 // ---------------------------------------------------------------------------
 async function main() {
 	const flags = parseArgs(argv.slice(2));
-	if (flags.version) {
+	if (flags.version && !flags.usageError) {
 		console.log(`@tommy-ca/lazypi ${VERSION}`);
 		return 0;
 	}

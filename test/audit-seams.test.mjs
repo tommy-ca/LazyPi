@@ -154,6 +154,70 @@ for (const args of CORRUPT_COMMANDS) {
 	});
 }
 
+test("install selectors on other commands fail before execution or settings changes", (t) => {
+	const { root, home, workspace, bin } = createWorkspace(t);
+	const agentDir = join(home, ".pi", "agent");
+	const settingsFile = join(agentDir, "settings.json");
+	const callsPath = join(root, "pi-calls.log");
+	writeFakePi(bin);
+	mkdirSync(agentDir, { recursive: true });
+	const before = JSON.stringify({ packages: ["npm:pi-subagents"], keep: true }) + "\n";
+	writeFileSync(settingsFile, before);
+	for (const command of ["update", "remove", "status", "doctor"]) {
+		for (const selectors of [["--only=fff"], ["--except=fff"], ["--only=fff", "--except=fff"]]) {
+			const args = command === "remove" ? [command, "subagents", ...selectors] : [command, ...selectors];
+			const result = runCli(args, { cwd: workspace, home, agentDir, bin, callsPath });
+			assert.equal(result.status, 2, `${args.join(" ")}\n${result.stdout}\n${result.stderr}`);
+			assert.match(result.stderr, /--only and --except are only supported by install/);
+			assert.deepEqual(readCalls(callsPath), []);
+			assert.equal(readFileSync(settingsFile, "utf8"), before);
+		}
+	}
+});
+
+test("version cannot bypass non-install selector rejection", (t) => {
+	const { root, home, workspace, bin } = createWorkspace(t);
+	const agentDir = join(home, ".pi", "agent");
+	const settingsFile = join(agentDir, "settings.json");
+	const callsPath = join(root, "calls.log");
+	writeFakePi(bin);
+	mkdirSync(agentDir, { recursive: true });
+	const before = '{"packages":[],"keep":true}\n';
+	writeFileSync(settingsFile, before);
+	for (const command of ["update", "remove", "status", "doctor"]) {
+		for (const selector of ["--only=fff", "--except=fff"]) {
+			for (const version of ["--version", "-V"]) {
+				const result = runCli([command, selector, version], { cwd: workspace, home, agentDir, bin, callsPath });
+				assert.equal(result.status, 2);
+				assert.equal(result.stderr, "--only and --except are only supported by install\n");
+				assert.match(result.stdout, /Usage:/);
+				assert.deepEqual(readCalls(callsPath), []);
+				assert.equal(readFileSync(settingsFile, "utf8"), before);
+			}
+		}
+	}
+});
+
+test("empty unattended selection does not install Pi or write settings", { skip: process.platform === "win32" && "isolated Unix PATH probe" }, (t) => {
+	const { root, home, workspace, bin } = createWorkspace(t);
+	const agentDir = join(home, ".pi", "agent");
+	const npmPath = join(bin, "npm");
+	const callsPath = join(root, "npm-calls.log");
+	writeFileSync(npmPath, `#!/bin/sh\nprintf '%s\\n' "$*" >> '${callsPath}'\nexit 99\n`);
+	chmodSync(npmPath, 0o755);
+	const result = spawnSync(process.execPath, [CLI_PATH, "install", "--yes", "--except", "core,optional"], {
+		cwd: workspace,
+		env: { ...process.env, HOME: home, USERPROFILE: home, PI_CODING_AGENT_DIR: agentDir, PATH: [bin, "/usr/bin", "/bin"].join(delimiter) },
+		encoding: "utf8",
+		timeout: 15_000,
+	});
+	assert.equal(result.error, undefined);
+	assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+	assert.match(result.stdout, /Nothing selected/);
+	assert.equal(existsSync(callsPath), false);
+	assert.equal(existsSync(join(agentDir, "settings.json")), false);
+});
+
 test("writeSubagentOverrides skips write when empty models exist and keeps extra keys", (t) => {
 	const { home } = createWorkspace(t);
 	const agentDir = join(home, ".pi", "agent");

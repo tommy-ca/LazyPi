@@ -1,0 +1,6 @@
+ts	phase	decision	why	evidence	result
+2026-11-03T16:17:03Z	frame	Audit LazyPi and preserve untracked governance work	User clarified the target and existing work is outside scope	odd/tasks/lazypi-audit-stack.md#l2-scope-and-authority	framed
+2026-11-03T16:17:03Z	baseline	Capture existing tests and spec gates before changes	Separate existing defects from introduced regressions	/tmp/lazypi-baseline.jJaVrz/	checks passed
+2026-11-03T16:17:03Z	audit	Use three read-only source partitions	Cover independent CLI contracts and delivery concerns without concurrent writes	01577033-3e09-4f45-ac14-f70631e0fb0c	findings require runtime reproduction
+2026-11-03T16:17:03Z	plan	Compare remediation plans before implementation	Find minimal safe fixes and isolate unresolved recovery policy	b92e1c6f-a103-4dd5-b827-499137924e0b	pending
+2026-11-03T16:37:57Z	cli-safety	Reject ignored selectors and avoid false setup/version success	Existing parser and command checks solve the defects without new abstractions	/tmp/lazypi-baseline.jJaVrz/cli-suite.log	Focused tests full suite specs and baseline differential passed
