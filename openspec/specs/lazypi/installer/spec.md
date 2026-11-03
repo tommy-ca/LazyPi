@@ -122,9 +122,12 @@ installed. Invalid settings JSON SHALL fail the run before any `pi` spawn.
 #### Scenario: Legacy migration
 
 - **WHEN** an installed source matches an entry's `legacySources`
-- **THEN** the installer SHALL run `pi remove <legacy>` before
-  `pi install <source>`
-- **AND** a failed migration SHALL fail the entry without installing
+- **THEN** the installer SHALL run `pi install <source>` before
+  `pi remove <legacy>` when the replacement is missing
+- **AND** failed replacement installation SHALL fail the entry without removing legacy sources or rewriting their settings
+- **AND** successful installation SHALL be followed by removal using the exact installed legacy source, including its pin
+- **AND** failed legacy cleanup SHALL fail the entry while retaining the installed replacement
+- **AND** local install and removal SHALL retain `-l --approve`; global operations SHALL omit these flags
 
 #### Scenario: Legacy convergence
 
