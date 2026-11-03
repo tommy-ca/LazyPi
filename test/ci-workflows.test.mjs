@@ -14,10 +14,10 @@ const WINDOWS_COMMANDS = [
 ];
 
 function assertCommandsInOrder(workflow, commands) {
-	// ponytail: unconditional single-line run steps only; use a YAML parser for richer workflows.
+	// ponytail: current eight-space, single-line run keys only; use a YAML parser for richer workflows.
 	assert.doesNotMatch(workflow, /^\s*(?:-\s*)?if:/m, "Conditional workflows need explicit contract coverage");
 	assert.doesNotMatch(workflow, /^\s+run:\s*[|>]/m, "Multiline commands need explicit contract coverage");
-	const runs = [...workflow.matchAll(/^\s+run: ([^\r\n]+)$/gm)].map(match => match[1].trim());
+	const runs = [...workflow.matchAll(/^ {8}run: ([^\r\n]+)$/gm)].map(match => match[1].trim());
 	let previous = -1;
 	for (const command of commands) {
 		const at = runs.indexOf(command);
@@ -56,6 +56,18 @@ test("workflow checks reject commented, conditional, and unsupported required co
 		`        run: |\n          ${OPTIONAL_INSTALL}`,
 	]) {
 		assert.throws(() => assertCommandsInOrder(workflow.replace(step, replacement), WINDOWS_COMMANDS), replacement);
+	}
+});
+
+test("workflow checks reject command text in environment or multiline step names", () => {
+	const workflow = readFileSync(".github/workflows/windows-smoke.yml", "utf8");
+	const step = `        run: ${OPTIONAL_INSTALL}`;
+	const mutations = [
+		workflow.replace(step, `        env:\n          run: ${OPTIONAL_INSTALL}\n        run: echo skipped`),
+		workflow.replace(`      - name: Install optional catalog tier\n${step}`, `      - name: |\n          run: ${OPTIONAL_INSTALL}\n        run: echo skipped`),
+	];
+	for (const mutated of mutations) {
+		assert.throws(() => assertCommandsInOrder(mutated, WINDOWS_COMMANDS));
 	}
 });
 
