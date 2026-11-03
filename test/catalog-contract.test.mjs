@@ -1,7 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { PACKAGES } from "../bin/lazypi.mjs";
 
@@ -80,20 +79,6 @@ test("dropped package ids are absent from PACKAGES", () => {
 	for (const id of DROPPED_IDS) {
 		assert.equal(ids.has(id), false, id);
 	}
-});
-
-test("windows smoke installs the optional tier before the full-catalog assert", () => {
-	const workflow = readFileSync(".github/workflows/windows-smoke.yml", "utf8");
-	const optionalAt = workflow.indexOf("lazypi.mjs --yes --only optional");
-	const assertAt = workflow.indexOf("assert-installed-packages.mjs --check-status");
-	assert.notEqual(optionalAt, -1);
-	assert.notEqual(assertAt, -1);
-	assert.equal(optionalAt < assertAt, true);
-});
-
-test("linux CI runs npm run spec:validate", () => {
-	const workflow = readFileSync(".github/workflows/test.yml", "utf8");
-	assert.match(workflow, /npm run spec:validate/);
 });
 
 test("--help does not advertise dropped extras as installable npm sources", () => {

@@ -13,11 +13,12 @@ Branch: `audit/lazypi-safety-stack`. Delivery: auto-chain, stacked-to-master. Ru
 ## Tasks
 
 - T1 [S1,S2,S4] inline synthesis plus delegated read-only swarm/arena; complete; baseline gates and CLI/migration RED observed, Sol plan selected with cross-judge agreement.
-- T2 [S3,S5] inline CLI safety fixes I1/I3/I4 with regression tests and spec delta; implementation checked, independent shipping verdict pending; RED observed, focused/full/spec GREEN; Risk item 3, shared argument handling and behavior contracts.
-- T3 [S3,S5] inline install-first migration I2; pending implementation; Risk item 1, removal of an installed legacy source.
-- T4 [S3,S5] inline documentation corrections I5; pending; passive structural verification.
-- T5 [S3,S5] inline portable active-step verification I7/I8, then separate manual-release correction I6; pending; Risk item 5, CI and publishing mechanics.
-- T6 [S3,S4,S5] delegated independent per-slice verification and interrogate, then parent GitHub delivery; pending; no merges before verdicts and gates.
+- T2 [S3,S5] inline CLI safety fixes I1/I3/I4; `8f7ac25` plus `5fd4c27`; implementation and independent recheck passed, Linux CI green; merge pending; Risk item 3, shared behavior contracts.
+- T3 [S3,S5] inline install-first migration I2; `84a6a14`; focused/full/spec, independent probes, and Linux real-Pi CI passed; merge pending; Risk item 1, removal of installed legacy sources.
+- T4 [S3,S5] inline documentation corrections I5; `3c3affe`; structural readback, docs/full/spec, independent review and Linux CI passed; merge pending; passive.
+- T5 [S3,S5] inline portable active-step verification I7/I8 implemented in `8f9892a` plus scoped correction `e017d65`; I6 publisher removal in `5a4f527`; own checks passed, release independent review pending; Risk item 5, CI and publishing mechanics.
+- T6 [S3,S4,S5] delegated independent per-slice verification and interrogate, then parent GitHub delivery; in progress; no merges before verdicts and gates.
+- T7 [S1,S3,S5] inline CRLF README catalog-test correction I10; RED observed, focused/full/spec GREEN, independent and native CI pending; Risk item 5, native CI portability.
 
 ## Log
 
@@ -57,6 +58,7 @@ graph TD
   E3 --> I6[Align dormant release workflow with manual policy]
   E3 --> I7[Portable isolated update test fixture]
   E3 --> I8[Reject disabled required CI steps]
+  E3 --> I10[Parse README catalog with Windows line endings]
   I1 --> V[Independent slice verification]
   I2 --> V
   I3 --> V
@@ -65,6 +67,7 @@ graph TD
   I6 --> V
   I7 --> V
   I8 --> V
+  I10 --> V
   V --> P[Stacked PRs and current-head CI]
   P --> M[Dependency-ordered gated merges]
 ```
@@ -113,5 +116,40 @@ graph TD
 
 - Independent verifier found `--version` bypassed selector rejection. Its durable regression reproduced `0 !== 2`. Suppress version short-circuiting when parsing produced a usage error. Recheck is limited to this blocker and ordinary version behavior.
 - Initial CLI commit is `8f7ac259ac213a79ea541e49b46c911d434cc716`. No other blocker was reported. A trailing blank-line diff-check warning in the tracking document is removed in this correction.
+
+### L10. Install-first migration checked
+
+- Migration commit `84a6a14` installs before legacy cleanup, skips removal on failed installation, and retains cleanup-only convergence. Exact pins and local approval flags are reused through existing helpers. No rollback or direct settings writer was added.
+- Stateful CLI regression tests passed in global and local scopes, including failed replacement, failed cleanup, pinned object metadata, and already-installed convergence. `npm test` and `npm run spec:validate` passed. Logs `/tmp/lazypi-baseline.jJaVrz/migration-green.log`, `migration-suite.log`, and `migration-spec.log`.
+- Real-Pi integration stage now removes the seeded replacement before migration and asserts install-before-remove output. Its live registry execution is pending GitHub CI, not claimed locally.
+- PR #3 is https://github.com/tommy-ca/LazyPi/pull/3. CLI version-bypass correction `5fd4c27` was merged into the migration branch without force-pushing; this preserves the stack's parent ancestry.
+
+### L11. Truthful documentation checked
+
+- Corrected the overview, FAQ, installation/removal guides, subagents page, and README. Read back the diff against settings-writing, backup naming, and removal-picker behavior. No executable behavior changed. Passive prose does not have a meaningful RED test.
+- Existing documentation tests, full `npm test`, spec validation, and diff checks passed. Logs `/tmp/lazypi-baseline.jJaVrz/docs-focused.log`, `docs-suite.log`, and `docs-spec.log`. No Jekyll build or visual-layout claim is made.
+- PR #4 is https://github.com/tommy-ca/LazyPi/pull/4. CLI recheck at `5fd4c27` received PASS+NOTES from the independent verifier; parent posted the verdict on PR #3. Current-head CI remains required.
+
+### L12. Executable CI contracts checked
+
+- Observed RED when the old substring checker accepted a commented required optional-install command. The replacement checks exact ordered run commands, rejects unsupported conditional/multiline forms, and passes commented/false-conditioned/reversed negative mutations. Duplicate workflow assertions were removed from catalog tests.
+- Update test uses the existing Windows launcher pattern, retains system PATH, isolates settings paths, and cleans its fixture. Linux focused/full/spec checks passed with logs `/tmp/lazypi-baseline.jJaVrz/ci-focused.log`, `ci-suite.log`, and `ci-spec.log`. Native Windows proof remains pending.
+- Independent migration verdict is PASS+NOTES at `d6ae302`, base `5fd4c27`, stable patch-id `c2e72dfc0ff6281f6ce91ebb8f37d1ae4cfc03e8`. Exact-snapshot tests and independent multi-source/pin/hash/retry probes passed. No blocker was found. Scratch `/tmp/tmp.kttnfliNxC` is retained for parent cleanup.
+- Parent observed GitHub Linux test SUCCESS for PR #3 at its corrected head and PR #4. PR #5 is https://github.com/tommy-ca/LazyPi/pull/5. No merge is armed.
+
+### L13. CI correction, manual policy, and native finding
+
+- Independent CI verifier found nested `env.run` and multiline name text could satisfy the first matcher. New durable mutations reproduced the false green. Scoped correction `e017d65` restricts matching to the current eight-space step run keys. Focused/full/spec checks passed. Independent limited recheck returned PASS+NOTES with patch-id `af6a3351d82b5ec3eeb5afaab3026a58670a2bea`.
+- Comments review found no CLI/migration comments to change. Its low-priority suggestion to delete the workflow ceiling marker was dismissed because Ponytail explicitly requires documenting this known supported-format ceiling. No code behavior is hidden by the marker.
+- The manual-only release-policy test first failed on the actual dormant publisher. Commit `5a4f527` removes it, updates README/specs, and keeps manual release gates. Focused/full/spec checks passed with logs `/tmp/lazypi-baseline.jJaVrz/release-suite.log` and `release-spec.log`. No publication or credential changes occurred.
+- PR #6 is https://github.com/tommy-ca/LazyPi/pull/6. The corrected CI parent was merged into the release branch without rewriting remote history.
+- Native Windows run https://github.com/tommy-ca/LazyPi/actions/runs/41678195347 failed on the existing README catalog parser, which splits LF lines but rejects trailing CR. Its update-delegation fixture passed. Logs `/tmp/lazypi-baseline.jJaVrz/windows-failed.log` show expected catalog rows versus an empty actual list.
+- New finding I10 P2 is a pre-existing native portability defect, not a new reviewer correction. Add T7 as a separate follow-up slice and reproduce CRLF locally before fixing it. A new Windows run remains required; no failing proof is accepted as a pass.
+
+### L14. CRLF follow-up checked
+
+- Added a literal LF/CRLF catalog-table probe. RED reproduced an empty CRLF result instead of the expected rows. The one-line fix splits either newline form. Focused docs checks, full `npm test`, spec validation, and diff checks passed. Final local suite observed 71 passed with no failures. Logs `/tmp/lazypi-baseline.jJaVrz/final-suite.log` and `final-spec.log`.
+- No spec delta is needed for I10: this changes only the test parser to enforce the existing README catalog contract on Windows; it changes neither PACKAGES, CLI behavior, nor release mechanics. Prior release and CI changes each carry their own delta.
+- PR #7 is https://github.com/tommy-ca/LazyPi/pull/7. Release-policy independent review, full-stack interrogate, exact-head Windows rerun, current-head CI, and dependency-ordered merges remain pending. No merge or npm publish is armed.
 
 

@@ -58,6 +58,8 @@ Dropped packages are outside this table. `pi install` still works. LazyPi does n
 `--only` and `--except` apply only to `install`. Other commands reject them
 before running Pi. An empty unattended selection does not install Pi or packages.
 `doctor` warns nonfatally when `pi --version` fails or returns no output.
+Legacy migrations install the catalog replacement before removing the old source.
+If the replacement fails to install, LazyPi leaves the legacy package in place.
 
 ## Updating
 
@@ -78,7 +80,8 @@ npx @tommy-ca/lazypi remove subagents
 npx @tommy-ca/lazypi remove npm:pi-subagents@0.13.3   # raw pi source also works
 ```
 
-There is nothing to "uninstall" for LazyPi itself — `npx` doesn't leave it around.
+LazyPi needs no global installation. Runner caches, subagent settings overrides,
+and timestamped settings backups can remain after package removal.
 
 ## Troubleshooting
 
@@ -129,10 +132,8 @@ LazyPi ships from `master` with a manual, gate-checked release flow:
   `bunx @tommy-ca/lazypi@<version> --version` must both report the
   released version, then `status`/`install --yes` must be idempotent.
 
-The repo also carries a release-please workflow intended for CI trusted
-publishing, but it is **not provisioned** (no `NPM_TOKEN` secret), so it
-is not the current publish path. Wire the secret and test the workflow
-before treating releases as automated.
+There is no automated npm publishing workflow. CI verifies the artifact;
+publishing remains an interactive, gate-checked maintainer action.
 
 ---
 

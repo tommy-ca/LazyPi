@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -17,8 +17,9 @@ const AUTH_ENV_VARS = [
 	"MISTRAL_API_KEY",
 ];
 
-function createWorkspace() {
+function createWorkspace(t) {
 	const root = mkdtempSync(join(tmpdir(), "lazypi-update-"));
+	t.after(() => rmSync(root, { recursive: true, force: true }));
 	const home = join(root, "home");
 	const workspace = join(root, "workspace");
 	const bin = join(root, "bin");
@@ -29,6 +30,10 @@ function createWorkspace() {
 }
 
 function writeFakePi(bin, callsPath) {
+	if (process.platform === "win32") {
+		writeFileSync(join(bin, "pi.cmd"), `@echo off\r\necho %*>>"${callsPath}"\r\nexit /b 0\r\n`);
+		return;
+	}
 	const piPath = join(bin, "pi");
 	writeFileSync(piPath, `#!/bin/sh\nprintf '%s\\n' "$*" >> "${callsPath}"\nexit 0\n`);
 	chmodSync(piPath, 0o755);
@@ -38,7 +43,9 @@ function runCli(args, { cwd, home, bin } = {}) {
 	const env = {
 		...process.env,
 		HOME: home,
-		PATH: [bin, "/usr/bin", "/bin"].join(delimiter),
+		USERPROFILE: home,
+		PI_CODING_AGENT_DIR: join(home, ".pi", "agent"),
+		PATH: [bin, process.env.PATH].filter(Boolean).join(delimiter),
 	};
 	for (const key of AUTH_ENV_VARS) delete env[key];
 	const result = spawnSync(process.execPath, [CLI_PATH, ...args], {
@@ -51,8 +58,8 @@ function runCli(args, { cwd, home, bin } = {}) {
 	return result;
 }
 
-test("update delegates to pi update without installing the full catalog", () => {
-	const { root, home, workspace, bin } = createWorkspace();
+test("update delegates to pi update without installing the full catalog", (t) => {
+	const { root, home, workspace, bin } = createWorkspace(t);
 	const callsPath = join(root, "pi-calls.log");
 	writeFakePi(bin, callsPath);
 	mkdirSync(join(home, ".pi", "agent"), { recursive: true });

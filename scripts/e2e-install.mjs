@@ -106,12 +106,17 @@ try {
 	// --- Stage 5: legacy migration ------------------------------------------
 	console.log("Stage 5: legacy source migration (npm:pi-btw -> @narumitw/pi-btw)");
 	assert.equal(run("npm", ["view", "pi-btw", "version"]).status, 0, "legacy npm:pi-btw no longer published — migration stage cannot run");
+	r = run("pi", ["remove", "npm:@narumitw/pi-btw"], { env, timeout: 300_000 });
+	assert.equal(r.status, 0, `removing replacement seed failed\n${r.stdout}\n${r.stderr}`);
+	assert.ok(!readSettings(agentDir).packages.includes("npm:@narumitw/pi-btw"), "replacement must be absent before migration");
 	r = run("pi", ["install", "npm:pi-btw"], { env, timeout: 300_000 });
 	assert.equal(r.status, 0, `seeding legacy failed\n${r.stdout}\n${r.stderr}`);
 	assert.ok(readSettings(agentDir).packages.includes("npm:pi-btw"), "legacy seed missing");
-	r = lazypi("install --yes");
+	r = lazypi("install --yes --only btw");
 	assert.equal(r.status, 0, `migrating install failed\n${r.stdout}\n${r.stderr}`);
-	assert.match(r.stdout, /pi remove npm:pi-btw/);
+	const installAt = r.stdout.indexOf("→ pi install npm:@narumitw/pi-btw");
+	const removeAt = r.stdout.indexOf("→ pi remove npm:pi-btw");
+	assert.ok(installAt >= 0 && removeAt > installAt, "replacement installation must precede legacy cleanup");
 	check("legacy removed, fork source installed", () => {
 		const packages = readSettings(agentDir).packages;
 		assert.ok(!packages.includes("npm:pi-btw"), "legacy source still present");

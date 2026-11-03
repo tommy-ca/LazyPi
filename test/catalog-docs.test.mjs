@@ -17,7 +17,7 @@ function catalogTableRows(readme) {
 	assert.ok(section, "README has a Catalog section");
 	const body = section.split(/^## /m)[0];
 	const rows = [];
-	for (const line of body.split("\n")) {
+	for (const line of body.split(/\r?\n/)) {
 		const match = line.match(/^\| `?([a-z0-9-]+)`? \| (core|optional) \| (.+) \|$/);
 		if (!match) continue;
 		if (match[1] === "id") continue;
@@ -35,6 +35,16 @@ function sidebarPackageHrefs(sidebar) {
 	}
 	return hrefs;
 }
+
+test("catalog table parsing accepts LF and CRLF line endings", () => {
+	const readme = "## Catalog\n| `fff` | core | Search |\n| `memory` | optional | Remember decisions |\n\n## Commands\n";
+	const expected = [
+		{ id: "fff", category: "core", rationale: "Search" },
+		{ id: "memory", category: "optional", rationale: "Remember decisions" },
+	];
+	assert.deepEqual(catalogTableRows(readme), expected);
+	assert.deepEqual(catalogTableRows(readme.replace(/\n/g, "\r\n")), expected);
+});
 
 test("README lists PACKAGES ids in order with category and rationale", () => {
 	const rows = catalogTableRows(README);

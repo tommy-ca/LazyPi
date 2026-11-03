@@ -122,9 +122,12 @@ installed. Invalid settings JSON SHALL fail the run before any `pi` spawn.
 #### Scenario: Legacy migration
 
 - **WHEN** an installed source matches an entry's `legacySources`
-- **THEN** the installer SHALL run `pi remove <legacy>` before
-  `pi install <source>`
-- **AND** a failed migration SHALL fail the entry without installing
+- **THEN** the installer SHALL run `pi install <source>` before
+  `pi remove <legacy>` when the replacement is missing
+- **AND** failed replacement installation SHALL fail the entry without removing legacy sources or rewriting their settings
+- **AND** successful installation SHALL be followed by removal using the exact installed legacy source, including its pin
+- **AND** failed legacy cleanup SHALL fail the entry while retaining the installed replacement
+- **AND** local install and removal SHALL retain `-l --approve`; global operations SHALL omit these flags
 
 #### Scenario: Legacy convergence
 
@@ -358,13 +361,12 @@ be gated on the spec and test suites before publishing.
 - **AND** `npm login` (device auth) SHALL mint a fresh token, after which
   publish SHALL succeed with an OTP or the device-auth flow
 
-#### Scenario: CI trusted publishing
+#### Scenario: Manual-only publishing policy
 
-- **WHEN** the release-please workflow is considered for release
-  production
-- **THEN** it SHALL NOT be treated as the current publish path until an
-  `NPM_TOKEN` secret exists in the repository
-- **AND** releases SHALL be manual until that secret is provisioned
+- **WHEN** repository CI workflows are inspected
+- **THEN** no automated npm publishing workflow SHALL be present
+- **AND** the dormant release-please publisher SHALL be removed
+- **AND** README SHALL describe interactive gated publishing as the current release path
 
 #### Scenario: Post-publish validation
 
@@ -507,3 +509,40 @@ The CLI SHALL reject inapplicable installation selectors, avoid setup for an emp
 - **WHEN** `pi --version` exits unsuccessfully or provides no output
 - **THEN** doctor SHALL issue a nonfatal warning rather than a passing version check
 - **AND** successful version execution with output SHALL retain its passing check
+
+### Requirement: Installer documentation accuracy
+
+User documentation SHALL distinguish package installation, intentional settings changes, backups, and runner caches.
+
+#### Scenario: Subagent configuration changes
+
+- **WHEN** users read the overview, FAQ, installation guide, or subagents page
+- **THEN** the docs SHALL explain that selecting subagents can reset builtin model overrides even on re-runs
+- **AND** the installation guide and subagents page SHALL list `context-builder`, `planner`, `researcher`, `reviewer`, `scout`, and `worker`
+- **AND** the docs SHALL explain the session-model fallback and preservation of other override keys
+- **AND** they SHALL describe timestamped backups before changing existing settings
+
+#### Scenario: Persistent artifacts and removal selection
+
+- **WHEN** users read the installation or removal guide
+- **THEN** the docs SHALL distinguish installed packages, settings overrides, backup files, and runner caches
+- **AND** they SHALL NOT promise fresh downloads or automatic removal of caches and backups
+- **AND** removal instructions SHALL say that space selects packages to remove and an empty selection removes nothing
+
+### Requirement: Executable CI contracts
+
+Workflow checks SHALL verify required commands as executable run steps rather than raw substrings. CLI fixtures SHALL isolate settings and support the platform running the suite.
+
+#### Scenario: Required workflow execution
+
+- **WHEN** CI contract tests inspect Linux or Windows workflows
+- **THEN** they SHALL check required command order using uncommented run steps
+- **AND** conditional or multiline workflow forms outside the checker's supported shape SHALL fail closed
+- **AND** regression mutations with a commented, false-conditioned, or reversed required command SHALL fail the check
+
+#### Scenario: Portable update fixture
+
+- **WHEN** the update delegation regression runs on Windows
+- **THEN** its mock Pi SHALL use a `.cmd` launcher and retain the system PATH
+- **AND** all platforms SHALL isolate `HOME`, `USERPROFILE`, and `PI_CODING_AGENT_DIR`
+- **AND** temporary fixtures SHALL be cleaned up after the test

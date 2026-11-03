@@ -35,11 +35,12 @@ description: "How to install LazyPi and get your Pi coding agent set up."
 
     <h2>Idempotency</h2>
     <p>
-      LazyPi is safe to re-run at any time. It checks what's already installed and skips it. Running <code>npx @tommy-ca/lazypi</code> on a fully set-up machine is a no-op. This makes it safe to run as part of a machine setup script.
+      LazyPi skips installed packages. Selecting subagents also sets <code>model: ""</code> for <code>context-builder</code>, <code>planner</code>, <code>researcher</code>, <code>reviewer</code>, <code>scout</code>, and <code>worker</code>, even when the package is already installed. They then inherit the session model. Other override keys remain unchanged. A re-run is a no-op when the selected packages and these overrides are already present.
     </p>
 
     <div class="callout">
-      <p>LazyPi itself leaves nothing behind after running — it's fetched fresh each time via <code>npx</code>. Only the packages you choose to install are persisted to your Pi configuration.</p>
+      <p>No global LazyPi installation is required. Runner caches can persist and may serve an older release. See the <a href="/faq.html">FAQ</a> for cache troubleshooting. Installed Pi packages, settings overrides, and timestamped settings backups also persist.</p>
+      <p>Before LazyPi changes an existing settings file, it saves a sibling backup named <code>settings.json.lazypi.&lt;timestamp&gt;.bak</code>. Package removal does not delete these backups or runner caches.</p>
     </div>
 
     <p>
