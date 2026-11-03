@@ -3,36 +3,29 @@ layout: docs
 title: "Memory — LazyPi Docs"
 ---
 <h1>Memory</h1>
-<p class="page-desc">Letta-like, git-backed markdown memory: persistent context across sessions.</p>
-<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only memory</code> or <code>pi install npm:pi-memory-md</code>; installs of the older git source migrate automatically.</p>
+<p class="page-desc">Auto-managed markdown memory: capped MEMORY.md/USER.md stores with frozen session snapshots.</p>
+<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only memory</code> or <code>pi install npm:@henryqw/pi-memory</code>; installs of the older npm and git sources migrate automatically.</p>
 
 <h2>What it does</h2>
 <p>
-  pi-memory-md gives Pi a durable knowledge layer: context, preferences,
-  and decisions stored as git-backed markdown with full history, a memory
-  index appended to the prompt at session start, on-demand reads via
-  tools, and separate memory spaces per project.
+  @henryqw/pi-memory gives Pi auto-managed markdown memory: capped
+  MEMORY.md and USER.md entry stores with frozen session snapshots.
+  It uses the pi 1.5.0 native API and is actively maintained.
+</p>
+<p>
+  The package replaces the older pi-memory-md, which has not been
+  updated since May 2026. LazyPi migrates legacy installs automatically.
 </p>
 
 <h2>Why it's included as optional</h2>
 <p>
-  Re-audited 2026-08-29: the operator's harness uses it daily (memory
-  tools and skills active across sessions), and it publishes to npm
-  (0.1.38) — consistent with the floating-npm convention. It is harness
-  infrastructure rather than control plane, so it stays optional and
-  installs on request.
-</p>
-<p>
-  The audit also evaluated <code>npm:pi-memory</code> (jayzeng's qmd-powered
-  semantic-search memory, the most popular on the pi package directory):
-  compelling and maintained, but a second memory substrate would duplicate
-  the installed daily driver with a different data format. The lean
-  harness ships one memory implementation — see
-  <code>openspec/explorations/memory-audit.md</code> for the comparison.
+  Memory is harness infrastructure rather than control plane, so it
+  stays optional and installs on request. The catalog now manages
+  install, status, remove, and source migration for it.
 </p>
 
 <div class="learn-more">
-  <a href="https://github.com/VandeeFeng/pi-memory-md" target="_blank" rel="noopener">→ GitHub — VandeeFeng/pi-memory-md</a>
+  <a href="https://github.com/henryqw/pi-memory" target="_blank" rel="noopener">→ GitHub — henryqw/pi-memory</a>
 </div>
 
 <nav class="prev-next">
