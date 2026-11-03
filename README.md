@@ -21,7 +21,7 @@ Install is **idempotent** — LazyPi reads your Pi settings and skips any packag
 
 ## Catalog
 
-`--yes` installs 12 core packages. TTY Install everything installs all 17.
+`--yes` installs 12 core packages. TTY Install everything installs all 18.
 
 | id | category | why |
 | --- | --- | --- |
@@ -42,6 +42,7 @@ Install is **idempotent** — LazyPi reads your Pi settings and skips any packag
 | autoresearch | optional | Experiment loops. Convenience, not core |
 | todos | optional | Structured tracker. Optional because core forbids checkbox todos as default |
 | memory | optional | Git-backed memory. Infrastructure, not control plane |
+| verdict | optional | Permission gate. Allow, deny, or ask per tool call; fail-closed |
 
 Dropped packages are outside this table. `pi install` still works. LazyPi does not manage them.
 

@@ -21,7 +21,7 @@ const CORE_IDS = [
 	"ponytail",
 ];
 
-const OPTIONAL_IDS = ["lsp", "interactive-shell", "autoresearch", "todos", "memory"];
+const OPTIONAL_IDS = ["lsp", "interactive-shell", "autoresearch", "todos", "memory", "verdict"];
 
 const CURRENT_SOURCES = {
 	subagents: "npm:pi-subagents",
@@ -41,6 +41,7 @@ const CURRENT_SOURCES = {
 	autoresearch: "npm:pi-autoresearch",
 	todos: "npm:pi-manage-todo-list",
 	memory: "npm:pi-memory-md",
+	verdict: "npm:pi-verdict",
 };
 
 const DROPPED_IDS = [
@@ -68,7 +69,7 @@ test("PACKAGES matches the lean catalog shape", () => {
 	const optional = PACKAGES.filter((p) => p.category === "optional").map((p) => p.id);
 	assert.deepEqual(core, CORE_IDS);
 	assert.deepEqual(optional, OPTIONAL_IDS);
-	assert.equal(PACKAGES.length, 17);
+	assert.equal(PACKAGES.length, 18);
 	for (const pkg of PACKAGES) {
 		assert.equal(pkg.source, CURRENT_SOURCES[pkg.id], pkg.id);
 	}
