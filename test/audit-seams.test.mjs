@@ -175,6 +175,29 @@ test("install selectors on other commands fail before execution or settings chan
 	}
 });
 
+test("version cannot bypass non-install selector rejection", (t) => {
+	const { root, home, workspace, bin } = createWorkspace(t);
+	const agentDir = join(home, ".pi", "agent");
+	const settingsFile = join(agentDir, "settings.json");
+	const callsPath = join(root, "calls.log");
+	writeFakePi(bin);
+	mkdirSync(agentDir, { recursive: true });
+	const before = '{"packages":[],"keep":true}\n';
+	writeFileSync(settingsFile, before);
+	for (const command of ["update", "remove", "status", "doctor"]) {
+		for (const selector of ["--only=fff", "--except=fff"]) {
+			for (const version of ["--version", "-V"]) {
+				const result = runCli([command, selector, version], { cwd: workspace, home, agentDir, bin, callsPath });
+				assert.equal(result.status, 2);
+				assert.equal(result.stderr, "--only and --except are only supported by install\n");
+				assert.match(result.stdout, /Usage:/);
+				assert.deepEqual(readCalls(callsPath), []);
+				assert.equal(readFileSync(settingsFile, "utf8"), before);
+			}
+		}
+	}
+});
+
 test("empty unattended selection does not install Pi or write settings", { skip: process.platform === "win32" && "isolated Unix PATH probe" }, (t) => {
 	const { root, home, workspace, bin } = createWorkspace(t);
 	const agentDir = join(home, ".pi", "agent");

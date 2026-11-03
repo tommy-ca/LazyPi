@@ -109,5 +109,9 @@ graph TD
 - The next migration test file remains outside the worktree at `/tmp/lazypi-baseline.jJaVrz/migration-safety.test.mjs` until its own slice, so intentionally RED future work is not included in this commit.
 - No formatter or generator is configured or needed. Deslop diff inspection found no new wrappers, dependencies, or explanatory comments. Independent shipping verdict remains pending.
 
+### L9. Scoped CLI review correction
+
+- Independent verifier found `--version` bypassed selector rejection. Its durable regression reproduced `0 !== 2`. Suppress version short-circuiting when parsing produced a usage error. Recheck is limited to this blocker and ordinary version behavior.
+- Initial CLI commit is `8f7ac259ac213a79ea541e49b46c911d434cc716`. No other blocker was reported. A trailing blank-line diff-check warning in the tracking document is removed in this correction.
 
 
