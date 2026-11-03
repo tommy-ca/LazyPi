@@ -164,8 +164,8 @@ test("install selectors on other commands fail before execution or settings chan
 	const before = JSON.stringify({ packages: ["npm:pi-subagents"], keep: true }) + "\n";
 	writeFileSync(settingsFile, before);
 	for (const command of ["update", "remove", "status", "doctor"]) {
-		for (const selector of ["--only=fff", "--except=fff"]) {
-			const args = command === "remove" ? [command, "subagents", selector] : [command, selector];
+		for (const selectors of [["--only=fff"], ["--except=fff"], ["--only=fff", "--except=fff"]]) {
+			const args = command === "remove" ? [command, "subagents", ...selectors] : [command, ...selectors];
 			const result = runCli(args, { cwd: workspace, home, agentDir, bin, callsPath });
 			assert.equal(result.status, 2, `${args.join(" ")}\n${result.stdout}\n${result.stderr}`);
 			assert.match(result.stderr, /--only and --except are only supported by install/);
