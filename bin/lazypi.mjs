@@ -154,11 +154,11 @@ function parseArgs(args) {
 		}
 	}
 
-	if (flags.only && flags.except) {
-		flags.usageError ??= "Use either --only or --except, not both";
-	}
 	if (flags.command !== "install" && (flags.only || flags.except)) {
 		flags.usageError ??= "--only and --except are only supported by install";
+	}
+	if (flags.only && flags.except) {
+		flags.usageError ??= "Use either --only or --except, not both";
 	}
 
 	return flags;
