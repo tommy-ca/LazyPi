@@ -39,7 +39,7 @@ const CURRENT_SOURCES = {
 	lsp: "npm:@narumitw/pi-lsp",
 	"interactive-shell": "npm:pi-interactive-shell",
 	autoresearch: "npm:pi-autoresearch",
-	todos: "npm:pi-manage-todo-list",
+	todos: "npm:@juicesharp/rpiv-todo",
 	memory: "npm:pi-memory-md",
 	verdict: "npm:pi-verdict",
 };

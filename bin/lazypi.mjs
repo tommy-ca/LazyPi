@@ -49,7 +49,14 @@ export const PACKAGES = [
 	{ id: "lsp", category: "optional", source: "npm:@narumitw/pi-lsp", description: "Targeted LSP diagnostics and fixes", hint: "lsp_diagnostics / lsp_fix with configurable language servers, started per call." },
 	{ id: "interactive-shell", category: "optional", source: "npm:pi-interactive-shell", description: "Interactive shell overlays", hint: "Run CLIs and agents in TUI overlays: interactive, hands-free, dispatch supervision." },
 	{ id: "autoresearch", category: "optional", source: "npm:pi-autoresearch", legacySources: ["git:github.com/davebcn87/pi-autoresearch"], description: "Autonomous experiment loops", hint: "Iterative optimization runs with hooks, finalize, and convergence tracking." },
-	{ id: "todos", category: "optional", source: "npm:pi-manage-todo-list", legacySources: ["git:github.com/tintinweb/pi-manage-todo-list"], description: "Structured todo tracking", hint: "Track multi-step work with live progress widgets and session persistence." },
+	{
+		id: "todos",
+		category: "optional",
+		source: "npm:@juicesharp/rpiv-todo",
+		legacySources: ["npm:pi-manage-todo-list", "git:github.com/tintinweb/pi-manage-todo-list"],
+		description: "Persistent todo overlay",
+		hint: "Task list that survives reload and compaction; /todos command with live panel.",
+	},
 	{ id: "memory", category: "optional", source: "npm:pi-memory-md", legacySources: ["git:github.com/VandeeFeng/pi-memory-md"], description: "Markdown-backed memory", hint: "Letta-like git-backed memory: persistent context, prompt append, multi-project spaces." },
 	{ id: "verdict", category: "optional", source: "npm:pi-verdict", description: "Permission gate", hint: "Claude Code-style auto mode: allow, deny, or ask per tool call with an LLM classifier; fail-closed." },
 ];
