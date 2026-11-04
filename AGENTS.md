@@ -6,6 +6,10 @@ LazyPi is an opinionated installer for the Pi coding agent. It provides a curate
 
 The CLI is published to npm as `@tommy-ca/lazypi` (a fork of `@robzolkos/lazypi`). The main executable is `bin/lazypi.mjs`, with package metadata and install behavior centered around the `PACKAGES` catalog in that file. The `openspec/` tree is the engineering contract; changes land as OpenSpec change specs and `npm run spec:validate` keeps them green.
 
+## Verification
+
+Use `.agents/skills/verify/SKILL.md` for isolated CLI checks. Its feature map records coverage and limitations.
+
 ## Change discipline
 
 - Any change touching `PACKAGES` data, CLI behavior, or release mechanics MUST carry a spec delta — grep for the touched data before declaring `skip_specs` (a missed delta caused the `essential` field drift, caught by the 2026-08-29 re-audit).
