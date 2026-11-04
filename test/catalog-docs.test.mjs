@@ -58,10 +58,35 @@ test("README lists PACKAGES ids in order with category and rationale", () => {
 	}
 });
 
-test("README states --yes is 12 and TTY Install everything is 17", () => {
-	assert.match(README, /`--yes`.*12/);
-	assert.match(README, /17/);
-	assert.match(README, /Install (all|everything)/i);
+test("documented install counts match the catalog", () => {
+	const core = PACKAGES.filter((pkg) => pkg.category === "core").length;
+	const optional = PACKAGES.filter((pkg) => pkg.category === "optional").length;
+	const installation = readFileSync("docs/docs/installation.html", "utf8");
+	const philosophy = readFileSync(PHILOSOPHY_PATH, "utf8");
+	assert.match(README, new RegExp(`--yes.*${core}`));
+	assert.equal([...README.matchAll(new RegExp(`Install everything installs all ${PACKAGES.length}\\.`, "g"))].length, 2);
+	assert.match(README, new RegExp(`${optional}-package optional tier`));
+	assert.match(README, new RegExp(`Install everything is ${PACKAGES.length}\\.`));
+	assert.match(installation, new RegExp(`full ${PACKAGES.length}-package catalog`));
+	assert.match(philosophy, new RegExp(`keeps ${optional} optional`));
+	assert.match(philosophy, new RegExp(`why ${optional} stay optional`));
+	const landing = readFileSync("docs/index.html", "utf8");
+	const faq = readFileSync("docs/faq.html", "utf8");
+	const packages = readFileSync("docs/docs/packages/index.html", "utf8");
+	assert.match(landing, new RegExp(`<div class="stat-num">${PACKAGES.length}</div>`));
+	assert.match(landing, new RegExp(`TTY Install everything is ${PACKAGES.length}\\.`));
+	assert.match(faq, new RegExp(`full ${PACKAGES.length}-package catalog`));
+	assert.match(faq, new RegExp(`${optional}-package optional tier`));
+	assert.match(OVERVIEW, new RegExp(`full ${PACKAGES.length}-package catalog`));
+	assert.match(OVERVIEW, new RegExp(`why ${optional} are optional`));
+	const firstSteps = readFileSync("docs/docs/first-steps.html", "utf8");
+	assert.match(firstSteps, new RegExp(`Install everything</strong> is ${PACKAGES.length} packages`));
+	assert.equal([...landing.matchAll(/class="catalog-card"/g)].length, PACKAGES.length);
+	assert.match(packages, new RegExp(`The ${PACKAGES.length} catalog packages: ${core} core plus ${optional} optional`));
+	assert.match(packages, /Side questions without adding them to the main conversation/);
+	assert.match(packages, /Reviews changed code for clarity and consistency<\/div>/);
+	assert.match(landing, /github\.com\/HenryQW\/pi-harness\/tree\/main\/extensions\/pi-memory/);
+	assert.match(landing, /github\.com\/juicesharp\/rpiv-mono/);
 });
 
 test("philosophy.html exists and names the membership bar", () => {

@@ -7,15 +7,15 @@ title: "Pi Verdict — LazyPi Docs"
 
 <h2>What it does</h2>
 <p>
-  Pi Verdict adds a permission gate to Pi that runs before every tool call. It classifies each action as allow, deny, or ask, using built-in dangerous rules, your own allow/deny rules, and an LLM classifier that carries session context. Uncertain or failed classifications always fail closed.
+  Pi Verdict adds a permission gate to Pi tool calls. It uses built-in dangerous rules, your own allow/deny rules, and an LLM classifier that carries session context. Uncertain or failed classifications fail closed. Configured <code>ignoreTools</code> exemptions can allow uncovered tools without classification; review those exemptions before relying on the gate.
 </p>
 <p>
-  The gate protects itself against tampering and inspection. It is a permission gate, not a sandbox: use OS-level isolation on top of it.
+  The gate includes self-protection against tampering. It does not guard manual <code>!</code> shell escapes or contain malicious code. It is a permission gate, not a sandbox; use OS-level isolation on top of it.
 </p>
 
 <h2>Why it's included</h2>
 <p>
-  Pi has no built-in per-tool permission confirmation. Every tool call runs with Pi's own privileges. Pi Verdict adds the missing safety layer, modeled on Claude Code's auto mode, so routine actions flow through while dangerous or ambiguous ones stop for review.
+  Pi has no built-in per-tool permission confirmation. Every tool call runs with Pi's own privileges. Pi Verdict adds the missing safety layer, modeled on Claude Code's auto mode, to help control routine, dangerous, and ambiguous actions. Its configured exemptions and security limits still apply.
 </p>
 
 <h2>Commands</h2>
@@ -25,8 +25,8 @@ title: "Pi Verdict — LazyPi Docs"
   </thead>
   <tbody>
     <tr>
-      <td><code>/verdict</code></td>
-      <td>Open the permission gate status and configuration</td>
+      <td><code>/automode</code></td>
+      <td>Show the permission gate status</td>
     </tr>
   </tbody>
 </table>

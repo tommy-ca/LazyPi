@@ -7,7 +7,7 @@ title: "Web Access — LazyPi Docs"
 
     <h2>What it does</h2>
     <p>
-      Pi-Web-Access gives Pi the ability to search the web, fetch and extract page content, and understand video — without requiring browser automation. It exposes four tools that Pi invokes directly: <code>web_search</code>, <code>code_search</code>, <code>fetch_content</code>, and <code>get_search_content</code>.
+      Pi-Web-Access gives Pi the ability to search the web, fetch and extract page content, and understand video — without requiring browser automation. It exposes four tools that Pi invokes directly: <code>web_search</code>, <code>source_check</code>, <code>fetch_content</code>, and <code>get_search_content</code>.
     </p>
     <p>
       The package is zero-config when used via Exa MCP. It also supports Perplexity and Gemini as providers, with smart fallback across them. Specialized capabilities include YouTube video understanding, local video file analysis, GitHub repository cloning for deeper inspection, and PDF extraction.
@@ -19,7 +19,7 @@ title: "Web Access — LazyPi Docs"
     </p>
 
     <h2>Commands</h2>
-    <p>Web Access has no slash commands. Pi invokes the following tools directly based on context:</p>
+    <p>Pi can invoke these default tools directly. Tool availability and names can be configured.</p>
     <table>
       <thead>
         <tr><th>Tool</th><th>What it does</th></tr>
@@ -30,8 +30,8 @@ title: "Web Access — LazyPi Docs"
           <td>General web search across providers</td>
         </tr>
         <tr>
-          <td><code>code_search</code></td>
-          <td>Search optimized for code and technical content</td>
+          <td><code>source_check</code></td>
+          <td>Gather passage-level evidence for a claim</td>
         </tr>
         <tr>
           <td><code>fetch_content</code></td>
@@ -39,7 +39,7 @@ title: "Web Access — LazyPi Docs"
         </tr>
         <tr>
           <td><code>get_search_content</code></td>
-          <td>Search and retrieve full page content in one step</td>
+          <td>Retrieve stored content from earlier searches or fetches</td>
         </tr>
       </tbody>
     </table>

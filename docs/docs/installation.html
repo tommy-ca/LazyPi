@@ -8,9 +8,10 @@ description: "How to install LazyPi and get your Pi coding agent set up."
 
     <h2>Prerequisites</h2>
     <ul>
-      <li>Node.js 20 or later</li>
+      <li>Node.js 20 or later for the LazyPi CLI</li>
       <li>npm (bundled with Node.js)</li>
     </ul>
+    <p>Pi and individual extensions can require a newer runtime. For example, the current pi-skillful and pi-web-access packages declare Node.js 22.19 or later. Check the requirements for the versions you install and the runtime used to launch Pi.</p>
     <p>You do not need to install LazyPi globally. <code>npx</code> downloads and runs it on demand.</p>
 
     <h2>Run it</h2>
@@ -27,7 +28,7 @@ description: "How to install LazyPi and get your Pi coding agent set up."
 
     <h2>Install everything vs. interactive picker</h2>
     <p>
-      Choosing <strong>Install everything</strong> on a TTY installs the full 17-package catalog (12 core plus the optional tier). <code>--yes</code> with no other flags installs the 12 harness-core packages only; add the optional tier with <code>--only optional</code> or the picker.
+      Choosing <strong>Install everything</strong> on a TTY installs the full 18-package catalog (12 core plus the optional tier). <code>--yes</code> with no other flags installs the 12 harness-core packages only; add the optional tier with <code>--only optional</code> or the picker.
     </p>
     <p>
       The interactive picker lets you browse the catalog and select only what you want. Use arrow keys to navigate, space to toggle, and enter to confirm.
@@ -35,7 +36,7 @@ description: "How to install LazyPi and get your Pi coding agent set up."
 
     <h2>Idempotency</h2>
     <p>
-      LazyPi skips installed packages. Selecting subagents also sets <code>model: ""</code> for <code>context-builder</code>, <code>planner</code>, <code>researcher</code>, <code>reviewer</code>, <code>scout</code>, and <code>worker</code>, even when the package is already installed. They then inherit the session model. Other override keys remain unchanged. A re-run is a no-op when the selected packages and these overrides are already present.
+      LazyPi skips installed packages. Selecting subagents also sets <code>model: ""</code> for <code>context-builder</code>, <code>planner</code>, <code>researcher</code>, <code>reviewer</code>, <code>scout</code>, and <code>worker</code>, even when the package is already installed. They inherit the session model when no higher-precedence model override applies. Other override keys remain unchanged. A re-run is a no-op when the selected packages and these overrides are already present.
     </p>
 
     <div class="callout">

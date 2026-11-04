@@ -16,6 +16,9 @@ title: "LSP — LazyPi Docs"
   afterwards — no editor-like persistent session.
 </p>
 <p>
+  Install the language server commands you need on <code>PATH</code>. Servers run with Pi's permissions and inherit its environment.
+</p>
+<p>
   It is most useful when a full lint or typecheck is slow but a few files need
   intermediate feedback, or when a language server offers a source action
   worth applying. It does not replace the repository's authoritative format,
@@ -25,8 +28,7 @@ title: "LSP — LazyPi Docs"
 <h2>Why it's included as optional</h2>
 <p>
   Promotion audit 2026-08-29: actively maintained (<code>@narumitw</code>, the
-  same author as BTW and Goal), lean-philosophy aligned, and runtime-verified
-  (prebuilt node-pty bindings). It qualified for the catalog but not the core
+  same author as BTW and Goal) and lean-philosophy aligned. It qualified for the catalog but not the core
   default — it adds the most value only when your repo's own checks are slow,
   so it sits in the optional tier pending demonstrated daily-driver use.
 </p>

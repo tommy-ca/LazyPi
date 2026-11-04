@@ -7,10 +7,10 @@ title: "Pi Skillful — LazyPi Docs"
 
     <h2>What it does</h2>
     <p>
-      Stock Pi stops <code>.agents/skills/</code> discovery at the git repo root. <code>pi-skillful</code> walks ancestors to the filesystem root — matching how <code>AGENTS.md</code> layers — and lets you hide unused skills so they never enter the automatic skill-discovery prompt. It also expands <code>/skill:name</code> inline anywhere in a prompt.
+      Stock Pi stops <code>.agents/skills/</code> discovery at the git repo root. <code>pi-skillful</code> walks ancestors to the filesystem root — matching how <code>AGENTS.md</code> layers — and lets you hide supported global and project skills from the automatic skill-discovery prompt. It also expands <code>/skill:name</code> inline anywhere in a prompt.
     </p>
     <p>
-      Hide skills you don't want visible:
+      Package-bundled skills are outside Skillful's visibility controls. Other prompt handlers can also affect the final prompt. Hide supported skills you don't want visible:
     </p>
     <pre><code>{
   "skillful": {
@@ -20,7 +20,7 @@ title: "Pi Skillful — LazyPi Docs"
 
     <h2>Why it's included</h2>
     <p>
-      The harness rules say only name + description of 4–6 weekly skills should sit in the system prompt. Visibility control is how that stays true: hidden skills load on demand, so prompt drift and wrong-skill routing stay out of the picture.
+      The harness rules say only name + description of 4–6 weekly skills should sit in the system prompt. Visibility controls reduce which supported skills are advertised for automatic selection while keeping explicit invocation available.
     </p>
 
     <div class="learn-more">

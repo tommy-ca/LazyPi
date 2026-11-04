@@ -4,7 +4,7 @@ title: "Memory — LazyPi Docs"
 ---
 <h1>Memory</h1>
 <p class="page-desc">Auto-managed markdown memory: capped MEMORY.md/USER.md stores with frozen session snapshots.</p>
-<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only memory</code> or <code>pi install npm:@henryqw/pi-memory</code>; installs of the older npm and git sources migrate automatically.</p>
+<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only memory</code> or <code>pi install npm:@henryqw/pi-memory</code>; LazyPi replaces registrations of the older npm and git sources.</p>
 
 <h2>What it does</h2>
 <p>
@@ -14,7 +14,12 @@ title: "Memory — LazyPi Docs"
 </p>
 <p>
   The package replaces the older pi-memory-md, which has not been
-  updated since May 2026. LazyPi migrates legacy installs automatically.
+  updated since May 2026. LazyPi replaces the legacy package registration after installing the replacement. It does not convert stored memory content.
+</p>
+
+<h2>Setup</h2>
+<p>
+  Memory requires Pi 1.5.0 or later in the 1.x series. Install <code>npm:@henryqw/pi-ask-question</code> and <code>npm:@henryqw/pi-task-models</code> separately, then configure a <code>balanced</code> model in <code>/task-models</code>. These companion extensions are not installed by LazyPi's memory selection.
 </p>
 
 <h2>Why it's included as optional</h2>
@@ -25,7 +30,7 @@ title: "Memory — LazyPi Docs"
 </p>
 
 <div class="learn-more">
-  <a href="https://github.com/henryqw/pi-memory" target="_blank" rel="noopener">→ GitHub — henryqw/pi-memory</a>
+  <a href="https://github.com/HenryQW/pi-harness/tree/main/extensions/pi-memory" target="_blank" rel="noopener">→ GitHub — HenryQW/pi-harness</a>
 </div>
 
 <nav class="prev-next">

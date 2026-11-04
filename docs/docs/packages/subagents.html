@@ -13,12 +13,12 @@ title: "Sub-agents — LazyPi Docs"
       Each agent gets a focused system prompt and a specific task. This keeps individual context windows small and targeted, which tends to produce better results than asking a single agent to hold too much state at once.
     </p>
     <p>
-      Pi-subagents ships seven built-in specialists: <code>scout</code> (codebase exploration), <code>planner</code> (task decomposition), <code>worker</code> (implementation), <code>reviewer</code> (code review), <code>context-builder</code> (context gathering), <code>researcher</code> (information lookup), and <code>delegate</code> (general-purpose forwarding). You can override any of them or add your own via agent frontmatter.
+      Pi-subagents ships built-in specialists including <code>scout</code> (codebase exploration), <code>worker</code> (implementation), <code>reviewer</code> (code review), <code>researcher</code> (information lookup), <code>evidence-auditor</code> (source verification), <code>oracle</code> (second opinions), and <code>delegate</code> (general-purpose forwarding). You can override any of them or add your own via agent frontmatter.
     </p>
 
     <h2>Installer settings</h2>
     <p>
-      Selecting subagents in LazyPi sets <code>model: ""</code> for <code>context-builder</code>, <code>planner</code>, <code>researcher</code>, <code>reviewer</code>, <code>scout</code>, and <code>worker</code>. These agents then inherit the session model. This also happens on re-runs when the package is already installed. Other override keys remain unchanged.
+      Selecting subagents in LazyPi sets <code>model: ""</code> for <code>context-builder</code>, <code>planner</code>, <code>researcher</code>, <code>reviewer</code>, <code>scout</code>, and <code>worker</code>. These agents inherit the session model when no higher-precedence model override applies. This also happens on re-runs when the package is already installed. Other override keys remain unchanged.
     </p>
     <p>
       Before changing an existing settings file, LazyPi creates a sibling <code>settings.json.lazypi.&lt;timestamp&gt;.bak</code> backup. Removing the package does not remove these overrides or backups.
