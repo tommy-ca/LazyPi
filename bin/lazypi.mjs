@@ -65,7 +65,7 @@ export const PACKAGES = [
 		description: "Auto-managed markdown memory",
 		hint: "Capped MEMORY.md/USER.md stores with frozen session snapshots; auto-managed.",
 	},
-	{ id: "verdict", category: "optional", source: "npm:pi-verdict", description: "Permission gate", hint: "Claude Code-style auto mode: allow, deny, or ask per tool call with an LLM classifier; fail-closed." },
+	{ id: "verdict", category: "optional", source: "npm:pi-verdict", description: "Permission gate", hint: "Permission gate with fail-closed classifier errors; configured exemptions and manual shell escapes are not classified." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -250,7 +250,7 @@ ${bold("Default behaviour:")}
 
 ${bold("Categories:")}
   core         the harness control plane: sub-agents, workflows, ask gate, skill visibility, $ mention, goal, side chat, context budget, simplify, web research, fff search, ponytail discipline
-  optional     only when selected (--only optional, picker, or the everything flow): lsp diagnostics, interactive-shell overlays, autoresearch loops, todo tracking, markdown memory
+  optional     only when selected (--only optional, picker, or the everything flow): lsp diagnostics, interactive-shell overlays, autoresearch loops, todo tracking, markdown memory, verdict
   (Dropped packages such as skill-args, mcp, ralph-wiggum, curated-themes are
   outside the catalog — pi install npm:<source> still works for them.)
 
