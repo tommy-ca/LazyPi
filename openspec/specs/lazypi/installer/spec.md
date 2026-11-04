@@ -17,7 +17,7 @@ MAY carry `legacySources`.
 #### Scenario: Lean catalog shape
 
 - **WHEN** the catalog is loaded
-- **THEN** it SHALL contain exactly 17 entries: 12 core and 5 optional
+- **THEN** it SHALL contain exactly 18 entries: 12 core and 6 optional
 - **AND** the categories SHALL be `core` and `optional`
 - **AND** core SHALL contain subagents, pi-ask-user, pi-skillful,
   mention-skill, goal, btw, context-usage, simplify, web-access, fff,
@@ -33,7 +33,7 @@ MAY carry `legacySources`.
   matching package ids), `--except`, the interactive picker, or the
   interactive everything flow
 - **AND** status and remove SHALL cover optional entries like core ones
-- **AND** `--except` SHALL subtract from the full catalog (16 ids for
+- **AND** `--except` SHALL subtract from the full catalog (17 ids for
   `--except todos`)
 
 #### Scenario: Catalog membership
@@ -78,12 +78,12 @@ MAY carry `legacySources`.
 - **AND** `autoresearch` SHALL resolve to `npm:pi-autoresearch`
 - **AND** the git source `git:github.com/davebcn87/pi-autoresearch` SHALL
   remain in `legacySources`
-- **AND** `todos` SHALL resolve to `npm:pi-manage-todo-list`
-- **AND** the git source `git:github.com/tintinweb/pi-manage-todo-list`
+- **AND** `todos` SHALL resolve to `npm:@juicesharp/rpiv-todo`
+- **AND** `npm:pi-manage-todo-list` and
+  `git:github.com/tintinweb/pi-manage-todo-list` SHALL remain in `legacySources`
+- **AND** `memory` SHALL resolve to `npm:@henryqw/pi-memory`
+- **AND** `npm:pi-memory-md` and `git:github.com/VandeeFeng/pi-memory-md`
   SHALL remain in `legacySources`
-- **AND** `memory` SHALL resolve to `npm:pi-memory-md`
-- **AND** the git source `git:github.com/VandeeFeng/pi-memory-md` SHALL
-  remain in `legacySources`
 
 #### Scenario: Essential control plane sources
 
@@ -183,7 +183,7 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 
 - **WHEN** `--only core` or `--except <id>` is passed
 - **THEN** only matching categories or package ids are selected
-- **AND** `--except` SHALL subtract from the full catalog (16 ids for
+- **AND** `--except` SHALL subtract from the full catalog (17 ids for
   `--except todos`)
 
 #### Scenario: Empty selector
@@ -389,7 +389,7 @@ category and a rationale.
 
 `README.md` SHALL state that `--yes` installs 12 packages.
 
-`README.md` SHALL state that the TTY Install everything path installs 17
+`README.md` SHALL state that the TTY Install everything path installs 18
 packages.
 
 The TTY everything option label SHALL be Install everything.
@@ -403,7 +403,7 @@ Catalog documentation SHALL NOT call that option recommended.
 `docs/docs/philosophy.html` SHALL explain why the default install is the
 12 core packages.
 
-`docs/docs/philosophy.html` SHALL explain why five packages are optional.
+`docs/docs/philosophy.html` SHALL explain why six packages are optional.
 
 `docs/docs/philosophy.html` SHALL name the membership bar as control
 plane or discipline, not meal-prep or chrome.
@@ -432,13 +432,13 @@ Dropped packages.
 
 - **WHEN** `README.md` describes install counts
 - **THEN** it SHALL state that `--yes` installs 12 packages
-- **AND** it SHALL state that TTY Install everything installs 17 packages
+- **AND** it SHALL state that TTY Install everything installs 18 packages
 
 #### Scenario: Philosophy page
 
 - **WHEN** `docs/docs/philosophy.html` is read
 - **THEN** it SHALL explain why 12 is the default install
-- **AND** it SHALL explain why 5 packages are optional
+- **AND** it SHALL explain why 6 packages are optional
 - **AND** it SHALL name the membership bar as control plane or
   discipline, not meal-prep or chrome
 - **AND** it SHALL name Dropped packages as outside the catalog

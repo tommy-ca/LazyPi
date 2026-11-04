@@ -42,7 +42,7 @@ Install is **idempotent** — LazyPi reads your Pi settings and skips any packag
 | autoresearch | optional | Experiment loops. Convenience, not core |
 | todos | optional | Structured tracker. Optional because core forbids checkbox todos as default |
 | memory | optional | Auto-managed markdown memory. Infrastructure, not control plane |
-| verdict | optional | Permission gate. Allow, deny, or ask per tool call; fail-closed |
+| verdict | optional | Permission gate. Classifier failures fail closed; exemptions and manual shell escapes are not classified |
 
 Dropped packages are outside this table. `pi install` still works. LazyPi does not manage them.
 

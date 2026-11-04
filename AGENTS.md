@@ -46,7 +46,7 @@ docs/
   (no themes gallery — curated-themes is dropped)
   docs/                — docs section
     index.html         — docs overview
-    philosophy.html    — catalog membership (12 default, 5 optional, Dropped)
+    philosophy.html    — catalog membership (12 default, 6 optional, Dropped)
     first-steps.html
     installation.html
     updating.html

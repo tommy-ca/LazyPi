@@ -79,6 +79,8 @@ test("documented install counts match the catalog", () => {
 	assert.match(faq, new RegExp(`${optional}-package optional tier`));
 	assert.match(OVERVIEW, new RegExp(`full ${PACKAGES.length}-package catalog`));
 	assert.match(OVERVIEW, new RegExp(`why ${optional} are optional`));
+	assert.match(OVERVIEW, /permission gate/);
+	assert.doesNotMatch(README, /per tool call; fail-closed/);
 	const firstSteps = readFileSync("docs/docs/first-steps.html", "utf8");
 	assert.match(firstSteps, new RegExp(`Install everything</strong> is ${PACKAGES.length} packages`));
 	assert.equal([...landing.matchAll(/class="catalog-card"/g)].length, PACKAGES.length);
