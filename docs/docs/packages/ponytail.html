@@ -10,7 +10,7 @@ title: "Ponytail — LazyPi Docs"
       Ponytail puts a lazy senior dev inside your agent: a discipline mode that makes the agent stop at the first rung of a stdlib-first ladder before writing code — does this need to exist, is it already in this codebase, does the stdlib or a native platform feature cover it, is it an installed dependency, can it be one line — and only then write the minimum that works. The result is minimal diffs, never golfed: validation, error handling, security, and accessibility are never on the chopping block.
     </p>
     <p>
-      Deferred shortcuts are marked with <code>ponytail:</code> annotations and harvested into a debt ledger, so "later" doesn't become "never". Review, audit, gain, and help modes round it out: review the current diff for over-engineering, audit the whole repo, show the measured impact scoreboard, or get a quick reference. Level switches (<code>/ponytail lite|full|ultra</code>) tune how aggressively the ruleset is enforced, and the ruleset is injected into subagents too.
+      Deferred shortcuts use <code>shortcut:</code> annotations by default and can be collected into a debt ledger. Review covers bugs, security, tests, performance, and unnecessary complexity; audit covers the whole repo. Level switches (<code>/ponytail lite|full|ultra</code>) tune how aggressively the ruleset is enforced, and the ruleset is injected into subagents too.
     </p>
 
     <h2>Why it's included</h2>
@@ -30,15 +30,15 @@ title: "Ponytail — LazyPi Docs"
         </tr>
         <tr>
           <td><code>/ponytail-review</code></td>
-          <td>Review the current diff for over-engineering and hand back a delete-list</td>
+          <td>Review the current change for correctness, risk, performance, tests, and unnecessary complexity</td>
         </tr>
         <tr>
           <td><code>/ponytail-audit</code></td>
-          <td>Audit the whole repo for over-engineering, not just the diff</td>
+          <td>Review the whole repo, not just the diff</td>
         </tr>
         <tr>
           <td><code>/ponytail-debt</code></td>
-          <td>Harvest the <code>ponytail:</code> shortcuts you've deferred into a debt ledger</td>
+          <td>Collect deferred <code>shortcut:</code> comments into a debt ledger; a custom marker can be specified</td>
         </tr>
         <tr>
           <td><code>/ponytail-gain</code></td>

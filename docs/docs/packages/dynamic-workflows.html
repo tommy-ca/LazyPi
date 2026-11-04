@@ -10,7 +10,7 @@ title: "Dynamic Workflows — LazyPi Docs"
       Dynamic workflows turns one request into a JavaScript orchestration script that fans work out across isolated subagents, routes each task to the right model, cross-checks the results, and returns one synthesized answer. Instead of one agent holding a huge task in a single context window, workflows run concurrent subagent sessions — up to 16 at a time — and keep intermediate work in script variables.
     </p>
     <p>
-      Intent-driven by default: mention <code>workflow</code> or <code>workflows</code> in a message and Pi handles a decomposable request by fanning it out across agents — or run the built-in patterns directly. Runs are resumable from a run ID (<code>resumeFromRunId</code>) with journaled replay, so unchanged agent calls replay from cache instead of re-spending tokens. Real token and cost accounting is reported per run, and parallel agents can edit safely on throwaway branches with <code>isolation: "worktree"</code>.
+      Intent-driven by default: mention <code>workflow</code> or <code>workflows</code> in a message and Pi handles a decomposable request by fanning it out across agents — or run the built-in patterns directly. Runs are resumable from a run ID (<code>resumeFromRunId</code>) with journaled replay, so unchanged agent calls replay from cache instead of re-spending tokens. Real token and cost accounting is reported per run, and parallel agents can use separate worktrees with <code>isolation: "worktree"</code>. Worktrees and the workflow VM are not security sandboxes; agents retain their granted tool permissions.
     </p>
 
     <h2>Why it's included</h2>

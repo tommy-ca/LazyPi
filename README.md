@@ -1,6 +1,6 @@
 # LazyPi
 
-The [Pi](https://github.com/earendil-works/pi-mono) coding agent is minimal by design. LazyPi is opinionated by design. Run one command and get the 12-package harness core. The 5-package optional tier installs when you ask. Remove what you don't want later.
+The [Pi](https://github.com/earendil-works/pi-mono) coding agent is minimal by design. LazyPi is opinionated by design. Run one command and get the 12-package harness core. The 6-package optional tier installs when you ask. Remove what you don't want later.
 
 ## Quick start
 
@@ -13,7 +13,7 @@ LazyPi will:
 1. Install `pi` for you if it isn't installed yet.
 2. Ask if you want to install all the packages or choose which to install.
 
-That setup is the 12-package harness core. `--yes` installs those 12. On a TTY, Install everything installs all 17. Packages LazyPi dropped stay installable with `pi install`. LazyPi does not manage them. See the Catalog table and `docs/docs/philosophy.html`.
+That setup is the 12-package harness core. `--yes` installs those 12. On a TTY, Install everything installs all 18. Packages LazyPi dropped stay installable with `pi install`. LazyPi does not manage them. See the Catalog table and `docs/docs/philosophy.html`.
 
 That's it.  Once done - run `pi` and experience a feature rich coding agent experience.
 
@@ -50,7 +50,7 @@ Dropped packages are outside this table. `pi install` still works. LazyPi does n
 
 | Command | What it does |
 | --- | --- |
-| `npx @tommy-ca/lazypi` | TTY Install everything is 17. `--yes` is the 12 core packages. Picker otherwise. |
+| `npx @tommy-ca/lazypi` | TTY Install everything is 18. `--yes` is the 12 core packages. Picker otherwise. |
 | `npx @tommy-ca/lazypi remove <id>` | Remove a catalog package by id (or pass a raw pi source) |
 | `npx @tommy-ca/lazypi status` | Show which catalog packages are installed, missing, or extra |
 | `npx @tommy-ca/lazypi update` | Run `pi update` for installed Pi packages |

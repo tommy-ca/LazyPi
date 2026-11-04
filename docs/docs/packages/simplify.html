@@ -3,14 +3,14 @@ layout: docs
 title: "Simplify — LazyPi Docs"
 ---
 <h1>Simplify</h1>
-    <p class="page-desc">Reviews recently changed code for clarity, consistency, and maintainability — never changes behavior.</p>
+    <p class="page-desc">Reviews recently changed code for clarity, consistency, and maintainability.</p>
 
     <h2>What it does</h2>
     <p>
-      Pi-simplify reads every file that changed in your working tree, applies clarity and consistency improvements one at a time, then runs your test suite after each change to verify nothing broke. It operates on a strict constraint: it may only improve how the code reads, never what it does.
+      Pi-simplify reviews changed code and suggests improvements to clarity and consistency while aiming to preserve behavior.
     </p>
     <p>
-      This means simplify is safe to run after any implementation pass. It won't introduce regressions because it won't change logic. What it will do is catch naming inconsistencies, overly complex expressions, unnecessary nesting, and other readability issues that are easy to miss when you're focused on getting the feature to work.
+      Review its changes and run appropriate tests. Like any code change, a simplification can introduce a regression.
     </p>
 
     <h2>Why it's included</h2>
