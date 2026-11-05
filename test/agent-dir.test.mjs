@@ -106,6 +106,23 @@ test("status reads settings from PI_CODING_AGENT_DIR", (t) => {
 	assert.doesNotMatch(result.stdout, /✓ \[core\] mcp/);
 });
 
+test("status preserves and classifies existing pinned, legacy, and external registrations", (t) => {
+	const { home, workspace } = createWorkspace(t);
+	const agentDir = join(home, ".pi", "agent");
+	const settingsFile = join(agentDir, "settings.json");
+	writeSettings(agentDir, ["npm:@narumitw/pi-btw@0.63.4", "npm:pi-memory-md@0.1.38", "npm:external-example"]);
+	const before = readFileSync(settingsFile, "utf8");
+
+	const result = runCli(["status"], { cwd: workspace, home, agentDir });
+
+	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
+	assert.match(result.stdout, /✓ \[(?:core|optional)\] btw\s+npm:@narumitw\/pi-btw@0\.63\.4/);
+	assert.match(result.stdout, /! \[optional\] memory\s+npm:pi-memory-md@0\.1\.38/);
+	assert.match(result.stdout, /Other Pi packages outside the LazyPi catalog \(1\):/);
+	assert.match(result.stdout, /npm:external-example/);
+	assert.equal(readFileSync(settingsFile, "utf8"), before);
+});
+
 test("status displays the installed source pin, not only the id column", (t) => {
 	const { home, workspace } = createWorkspace(t);
 	writeSettings(join(home, ".pi", "agent"), ["npm:pi-subagents@0.62.0"]);
