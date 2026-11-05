@@ -10,7 +10,6 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { PACKAGES } from "../bin/lazypi.mjs";
-import { expectedPackageSources } from "./assert-installed-packages.mjs";
 
 const REPO = resolve(import.meta.dirname, "..");
 const KEEP = process.argv.includes("--keep");
@@ -71,10 +70,12 @@ try {
 	console.log("Stage 1.5: install --yes --only optional");
 	r = lazypi("install --yes --only optional");
 	assert.equal(r.status, 0, `optional install failed\n${r.stdout}\n${r.stderr}`);
-	const OPTIONAL_COUNT = PACKAGES.filter((p) => p.category === "optional").length;
+	const optionalSources = PACKAGES.filter((p) => p.category === "optional").map((p) => p.source);
+	const OPTIONAL_COUNT = optionalSources.length;
+	const fullSources = [...coreSources, ...optionalSources];
 	assert.match(r.stdout, new RegExp(`Will install:\\s+${OPTIONAL_COUNT}`));
 	check(`exit 0, ${OPTIONAL_COUNT} optional packages installed`, () => {
-		assert.deepEqual(readSettings(agentDir).packages, expectedPackageSources());
+		assert.deepEqual(readSettings(agentDir).packages, fullSources);
 	});
 
 	// --- Stage 2: idempotent re-run ----------------------------------------
@@ -83,7 +84,7 @@ try {
 	assert.equal(r.status, 0);
 	assert.match(r.stdout, /Nothing to do/);
 	check("re-run reports nothing to do", () => {
-		assert.deepEqual(readSettings(agentDir).packages, expectedPackageSources());
+		assert.deepEqual(readSettings(agentDir).packages, fullSources);
 	});
 
 	// --- Stage 3: subagent overrides ---------------------------------------
