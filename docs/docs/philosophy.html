@@ -1,30 +1,29 @@
 ---
 layout: docs
 title: "Catalog philosophy — LazyPi Docs"
-description: "Why LazyPi defaults to 12 core packages, keeps 6 optional, and leaves Dropped packages outside the catalog."
+description: "Why LazyPi defaults to 6 core packages, keeps 12 optional, and leaves Dropped packages outside the catalog."
 ---
 <h1>Catalog philosophy</h1>
-<p class="page-desc">Why the default install is 12, why 6 stay optional, and what it takes to join the catalog.</p>
+<p class="page-desc">Why the default install is 6, why 12 stay optional, and what it takes to join the catalog.</p>
 
-<h2>The default is 12</h2>
+<h2>The default is 6</h2>
 <p>
-  <code>--yes</code> installs the 12 core packages. That is the harness LazyPi will stand behind without a picker. Core packages are the control plane or a discipline habit. They run in the daily session, not as garnish.
-</p>
-<p>
-  Isolated sub-agents, an ask gate, skill visibility, <code>$</code> mention, a long-objective gate, side chat, context budget, simplify, web fetch, paged search, workflow fan-out, and ponytail. Twelve is already a lot. Adding more by default trains people to skip the catalog.
+  <code>--yes</code> installs the 6 core packages: subagents, ask-user, skillful, goal, web access, and dynamic workflows. This autonomy-first control plane keeps structured decisions, skill visibility, research, and long-running work available by default.
 </p>
 
-<h2>Six are optional</h2>
+<h2>Twelve are optional</h2>
 <p>
-  On a TTY, Install everything installs all 18. The extra six are cataloged so LazyPi can install, status, update, and remove them. They are not default because they fail the core bar.
+  On a TTY, Install everything installs all 18. The 12 optional packages remain managed by LazyPi and provide additional interaction, review, search, and infrastructure features.
 </p>
 <ul>
+  <li><code>mention-skill</code>, <code>btw</code>, and <code>context-usage</code> add skill selection, side chat, and context detail.</li>
+  <li><code>simplify</code>, <code>fff</code>, and <code>ponytail</code> add review, indexed search, and discipline tools.</li>
   <li><code>lsp</code> is targeted diagnostics. Useful, not a control-plane primitive.</li>
   <li><code>interactive-shell</code> is TUI chrome. Chrome is not the control plane.</li>
   <li><code>autoresearch</code> is experiment loops. Convenience, not core.</li>
   <li><code>verdict</code> is a permission gate. Security layer, not default.</li>
   <li><code>todos</code> is a structured tracker. Core forbids checkbox todos as the default posture.</li>
-  <li><code>memory</code> is git-backed memory. Infrastructure, not a control-plane primitive.</li>
+  <li><code>memory</code> manages markdown memory. It is optional infrastructure.</li>
 </ul>
 <p>
   Pick them with <code>--only optional</code>, the picker, or TTY Install everything.
@@ -43,7 +42,7 @@ description: "Why LazyPi defaults to 12 core packages, keeps 6 optional, and lea
   <li>A change spec carries the audit trail before the catalog grows.</li>
 </ul>
 <p>
-  Meal-prep, chrome, and one-shot convenience can be excellent packages. They still do not belong in LazyPi's default or optional tiers.
+  Optional packages may provide useful convenience or infrastructure without joining the default control plane.
 </p>
 
 <h2>Dropped packages</h2>

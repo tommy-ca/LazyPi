@@ -126,5 +126,5 @@ test("status prints core and optional installed counts after the catalog header"
 	const output = `${result.stdout}\n${result.stderr}`;
 	assert.equal(result.status, 0, output);
 	assert.match(output, /Installed from LazyPi catalog \(0\/18\):/);
-	assert.match(output, /core 0\/12, optional 0\/6/);
+	assert.match(output, /core 0\/6, optional 0\/12/);
 });

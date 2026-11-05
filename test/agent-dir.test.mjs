@@ -123,6 +123,75 @@ test("status preserves and classifies existing pinned, legacy, and external regi
 	assert.equal(readFileSync(settingsFile, "utf8"), before);
 });
 
+for (const [name, selection] of [["default", []], ["explicit core", ["--only", "core"]]]) {
+	test(`${name} install selects the autonomy core and preserves unselected registrations`, (t) => {
+		const { root, home, workspace, bin } = createWorkspace(t);
+		const agentDir = join(home, ".pi", "agent");
+		const settingsFile = join(agentDir, "settings.json");
+		const callsPath = join(root, "pi-calls.log");
+		const packages = ["npm:pi-btw@0.1.0", "npm:external-example"];
+		writeJson(settingsFile, { packages, keep: { marker: true } });
+		writeFakePi(bin);
+
+		const result = runCli(["install", "--yes", ...selection], { cwd: workspace, home, agentDir, bin, callsPath });
+
+		assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
+		assert.match(result.stdout, /Selected:\s+6\/18/);
+		assert.deepEqual(readFileSync(callsPath, "utf8").trim().split(/\r?\n/), [
+			"install npm:pi-subagents",
+			"install npm:pi-ask-user",
+			"install npm:pi-skillful",
+			"install npm:@narumitw/pi-goal",
+			"install npm:pi-web-access",
+			"install npm:@quintinshaw/pi-dynamic-workflows",
+		]);
+		const after = JSON.parse(readFileSync(settingsFile, "utf8"));
+		assert.deepEqual(after.packages, packages);
+		assert.deepEqual(after.keep, { marker: true });
+	});
+}
+
+test("optional selection installs every non-core package", (t) => {
+	const { root, home, workspace, bin } = createWorkspace(t);
+	const agentDir = join(home, ".pi", "agent");
+	const callsPath = join(root, "pi-calls.log");
+	writeSettings(agentDir, []);
+	writeFakePi(bin);
+
+	const result = runCli(["install", "--yes", "--only", "optional"], { cwd: workspace, home, agentDir, bin, callsPath });
+
+	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
+	assert.match(result.stdout, /Selected:\s+12\/18/);
+	assert.deepEqual(readFileSync(callsPath, "utf8").trim().split(/\r?\n/), [
+		"install npm:@zigai/pi-mention-skill",
+		"install npm:@narumitw/pi-btw",
+		"install npm:pi-context-usage",
+		"install npm:pi-simplify",
+		"install npm:@ff-labs/pi-fff",
+		"install npm:@dietrichgebert/ponytail",
+		"install npm:@narumitw/pi-lsp",
+		"install npm:pi-interactive-shell",
+		"install npm:pi-autoresearch",
+		"install npm:@juicesharp/rpiv-todo",
+		"install npm:@henryqw/pi-memory",
+		"install npm:pi-verdict",
+	]);
+});
+
+test("a demoted package remains individually installable", (t) => {
+	const { root, home, workspace, bin } = createWorkspace(t);
+	const agentDir = join(home, ".pi", "agent");
+	const callsPath = join(root, "pi-calls.log");
+	writeSettings(agentDir, []);
+	writeFakePi(bin);
+
+	const result = runCli(["install", "--yes", "--only", "fff"], { cwd: workspace, home, agentDir, bin, callsPath });
+
+	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
+	assert.match(result.stdout, /Selected:\s+1\/18/);
+	assert.equal(readFileSync(callsPath, "utf8").trim(), "install npm:@ff-labs/pi-fff");
+});
+
 test("status displays the installed source pin, not only the id column", (t) => {
 	const { home, workspace } = createWorkspace(t);
 	writeSettings(join(home, ".pi", "agent"), ["npm:pi-subagents@0.62.0"]);
@@ -185,6 +254,6 @@ test("--local settings remain independent of PI_CODING_AGENT_DIR", (t) => {
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.ok(result.stdout.includes(`Settings file: ${join(workspace, ".pi", "settings.json")}`));
-	assert.match(result.stdout, /✓ \[core\] fff/);
+	assert.match(result.stdout, /✓ \[optional\] fff/);
 	assert.doesNotMatch(result.stdout, /✓ \[core\] subagents/);
 });
