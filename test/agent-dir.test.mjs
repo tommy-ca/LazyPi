@@ -151,6 +151,174 @@ for (const [name, selection] of [["default", []], ["explicit core", ["--only", "
 	});
 }
 
+function writeStatefulPi(bin, local) {
+	const script = join(bin, "fake-pi.mjs");
+	writeFileSync(script, `import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
+const args = process.argv.slice(2);
+appendFileSync(process.env.PI_TEST_CALLS, JSON.stringify(args) + "\\n");
+const prefix = ${JSON.stringify(local ? ["install", "-l", "--approve"] : ["install"])};
+if (args.length !== prefix.length + 1 || !prefix.every((arg, i) => args[i] === arg)
+	|| !args.at(-1).startsWith("npm:")) {
+	console.error("Unexpected fake Pi command: " + JSON.stringify(args));
+	process.exit(97);
+}
+const path = process.env.PI_TEST_SETTINGS;
+const settings = JSON.parse(readFileSync(path, "utf8"));
+const source = args.at(-1);
+if (!settings.packages.some(entry => (typeof entry === "string" ? entry : entry.source) === source)) {
+	settings.packages.push(source);
+}
+writeFileSync(path, JSON.stringify(settings, null, 2) + "\\n");
+`);
+	const pi = join(bin, "pi");
+	writeFileSync(pi, `#!/bin/sh\nexec '${process.execPath}' '${script}' "$@"\n`);
+	chmodSync(pi, 0o755);
+	// LazyPi probes with `which`; never let lookup reach host executables.
+	const which = join(bin, "which");
+	writeFileSync(which, `#!${process.execPath}\nconst args = process.argv.slice(2);
+if (args.length !== 1 || !["pi", "npm"].includes(args[0])) process.exit(98);
+console.log(${JSON.stringify(bin)} + "/" + args[0]);
+`);
+	chmodSync(which, 0o755);
+	const npm = join(bin, "npm");
+	writeFileSync(npm, `#!${process.execPath}\nimport { appendFileSync } from "node:fs";
+appendFileSync(process.env.PI_TEST_CALLS, JSON.stringify(["unexpected npm", ...process.argv.slice(2)]) + "\\n");
+console.error("Unexpected npm fallback");
+process.exit(99);
+`);
+	chmodSync(npm, 0o755);
+}
+
+for (const local of [false, true]) {
+	const scope = local ? "project" : "global";
+	test(`${scope} default install preserves state with stateful fake Pi`, { skip: process.platform === "win32" }, (t) => {
+		const { root, home, workspace, bin } = createWorkspace(t);
+		const agentDir = join(home, ".pi", "agent");
+		const globalSettings = join(agentDir, "settings.json");
+		const projectSettings = join(workspace, ".pi", "settings.json");
+		const settingsFile = local ? projectSettings : globalSettings;
+		const oppositeFile = local ? globalSettings : projectSettings;
+		const callsPath = join(root, "calls.jsonl");
+		const packages = [
+			{
+				source: "npm:@narumitw/pi-btw@0.63.4",
+				extensions: ["index.ts"],
+				skills: [],
+				marker: { pinned: true },
+			},
+			{
+				source: "npm:pi-btw@0.1.0",
+				extensions: [],
+				prompts: ["prompts/legacy.md"],
+				marker: "legacy",
+			},
+			"npm:pi-context-usage@1.0.0",
+			{ source: "npm:external-example@2.0.0", extensions: ["custom.ts"], metadata: { owner: "fixture" } },
+		];
+		const original = {
+			packages,
+			theme: "fixture-theme",
+			keep: { nested: ["untouched", 42] },
+			subagents: {
+				defaultModel: "fixture-default",
+				agentOverrides: {
+					reviewer: { model: "fixture-reviewer", tools: ["read"] },
+					worker: { model: "", thinking: "high" },
+					custom: { model: "fixture-custom" },
+				},
+			},
+		};
+		writeJson(settingsFile, original);
+		writeJson(oppositeFile, {
+			packages: ["npm:opposite-scope@3.0.0"],
+			subagents: { agentOverrides: { reviewer: { model: "opposite-model" } } },
+		});
+		const configFile = join(agentDir, "fixture-config.json");
+		const dataFile = join(workspace, ".pi", "fixture-data.md");
+		writeJson(configFile, { enabled: true, untouched: [1, 2] });
+		mkdirSync(dirname(dataFile), { recursive: true });
+		writeFileSync(dataFile, "Persistent package data.\n\u0000sentinel\n");
+		const unchangedFiles = [oppositeFile, configFile, dataFile].map(path => [path, readFileSync(path)]);
+		writeFileSync(callsPath, "");
+		writeStatefulPi(bin, local);
+
+		const result = spawnSync(process.execPath, [CLI_PATH, "install", "--yes", ...(local ? ["--local"] : [])], {
+			cwd: workspace,
+			env: {
+				HOME: home,
+				USERPROFILE: home,
+				PI_CODING_AGENT_DIR: agentDir,
+				PATH: bin,
+				PI_TEST_CALLS: callsPath,
+				PI_TEST_SETTINGS: settingsFile,
+			},
+			encoding: "utf8",
+			timeout: 15_000,
+		});
+		assert.equal(result.error, undefined);
+		assert.match(result.stdout, /Selected:          6\/18\n/);
+		assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
+		assert.equal(result.signal, null);
+		assert.equal(result.stderr, "");
+		const sources = [
+			"npm:pi-subagents",
+			"npm:pi-ask-user",
+			"npm:pi-skillful",
+			"npm:@narumitw/pi-goal",
+			"npm:pi-web-access",
+			"npm:@quintinshaw/pi-dynamic-workflows",
+		];
+		const prefix = local ? ["install", "-l", "--approve"] : ["install"];
+		const calls = readFileSync(callsPath, "utf8").trim().split("\n").map(line => JSON.parse(line));
+		assert.deepEqual(calls, sources.map(source => [...prefix, source]));
+		assert.deepEqual(JSON.parse(readFileSync(settingsFile, "utf8")), {
+			...original,
+			packages: [...packages, ...sources],
+			subagents: {
+				defaultModel: "fixture-default",
+				agentOverrides: {
+					reviewer: { model: "", tools: ["read"] },
+					worker: { model: "", thinking: "high" },
+					custom: { model: "fixture-custom" },
+					"context-builder": { model: "" },
+					planner: { model: "" },
+					researcher: { model: "" },
+					scout: { model: "" },
+				},
+			},
+		});
+		for (const [path, before] of unchangedFiles) assert.deepEqual(readFileSync(path), before, path);
+		const target = local ? "project (.pi/settings.json)" : `global (${settingsFile})`;
+		assert.equal(result.stdout, [
+			`Target:            ${target}`,
+			"Selected:          6/18",
+			"Already installed: 0",
+			"Will install:      6",
+			"Pi credentials:    none detected",
+			...sources.flatMap(source => ["", `→ pi install ${source}`]),
+			"",
+			"What you've got:",
+			"  subagents            Run isolated sub-agents for parallel work.",
+			"  pi-ask-user          Interactive user questions for agent workflows.",
+			"  pi-skillful          Discover skills above the git root, hide unused skills, and expand /skill:name inline.",
+			"  goal                 Stop on done, blocked, or external wait for long tasks.",
+			"  web-access           Built-in web search and URL fetching.",
+			"  dynamic-workflows    Fan work out across subagents: /workflows TUI, deep-research, resume, token accounting.",
+			"",
+			"Remove pi packages with `pi remove <source>`.",
+			"",
+			"Installed 6 package(s) — next steps:",
+			"Pi credentials: none detected.",
+			"",
+			"Run `pi`, then type `/login` inside Pi to sign in with a",
+			"subscription (Claude Pro/Max, ChatGPT Plus/Pro, Copilot, Gemini)",
+			"or set a provider env var (ANTHROPIC_API_KEY, OPENAI_API_KEY, …)",
+			"before launching pi.",
+			"",
+		].join("\n"));
+	});
+}
+
 test("optional selection installs every non-core package", (t) => {
 	const { root, home, workspace, bin } = createWorkspace(t);
 	const agentDir = join(home, ".pi", "agent");
