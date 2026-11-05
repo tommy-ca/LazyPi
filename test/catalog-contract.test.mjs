@@ -11,18 +11,12 @@ const CORE_IDS = [
 	"subagents",
 	"pi-ask-user",
 	"pi-skillful",
-	"mention-skill",
 	"goal",
-	"btw",
-	"context-usage",
-	"simplify",
 	"web-access",
-	"fff",
 	"dynamic-workflows",
-	"ponytail",
 ];
 
-const OPTIONAL_IDS = ["lsp", "interactive-shell", "autoresearch", "todos", "memory", "verdict"];
+const OPTIONAL_IDS = ["mention-skill", "btw", "context-usage", "simplify", "fff", "ponytail", "lsp", "interactive-shell", "autoresearch", "todos", "memory", "verdict"];
 
 const CURRENT_SOURCES = {
 	subagents: "npm:pi-subagents",
@@ -81,7 +75,7 @@ test("PACKAGES matches the lean catalog shape", () => {
 
 test("active installer spec agrees with the catalog", () => {
 	const spec = readFileSync("openspec/specs/lazypi/installer/spec.md", "utf8");
-	assert.match(spec, /exactly 18 entries: 12 core and 6 optional/);
+	assert.match(spec, /exactly 18 entries: 6 core and 12 optional/);
 	assert.equal([...spec.matchAll(/17 ids for\s+`--except todos`/g)].length, 2);
 	assert.match(spec, /`todos` SHALL resolve to `npm:@juicesharp\/rpiv-todo`/);
 	assert.match(spec, /`memory` SHALL resolve to `npm:@henryqw\/pi-memory`/);
@@ -89,15 +83,15 @@ test("active installer spec agrees with the catalog", () => {
 		assert.ok(spec.includes(`\`${source}\``), source);
 	}
 	assert.equal([...spec.matchAll(/Install everything (?:path )?installs 18\s*packages/g)].length, 2);
-	assert.match(spec, /why six packages are optional/);
-	assert.match(spec, /why 6 packages are optional/);
+	assert.match(spec, /why twelve packages are optional/);
+	assert.match(spec, /why 12 packages are optional/);
 });
 
-test("catalog reconciliation delta contains the complete modified requirements", () => {
+test("lean catalog delta contains the complete modified requirements", () => {
 	const active = readFileSync("openspec/specs/lazypi/installer/spec.md", "utf8");
-	const delta = readFileSync("openspec/changes/2026-11-04-catalog-contract-reconciliation/specs/lazypi/installer/spec.md", "utf8");
+	const delta = readFileSync("openspec/changes/2026-11-04-lean-autonomy-core/specs/lazypi/installer/spec.md", "utf8");
 	const modified = delta.split("## ADDED Requirements")[0];
-	for (const name of ["Catalog Model", "Commands", "Catalog documentation"]) {
+	for (const name of ["Catalog Model", "Catalog documentation", "Reconciled catalog contract", "Permission gate catalog entry"]) {
 		const heading = `### Requirement: ${name}\n`;
 		const section = (text) => text.split(heading)[1]?.split(/\n### Requirement:|\n## (?:ADDED|MODIFIED) Requirements/)[0].trim();
 		assert.ok(section(active), `${name} exists in active spec`);

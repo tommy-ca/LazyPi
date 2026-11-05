@@ -17,18 +17,17 @@ MAY carry `legacySources`.
 #### Scenario: Lean catalog shape
 
 - **WHEN** the catalog is loaded
-- **THEN** it SHALL contain exactly 18 entries: 12 core and 6 optional
+- **THEN** it SHALL contain exactly 18 entries: 6 core and 12 optional
 - **AND** the categories SHALL be `core` and `optional`
-- **AND** core SHALL contain subagents, pi-ask-user, pi-skillful,
-  mention-skill, goal, btw, context-usage, simplify, web-access, fff,
-  dynamic-workflows, and ponytail
-- **AND** optional SHALL contain lsp, interactive-shell, autoresearch,
-  todos, memory, and verdict
+- **AND** core SHALL contain subagents, pi-ask-user, pi-skillful, goal,
+  web-access, and dynamic-workflows
+- **AND** optional SHALL contain mention-skill, btw, context-usage, simplify,
+  fff, ponytail, lsp, interactive-shell, autoresearch, todos, memory, and verdict
 
 #### Scenario: Optional catalog tier
 
 - **WHEN** install selection is computed without `--only` or `--except`
-- **THEN** the selection SHALL be the 12 core entries only
+- **THEN** the selection SHALL be the 6 core entries only
 - **AND** optional entries SHALL be selected only via `--only optional` (or
   matching package ids), `--except`, the interactive picker, or the
   interactive everything flow
@@ -387,7 +386,7 @@ be gated on the spec and test suites before publishing.
 `README.md` SHALL list each `PACKAGES` id in `PACKAGES` order with its
 category and a rationale.
 
-`README.md` SHALL state that `--yes` installs 12 packages.
+`README.md` SHALL state that `--yes` installs 6 packages.
 
 `README.md` SHALL state that the TTY Install everything path installs 18
 packages.
@@ -401,9 +400,9 @@ Catalog documentation SHALL NOT call that option recommended.
 `docs/index.html` SHALL NOT contain `(recommended)`.
 
 `docs/docs/philosophy.html` SHALL explain why the default install is the
-12 core packages.
+6 core packages.
 
-`docs/docs/philosophy.html` SHALL explain why six packages are optional.
+`docs/docs/philosophy.html` SHALL explain why twelve packages are optional.
 
 `docs/docs/philosophy.html` SHALL name the membership bar as control
 plane or discipline, not meal-prep or chrome.
@@ -431,14 +430,14 @@ Dropped packages.
 #### Scenario: Default versus everything counts
 
 - **WHEN** `README.md` describes install counts
-- **THEN** it SHALL state that `--yes` installs 12 packages
+- **THEN** it SHALL state that `--yes` installs 6 packages
 - **AND** it SHALL state that TTY Install everything installs 18 packages
 
 #### Scenario: Philosophy page
 
 - **WHEN** `docs/docs/philosophy.html` is read
-- **THEN** it SHALL explain why 12 is the default install
-- **AND** it SHALL explain why 6 packages are optional
+- **THEN** it SHALL explain why 6 is the default install
+- **AND** it SHALL explain why 12 packages are optional
 - **AND** it SHALL name the membership bar as control plane or
   discipline, not meal-prep or chrome
 - **AND** it SHALL name Dropped packages as outside the catalog
@@ -546,3 +545,32 @@ Workflow checks SHALL verify required commands as executable run steps rather th
 - **THEN** its mock Pi SHALL use a `.cmd` launcher and retain the system PATH
 - **AND** all platforms SHALL isolate `HOME`, `USERPROFILE`, and `PI_CODING_AGENT_DIR`
 - **AND** temporary fixtures SHALL be cleaned up after the test
+
+### Requirement: Reconciled catalog contract
+
+The active installer specification and public catalog summaries SHALL agree with the current catalog and accurately describe Verdict's classifier boundary.
+
+#### Scenario: Counts and source migrations
+
+- **WHEN** the active installer specification describes the catalog
+- **THEN** it SHALL specify 18 entries: 6 core and 12 optional
+- **AND** `--except todos` SHALL select 17 entries
+- **AND** `todos` SHALL use `npm:@juicesharp/rpiv-todo` and retain its former npm and git sources as legacy sources
+- **AND** `memory` SHALL use `npm:@henryqw/pi-memory` and retain its former npm and git sources as legacy sources
+
+#### Scenario: Verdict summaries
+
+- **WHEN** the CLI help or documentation summarizes the optional tier
+- **THEN** it SHALL include Verdict
+- **AND** summaries of its fail-closed behavior SHALL distinguish classifier failures from configured exemptions and manual shell escapes
+
+### Requirement: Permission gate catalog entry
+
+The optional tier SHALL include a permission-gate package.
+
+#### Scenario: Verdict package
+
+- **WHEN** the catalog is loaded
+- **THEN** it SHALL contain an entry with id `verdict`, category `optional`, and source `npm:pi-verdict`
+- **AND** the total catalog SHALL be 18 entries: 6 core and 12 optional
+- **AND** the packages index page SHALL list all 18 entries

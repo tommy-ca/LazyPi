@@ -1,6 +1,6 @@
 # LazyPi
 
-The [Pi](https://github.com/earendil-works/pi-mono) coding agent is minimal by design. LazyPi is opinionated by design. Run one command and get the 12-package harness core. The 6-package optional tier installs when you ask. Remove what you don't want later.
+The [Pi](https://github.com/earendil-works/pi-mono) coding agent is minimal by design. LazyPi is opinionated by design. Run one command and get the 6-package harness core. The 12-package optional tier installs when you ask. Remove what you don't want later.
 
 ## Quick start
 
@@ -13,30 +13,30 @@ LazyPi will:
 1. Install `pi` for you if it isn't installed yet.
 2. Ask if you want to install all the packages or choose which to install.
 
-That setup is the 12-package harness core. `--yes` installs those 12. On a TTY, Install everything installs all 18. Packages LazyPi dropped stay installable with `pi install`. LazyPi does not manage them. See the Catalog table and `docs/docs/philosophy.html`.
+That setup is the 6-package harness core. `--yes` installs those 6. On a TTY, Install everything installs all 18. Packages LazyPi dropped stay installable with `pi install`. LazyPi does not manage them. See the Catalog table and `docs/docs/philosophy.html`.
 
 That's it.  Once done - run `pi` and experience a feature rich coding agent experience.
 
-Install is **idempotent** — LazyPi reads your Pi settings and skips any package that is already installed, so re-running is safe.
+Install is **idempotent** — LazyPi reads your Pi settings and skips any package that is already installed. Moving a package to the optional tier does not remove an existing registration or its data.
 
 ## Catalog
 
-`--yes` installs 12 core packages. TTY Install everything installs all 18.
+`--yes` installs 6 core packages. TTY Install everything installs all 18.
 
 | id | category | why |
 | --- | --- | --- |
 | subagents | core | Isolated specialists instead of one bloated agent |
 | pi-ask-user | core | Stop and ask instead of guessing |
 | pi-skillful | core | Keep 4 to 6 skills visible. Hide the rest |
-| mention-skill | core | `$` mention is the one way to reach hidden skills |
+| mention-skill | optional | `$` mention is the one way to reach hidden skills |
 | goal | core | Long-objective gate. Not a checkbox list |
-| btw | core | Side chat that does not pollute history |
-| context-usage | core | See what is burning the window |
-| simplify | core | Review diffs for clarity after implementation |
+| btw | optional | Side chat that does not pollute history |
+| context-usage | optional | See what is burning the window |
+| simplify | optional | Review diffs for clarity after implementation |
 | web-access | core | Search and fetch instead of stale training data |
-| fff | core | Paged fuzzy search so grep does not flood the transcript |
+| fff | optional | Paged fuzzy search so grep does not flood the transcript |
 | dynamic-workflows | core | Fan work out across subagents |
-| ponytail | core | Stdlib-first discipline. Lean catalog as a habit |
+| ponytail | optional | Stdlib-first discipline. Lean catalog as a habit |
 | lsp | optional | Targeted diagnostics. Cataloged, not default |
 | interactive-shell | optional | TUI overlays. Chrome, not control plane |
 | autoresearch | optional | Experiment loops. Convenience, not core |
@@ -50,7 +50,7 @@ Dropped packages are outside this table. `pi install` still works. LazyPi does n
 
 | Command | What it does |
 | --- | --- |
-| `npx @tommy-ca/lazypi` | TTY Install everything is 18. `--yes` is the 12 core packages. Picker otherwise. |
+| `npx @tommy-ca/lazypi` | TTY Install everything is 18. `--yes` is the 6 core packages. Picker otherwise. |
 | `npx @tommy-ca/lazypi remove <id>` | Remove a catalog package by id (or pass a raw pi source) |
 | `npx @tommy-ca/lazypi status` | Show which catalog packages are installed, missing, or extra |
 | `npx @tommy-ca/lazypi update` | Run `pi update` for installed Pi packages |

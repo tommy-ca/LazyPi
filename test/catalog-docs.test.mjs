@@ -91,6 +91,21 @@ test("documented install counts match the catalog", () => {
 	assert.match(landing, /github\.com\/juicesharp\/rpiv-mono/);
 });
 
+test("package pages and catalog cards identify the selected tiers", () => {
+	const packages = readFileSync("docs/docs/packages/index.html", "utf8");
+	const landing = readFileSync("docs/index.html", "utf8");
+	for (const pkg of PACKAGES) {
+		const slug = docsSlug(pkg.id);
+		assert.match(packages, new RegExp(`<a class="pkg-card" href="/docs/packages/${slug}\\.html">\\s*<span class="pkg-tag ${pkg.category}">`), pkg.id);
+	}
+	for (const [id, label] of [["mention-skill", "@zigai/pi-mention-skill"], ["btw", "@narumitw/pi-btw"], ["context-usage", "pi-context-usage"], ["simplify", "pi-simplify"], ["fff", "@ff-labs/pi-fff"], ["ponytail", "ponytail"]]) {
+		const page = readFileSync(`docs/docs/packages/${id}.html`, "utf8");
+		assert.ok(page.includes(`--only ${id}`), id);
+		const card = [...landing.matchAll(/<a class="catalog-card"[\s\S]*?<span class="catalog-tag (core|optional)">[^<]+<\/span>\s*<div class="catalog-name">([^<]+)<\/div>/g)].find((match) => match[2] === label);
+		assert.equal(card?.[1], "optional", id);
+	}
+});
+
 test("philosophy.html exists and names the membership bar", () => {
 	assert.equal(existsSync(PHILOSOPHY_PATH), true);
 	const page = readFileSync(PHILOSOPHY_PATH, "utf8");

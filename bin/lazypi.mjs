@@ -30,22 +30,22 @@ export const PACKAGES = [
 	{ id: "subagents", category: "core", source: "npm:pi-subagents", description: "Sub-agent execution", hint: "Run isolated sub-agents for parallel work." },
 	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", description: "Ask-user prompts", hint: "Interactive user questions for agent workflows." },
 	{ id: "pi-skillful", category: "core", source: "npm:pi-skillful", description: "Skill visibility", hint: "Discover skills above the git root, hide unused skills, and expand /skill:name inline." },
-	{ id: "mention-skill", category: "core", source: "npm:@zigai/pi-mention-skill", description: "$ skill mention", hint: "Fuzzy-search skills with $ and expand them into the prompt; hidden skills stay reachable." },
+	{ id: "mention-skill", category: "optional", source: "npm:@zigai/pi-mention-skill", description: "$ skill mention", hint: "Fuzzy-search skills with $ and expand them into the prompt; hidden skills stay reachable." },
 	{ id: "goal", category: "core", source: "npm:@narumitw/pi-goal", description: "Long-objective gate", hint: "Stop on done, blocked, or external wait for long tasks." },
 	{
 		id: "btw",
-		category: "core",
+		category: "optional",
 		source: "npm:@narumitw/pi-btw",
 		legacySources: ["npm:pi-btw"],
 		description: "Side-chat popover",
 		hint: "Ask quick questions without polluting your conversation history.",
 	},
-	{ id: "context-usage", category: "core", source: "npm:pi-context-usage", description: "Context budget", hint: "See what is burning the context window before it fills." },
-	{ id: "simplify", category: "core", source: "npm:pi-simplify", description: "Code simplify review", hint: "Reviews recently changed code for clarity, consistency, and maintainability." },
+	{ id: "context-usage", category: "optional", source: "npm:pi-context-usage", description: "Context budget", hint: "See what is burning the context window before it fills." },
+	{ id: "simplify", category: "optional", source: "npm:pi-simplify", description: "Code simplify review", hint: "Reviews recently changed code for clarity, consistency, and maintainability." },
 	{ id: "web-access", category: "core", source: "npm:pi-web-access", description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
-	{ id: "fff", category: "core", source: "npm:@ff-labs/pi-fff", description: "FFF fuzzy search", hint: "Additive fffind / ffgrep / fff-multi-grep beside the built-in tools; /fff-health checks the index." },
+	{ id: "fff", category: "optional", source: "npm:@ff-labs/pi-fff", description: "FFF fuzzy search", hint: "Additive fffind / ffgrep / fff-multi-grep beside the built-in tools; /fff-health checks the index." },
 	{ id: "dynamic-workflows", category: "core", source: "npm:@quintinshaw/pi-dynamic-workflows", description: "Workflow engine", hint: "Fan work out across subagents: /workflows TUI, deep-research, resume, token accounting." },
-	{ id: "ponytail", category: "core", source: "npm:@dietrichgebert/ponytail", description: "Lazy senior dev mode", hint: "Enforces minimal, stdlib-first code; /ponytail review, audit, and a debt ledger." },
+	{ id: "ponytail", category: "optional", source: "npm:@dietrichgebert/ponytail", description: "Lazy senior dev mode", hint: "Enforces minimal, stdlib-first code; /ponytail review, audit, and a debt ledger." },
 	{ id: "lsp", category: "optional", source: "npm:@narumitw/pi-lsp", description: "Targeted LSP diagnostics and fixes", hint: "lsp_diagnostics / lsp_fix with configurable language servers, started per call." },
 	{ id: "interactive-shell", category: "optional", source: "npm:pi-interactive-shell", description: "Interactive shell overlays", hint: "Run CLIs and agents in TUI overlays: interactive, hands-free, dispatch supervision." },
 	{ id: "autoresearch", category: "optional", source: "npm:pi-autoresearch", legacySources: ["git:github.com/davebcn87/pi-autoresearch"], description: "Autonomous experiment loops", hint: "Iterative optimization runs with hooks, finalize, and convergence tracking." },
@@ -249,8 +249,8 @@ ${bold("Default behaviour:")}
   - An empty unattended selection does not install Pi or packages.
 
 ${bold("Categories:")}
-  core         the harness control plane: sub-agents, workflows, ask gate, skill visibility, $ mention, goal, side chat, context budget, simplify, web research, fff search, ponytail discipline
-  optional     only when selected (--only optional, picker, or the everything flow): lsp diagnostics, interactive-shell overlays, autoresearch loops, todo tracking, markdown memory, verdict
+  core         sub-agents, ask gate, skill visibility, goal, web research, workflows
+  optional     only when selected (--only optional, picker, or the everything flow): skill mentions, side chat, context usage, simplify, fff, ponytail, lsp, interactive shell, autoresearch, todos, memory, verdict
   (Dropped packages such as skill-args, mcp, ralph-wiggum, curated-themes are
   outside the catalog — pi install npm:<source> still works for them.)
 

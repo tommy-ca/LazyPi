@@ -7,13 +7,13 @@ description: "What to do after installing LazyPi: launch Pi, authenticate, try a
     <p class="page-desc">A short, practical path from “installed” to “I can already feel why this setup is useful.”</p>
 
     <div class="callout">
-      <p>TTY <strong>Install everything</strong> is 18 packages. These steps describe the default core 12. Skip a step if you omitted that package.</p>
+      <p>TTY <strong>Install everything</strong> is 18 packages. These steps describe the default core 6. Skip a step if you omitted that package.</p>
     </div>
 
     <h2>1. Launch Pi</h2>
     <pre><code>pi</code></pre>
     <p>
-      LazyPi installs and configures packages, but Pi is still the app you use day to day. Open it in a real project and you should immediately see the harness core: sub-agents, the ask gate, skill visibility, goal, web research, and FFF search LazyPi added.
+      LazyPi installs and configures packages, but Pi is still the app you use day to day. Open it in a real project and you should immediately see the harness core: sub-agents, the ask gate, skill visibility, goal, web research, and workflows LazyPi added.
     </p>
 
     <h2>2. Authenticate</h2>
@@ -40,8 +40,8 @@ pi</code></pre>
     </p>
 
     <h3>Check the skill surface</h3>
-    <pre><code>$research + $code-review after the change</code></pre>
-    <p>Type <code>$</code> for fuzzy skill autocomplete; hidden skills stay reachable from the prompt without polluting the system prompt.</p>
+    <pre><code>/skill:research</code></pre>
+    <p>Invoke an available skill explicitly. The optional <code>mention-skill</code> package adds <code>$</code> fuzzy skill autocomplete.</p>
 
     <h3>Review a real task</h3>
     <pre><code>Review this repository and propose the 3 highest-leverage improvements</code></pre>
@@ -69,7 +69,7 @@ pi</code></pre>
 
     <h2>4. Know what changed</h2>
     <p>
-      LazyPi keeps Pi's minimal core intact and installs a curated set of community packages on top. After installation, Pi can still do everything it could before — you just now also have the harness core: sub-agents, an ask gate, skill visibility, $ mention, a long-objective gate, side chat, context budgeting, simplification review, web research, FFF search, a workflow engine for sub-agent fan-out, and ponytail discipline review.
+      LazyPi keeps Pi's minimal core intact and installs a curated set of community packages on top. After installation, Pi can still do everything it could before — you just now also have the harness core: sub-agents, an ask gate, skill visibility, a long-objective gate, web research, and workflow fan-out. The optional tier adds skill mentions, side chat, context detail, search, review, and other tools.
     </p>
     <p>
       In other words: LazyPi is a curated starting point, not a fork and not a separate product.
