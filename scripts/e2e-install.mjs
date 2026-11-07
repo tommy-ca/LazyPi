@@ -1,21 +1,43 @@
 #!/usr/bin/env node
 // End-to-end install test: packs the LazyPi fork and drives the packed bin
-// against a real `pi` in an isolated sandbox (PI_CODING_AGENT_DIR). Needs
-// network + `pi` on PATH. CI runs this after `npm test`; locally:
-//   node scripts/e2e-install.mjs
+// against a real `pi` with private state and an allowlisted environment.
+// Needs network + `pi` on PATH, and separately authorized OS containment.
+// Private HOME is not containment. Offline tests use fake executables instead.
+// --keep retains the private run root, including on setup failures.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 
 import { PACKAGES } from "../bin/lazypi.mjs";
 
 const REPO = resolve(import.meta.dirname, "..");
 const KEEP = process.argv.includes("--keep");
 
+const sandbox = mkdtempSync(join(tmpdir(), "lazypi-e2e-"));
+const agentDir = join(sandbox, "agent");
+const env = { PATH: process.env.PATH ?? "" };
+if (process.platform === "win32") {
+	for (const key of ["SystemRoot", "WINDIR", "COMSPEC", "PATHEXT"]) {
+		if (process.env[key]) env[key] = process.env[key];
+	}
+}
+const privateDirs = {
+	HOME: "home", USERPROFILE: "home", PI_CODING_AGENT_DIR: "agent",
+	XDG_CONFIG_HOME: "config", XDG_DATA_HOME: "data", XDG_CACHE_HOME: "cache",
+	XDG_STATE_HOME: "state", XDG_RUNTIME_DIR: "run",
+	TMPDIR: "tmp", TMP: "tmp", TEMP: "tmp", NPM_CONFIG_CACHE: "npm-cache",
+};
+for (const [key, dir] of Object.entries(privateDirs)) env[key] = join(sandbox, dir);
+env.NPM_CONFIG_USERCONFIG = join(sandbox, "npmrc");
+env.NPM_CONFIG_GLOBALCONFIG = join(sandbox, "global-npmrc");
+const context = { root: sandbox, agentDir, env };
+
 function run(command, args, options = {}) {
-	const result = spawnSync(command, args, { encoding: "utf8", ...options });
+	const result = spawnSync(command, args, {
+		encoding: "utf8", timeout: 300_000, ...options, cwd: context.root, env: context.env,
+	});
 	if (result.error) throw result.error;
 	return result;
 }
@@ -31,27 +53,34 @@ function readSettings(agentDir) {
 	return JSON.parse(readFileSync(join(agentDir, "settings.json"), "utf8"));
 }
 
-const pack = run("npm", ["pack", "--silent"], { cwd: REPO });
-assert.equal(pack.status, 0, `npm pack failed: ${pack.stderr}`);
-const tarball = resolve(REPO, pack.stdout.trim().split(/\r?\n/).at(-1));
-
-const sandbox = mkdtempSync(join(tmpdir(), "lazypi-e2e-"));
-const agentDir = join(sandbox, "agent");
-const installed = run("npm", ["install", "--omit=dev", tarball], { cwd: sandbox, timeout: 120_000 });
-assert.equal(installed.status, 0, `npm install packed tarball failed: ${installed.stderr}`);
 const packedBin = join(sandbox, "node_modules", "@tommy-ca", "lazypi", "bin", "lazypi.mjs");
-assert.equal(existsSync(packedBin), true, `packed bin missing at ${packedBin}`);
-const env = { ...process.env, PI_CODING_AGENT_DIR: agentDir };
 const lazypi = (args) =>
-	run(process.execPath, [packedBin, ...args.split(/\s+/).filter(Boolean)], {
-		cwd: sandbox,
-		env,
-		timeout: 300_000,
-	});
+	run(process.execPath, [packedBin, ...args.split(/\s+/).filter(Boolean)]);
 
 let failures = 0;
 try {
 	console.log(`sandbox: ${sandbox}\n`);
+	for (const dir of new Set(Object.values(privateDirs))) {
+		mkdirSync(join(sandbox, dir), { recursive: true, mode: 0o700 });
+	}
+	writeFileSync(env.NPM_CONFIG_USERCONFIG, "");
+	writeFileSync(env.NPM_CONFIG_GLOBALCONFIG, "");
+
+	let pi;
+	try {
+		pi = run("pi", ["--version"]);
+	} catch (err) {
+		throw new Error("Pi executable required on PATH before packed verification", { cause: err });
+	}
+	assert.equal(pi.status, 0, `Pi executable required on PATH before packed verification: ${pi.stderr}`);
+	const pack = run("npm", ["pack", REPO, "--silent", "--pack-destination", sandbox]);
+	assert.equal(pack.status, 0, `npm pack failed: ${pack.stderr}`);
+	const filename = pack.stdout.trim().split(/\r?\n/).at(-1);
+	assert.ok(filename && basename(filename) === filename && filename.endsWith(".tgz"), "npm pack returned an invalid tarball filename");
+	const tarball = join(sandbox, filename);
+	const installed = run("npm", ["install", "--omit=dev", tarball], { timeout: 120_000 });
+	assert.equal(installed.status, 0, `npm install packed tarball failed: ${installed.stderr}`);
+	assert.equal(existsSync(packedBin), true, `packed bin missing at ${packedBin}`);
 
 	// --- Stage 1: fresh core install ------------------------------------------
 	console.log("Stage 1: fresh install --yes (core catalog)");
@@ -107,10 +136,10 @@ try {
 	// --- Stage 5: legacy migration ------------------------------------------
 	console.log("Stage 5: legacy source migration (npm:pi-btw -> @narumitw/pi-btw)");
 	assert.equal(run("npm", ["view", "pi-btw", "version"]).status, 0, "legacy npm:pi-btw no longer published — migration stage cannot run");
-	r = run("pi", ["remove", "npm:@narumitw/pi-btw"], { env, timeout: 300_000 });
+	r = run("pi", ["remove", "npm:@narumitw/pi-btw"]);
 	assert.equal(r.status, 0, `removing replacement seed failed\n${r.stdout}\n${r.stderr}`);
 	assert.ok(!readSettings(agentDir).packages.includes("npm:@narumitw/pi-btw"), "replacement must be absent before migration");
-	r = run("pi", ["install", "npm:pi-btw"], { env, timeout: 300_000 });
+	r = run("pi", ["install", "npm:pi-btw"]);
 	assert.equal(r.status, 0, `seeding legacy failed\n${r.stdout}\n${r.stderr}`);
 	assert.ok(readSettings(agentDir).packages.includes("npm:pi-btw"), "legacy seed missing");
 	r = lazypi("install --yes --only btw");
@@ -146,7 +175,6 @@ try {
 	console.error(`\nE2E FAIL: ${err.message}`);
 	console.error(err.stack ?? "");
 } finally {
-	rmSync(tarball, { force: true });
 	if (!KEEP) rmSync(sandbox, { recursive: true, force: true });
 	else console.log(`kept sandbox: ${sandbox}`);
 	process.exit(failures);
