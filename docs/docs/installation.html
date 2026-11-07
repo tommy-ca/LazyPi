@@ -20,9 +20,9 @@ description: "How to install LazyPi and get your Pi coding agent set up."
       That's the entire install command. LazyPi will:
     </p>
     <ol>
-      <li>Check whether Pi is installed on your system</li>
-      <li>Install Pi if it's missing</li>
       <li>Show an interactive picker: <strong>Install everything</strong> or select individual packages</li>
+      <li>Check whether Pi is installed after you confirm a nonempty selection</li>
+      <li>Offer to install Pi if it's missing</li>
       <li>Install your selection and confirm what's ready</li>
     </ol>
 
@@ -33,6 +33,8 @@ description: "How to install LazyPi and get your Pi coding agent set up."
     <p>
       The interactive picker lets you browse the catalog and select only what you want. Use arrow keys to navigate, space to toggle, and enter to confirm.
     </p>
+
+    <p>LazyPi completes package selection before Pi setup. Cancelling either selection prompt or confirming an empty picker installs nothing and leaves settings, model overrides, and backups unchanged. An empty <code>--except</code> result also skips Pi setup. Invalid settings still stop installation before setup.</p>
 
     <h2>Idempotency</h2>
     <p>

@@ -246,7 +246,8 @@ ${bold("Default behaviour:")}
     untick categories or packages before confirming.
   - With --yes, --only, or --except the picker is skipped.
   - --only and --except are install-only; other commands reject them.
-  - An empty unattended selection does not install Pi or packages.
+  - Final selection happens before Pi setup. Cancelling or selecting
+    nothing does not install Pi or packages or change settings.
 
 ${bold("Categories:")}
   core         sub-agents, ask gate, skill visibility, goal, web research, workflows
@@ -641,13 +642,6 @@ async function cmdInstall(flags) {
 		return 2;
 	}
 
-	if (!interactive && selectedIds.size === 0) {
-		console.log(yellow("Nothing selected — nothing to install."));
-		return 0;
-	}
-
-	if (!(await ensurePi(flags))) return 127;
-
 	if (interactive) {
 		const choice = await askLazyOrPick(PACKAGES.length);
 		if (choice === "pick") {
@@ -663,6 +657,8 @@ async function cmdInstall(flags) {
 		else console.log(yellow("Nothing selected — nothing to install."));
 		return 0;
 	}
+
+	if (!(await ensurePi(flags))) return 127;
 
 	const { sources: installedSources } = readInstalledSources(flags.local);
 
