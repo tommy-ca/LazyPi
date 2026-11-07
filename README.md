@@ -10,8 +10,10 @@ npx @tommy-ca/lazypi
 
 LazyPi will:
 
-1. Install `pi` for you if it isn't installed yet.
-2. Ask if you want to install all the packages or choose which to install.
+1. Ask if you want to install all the packages or choose which to install.
+2. Offer to install `pi` if needed, after you select packages.
+
+Cancelling selection or selecting no packages skips Pi bootstrap and package installation.
 
 That setup is the 6-package harness core. `--yes` installs those 6. On a TTY, Install everything installs all 18. Packages LazyPi dropped stay installable with `pi install`. LazyPi does not manage them. See the Catalog table and `docs/docs/philosophy.html`.
 
