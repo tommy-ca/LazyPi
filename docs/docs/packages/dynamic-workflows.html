@@ -1,55 +1,8 @@
 ---
 layout: docs
-title: "Dynamic Workflows — LazyPi Docs"
+title: "Dynamic Workflows historical reference — LazyPi Docs"
 ---
 <h1>Dynamic Workflows</h1>
-    <p class="page-desc">Intent-driven fan-out workflows: the /workflows TUI, /deep-research, resume from run IDs, token/cost accounting, and optional git-worktree isolation.</p>
-
-    <h2>What it does</h2>
-    <p>
-      Dynamic workflows turns one request into a JavaScript orchestration script that fans work out across isolated subagents, routes each task to the right model, cross-checks the results, and returns one synthesized answer. Instead of one agent holding a huge task in a single context window, workflows run concurrent subagent sessions — up to 16 at a time — and keep intermediate work in script variables.
-    </p>
-    <p>
-      Intent-driven by default: mention <code>workflow</code> or <code>workflows</code> in a message and Pi handles a decomposable request by fanning it out across agents — or run the built-in patterns directly. Runs are resumable from a run ID (<code>resumeFromRunId</code>) with journaled replay, so unchanged agent calls replay from cache instead of re-spending tokens. Real token and cost accounting is reported per run, and parallel agents can use separate worktrees with <code>isolation: "worktree"</code>. Worktrees and the workflow VM are not security sandboxes; agents retain their granted tool permissions.
-    </p>
-
-    <h2>Why it's included</h2>
-    <p>
-      The harness you get from LazyPi is meant to be driven — and its operator runs fan-out workflows daily. This engine runs separate agent sessions through scripted workflows, with journaled replay for codebase audits, multi-perspective review, and source-checked research.
-    </p>
-
-    <h2>Commands</h2>
-    <table>
-      <thead>
-        <tr><th>Command</th><th>What it does</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>/workflows</code></td>
-          <td>Open the interactive run navigator — browse phases, agents, models, token usage, and cost; pause, stop, restart, or save runs</td>
-        </tr>
-        <tr>
-          <td><code>/deep-research</code></td>
-          <td>Source-checked web research with citations, run as a fan-out workflow</td>
-        </tr>
-        <tr>
-          <td><code>workflow</code></td>
-          <td>Runtime tool: Pi invokes it to start a workflow script, manage background runs, or call a saved workflow inline</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="learn-more">
-      <a href="https://github.com/QuintinShaw/pi-dynamic-workflows" target="_blank" rel="noopener">→ GitHub — QuintinShaw/pi-dynamic-workflows</a>
-    </div>
-
-    <nav class="prev-next">
-      <a href="/docs/packages/fff.html" class="prev-next-link">
-        <span class="prev-next-label">Previous</span>
-        ← Previous
-      </a>
-      <a href="/docs/packages/ponytail.html" class="prev-next-link next">
-        <span class="prev-next-label">Next</span>
-        Next →
-      </a>
-    </nav>
+<p>Historical, unmanaged workflow engine. The canonical manifest declares a source conflict with <code>npm:@quintinshaw/pi-dynamic-workflows</code>. That is not proof of a loaded tool collision. No automatic uninstall or exclusion occurs.</p>
+<p>Workflow fan-out, replay, and accounting are no longer curated here. PStack registration does not establish runtime equivalence. Existing state stays Other, active, and eligible for broad updates. The retired ID rejects in install selectors and no longer resolves catalog or legacy sources on removal. Use the exact installed source.</p>
+<p><a href="https://github.com/QuintinShaw/pi-dynamic-workflows">Upstream package</a> | <a href="/docs/philosophy.html">Retirement limits</a> | <a href="/docs/packages/">Current catalog</a></p>

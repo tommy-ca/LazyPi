@@ -27,45 +27,17 @@ import {
 const CATEGORIES = ["core", "optional"];
 
 export const PACKAGES = [
+	{
+		id: "pstack", category: "core", source: "git:github.com/tommy-ca/pstack",
+		installSource: "git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8",
+		description: "Canonical PStack registration reference",
+		hint: "Canonical checkout registration only; native role binding and loading remain unverified.",
+	},
 	{ id: "subagents", category: "core", source: "npm:pi-subagents", description: "Sub-agent execution", hint: "Run isolated sub-agents for parallel work." },
-	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", description: "Ask-user prompts", hint: "Interactive user questions for agent workflows." },
-	{ id: "pi-skillful", category: "core", source: "npm:pi-skillful", description: "Skill visibility", hint: "Discover skills above the git root, hide unused skills, and expand /skill:name inline." },
-	{ id: "mention-skill", category: "optional", source: "npm:@zigai/pi-mention-skill", description: "$ skill mention", hint: "Fuzzy-search skills with $ and expand them into the prompt; hidden skills stay reachable." },
-	{ id: "goal", category: "core", source: "npm:@narumitw/pi-goal", description: "Long-objective gate", hint: "Stop on done, blocked, or external wait for long tasks." },
-	{
-		id: "btw",
-		category: "optional",
-		source: "npm:@narumitw/pi-btw",
-		legacySources: ["npm:pi-btw"],
-		description: "Side-chat popover",
-		hint: "Ask quick questions without polluting your conversation history.",
-	},
-	{ id: "context-usage", category: "optional", source: "npm:pi-context-usage", description: "Context budget", hint: "See what is burning the context window before it fills." },
-	{ id: "simplify", category: "optional", source: "npm:pi-simplify", description: "Code simplify review", hint: "Reviews recently changed code for clarity, consistency, and maintainability." },
-	{ id: "web-access", category: "core", source: "npm:pi-web-access", description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
-	{ id: "fff", category: "optional", source: "npm:@ff-labs/pi-fff", description: "FFF fuzzy search", hint: "Additive fffind / ffgrep / fff-multi-grep beside the built-in tools; /fff-health checks the index." },
-	{ id: "dynamic-workflows", category: "core", source: "npm:@quintinshaw/pi-dynamic-workflows", description: "Workflow engine", hint: "Fan work out across subagents: /workflows TUI, deep-research, resume, token accounting." },
-	{ id: "ponytail", category: "optional", source: "npm:@dietrichgebert/ponytail", description: "Lazy senior dev mode", hint: "Enforces minimal, stdlib-first code; /ponytail review, audit, and a debt ledger." },
-	{ id: "lsp", category: "optional", source: "npm:@narumitw/pi-lsp", description: "Targeted LSP diagnostics and fixes", hint: "lsp_diagnostics / lsp_fix with configurable language servers, started per call." },
-	{ id: "interactive-shell", category: "optional", source: "npm:pi-interactive-shell", description: "Interactive shell overlays", hint: "Run CLIs and agents in TUI overlays: interactive, hands-free, dispatch supervision." },
-	{ id: "autoresearch", category: "optional", source: "npm:pi-autoresearch", legacySources: ["git:github.com/davebcn87/pi-autoresearch"], description: "Autonomous experiment loops", hint: "Iterative optimization runs with hooks, finalize, and convergence tracking." },
-	{
-		id: "todos",
-		category: "optional",
-		source: "npm:@juicesharp/rpiv-todo",
-		legacySources: ["npm:pi-manage-todo-list", "git:github.com/tintinweb/pi-manage-todo-list"],
-		description: "Persistent todo overlay",
-		hint: "Task list that survives reload and compaction; /todos command with live panel.",
-	},
-	{
-		id: "memory",
-		category: "optional",
-		source: "npm:@henryqw/pi-memory",
-		legacySources: ["npm:pi-memory-md", "git:github.com/VandeeFeng/pi-memory-md"],
-		description: "Auto-managed markdown memory",
-		hint: "Capped MEMORY.md/USER.md stores with frozen session snapshots; auto-managed.",
-	},
-	{ id: "verdict", category: "optional", source: "npm:pi-verdict", description: "Permission gate", hint: "Permission gate with fail-closed classifier errors; configured exemptions and manual shell escapes are not classified." },
+	{ id: "sandbox", category: "core", source: "npm:pi-better-sandbox", description: "Sandbox support", hint: "Disabled until explicitly configured; registration is not containment." },
+	{ id: "verdict", category: "core", source: "npm:pi-verdict", description: "Permission gate", hint: "Permission gate with fail-closed classifier errors; configured exemptions and manual shell escapes are not classified." },
+	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", description: "Ask-user prompts", hint: "Interactive user questions for agent workflows; not hard approval." },
+	{ id: "web-access", category: "optional", source: "npm:pi-web-access", description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -250,17 +222,23 @@ ${bold("Default behaviour:")}
     nothing does not install Pi or packages or change settings.
 
 ${bold("Categories:")}
-  core         sub-agents, ask gate, skill visibility, goal, web research, workflows
-  optional     only when selected (--only optional, picker, or the everything flow): skill mentions, side chat, context usage, simplify, fff, ponytail, lsp, interactive shell, autoresearch, todos, memory, verdict
-  (Dropped packages such as skill-args, mcp, ralph-wiggum, curated-themes are
-  outside the catalog — pi install npm:<source> still works for them.)
+  core         pstack, subagents, sandbox, verdict, pi-ask-user (5 required)
+  optional     web-access only (research, on request)
+
+  Unpublished registration candidate, not native integration or readiness.
+  PStack fresh installs use audited f1571b8; existing canonical pins stay put.
+  Sandbox is disabled until configured; Ask User is not hard approval.
+  Retired ids are invalid install selectors. Installed retired sources remain
+  Other, active, and eligible for broad pi update. Removal passthrough remains:
+  retired ids no longer resolve catalog/legacy sources; use exact installed
+  sources. No automatic uninstall or conflict exclusion is performed.
 
 ${bold("Examples:")}
   npx @tommy-ca/lazypi                              # core catalog (interactive picker on a TTY)
   npx @tommy-ca/lazypi --yes                        # core catalog, no prompt
   npx @tommy-ca/lazypi --only core,optional         # install optional tier too
   npx @tommy-ca/lazypi --only optional              # just the optional tier
-  npx @tommy-ca/lazypi --only subagents,fff         # individual package ids also work
+  npx @tommy-ca/lazypi --only subagents,web-access  # individual package ids also work
   npx @tommy-ca/lazypi --only core --local          # core into the current project
   npx @tommy-ca/lazypi status
   npx @tommy-ca/lazypi doctor`);
@@ -728,10 +706,11 @@ async function cmdInstall(flags) {
 	const piArgs = flags.local ? ["install", "-l", "--approve"] : ["install"];
 
 	for (const pkg of toInstall) {
-		const action = `pi install ${pkg.source}`;
+		const source = pkg.installSource ?? pkg.source;
+		const action = `pi install ${source}`;
 		if (interactive) log.step(action);
 		else console.log(`\n→ ${action}`);
-		const status = spawnCommand("pi", [...piArgs, pkg.source], { stdio: "inherit" }).status;
+		const status = spawnCommand("pi", [...piArgs, source], { stdio: "inherit" }).status;
 		if (status !== 0) {
 			failed.push(pkg);
 			if (interactive) log.error(`failed to install ${pkg.id}`);

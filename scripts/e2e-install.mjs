@@ -85,7 +85,7 @@ try {
 	// --- Stage 1: fresh core install ------------------------------------------
 	console.log("Stage 1: fresh install --yes (core catalog)");
 	const CORE_COUNT = PACKAGES.filter((p) => p.category === "core").length;
-	const coreSources = PACKAGES.filter((p) => p.category === "core").map((p) => p.source);
+	const coreSources = PACKAGES.filter((p) => p.category === "core").map((p) => p.installSource ?? p.source);
 	let r = lazypi("install --yes");
 	assert.equal(r.status, 0, `install failed\n${r.stdout}\n${r.stderr}`);
 	assert.match(r.stdout, new RegExp(`Will install:\\s+${CORE_COUNT}`));
@@ -133,32 +133,28 @@ try {
 	assert.match(r.stdout, /none — full catalog is installed/);
 	check("status shows full catalog installed", () => {});
 
-	// --- Stage 5: legacy migration ------------------------------------------
-	console.log("Stage 5: legacy source migration (npm:pi-btw -> @narumitw/pi-btw)");
-	assert.equal(run("npm", ["view", "pi-btw", "version"]).status, 0, "legacy npm:pi-btw no longer published — migration stage cannot run");
-	r = run("pi", ["remove", "npm:@narumitw/pi-btw"]);
-	assert.equal(r.status, 0, `removing replacement seed failed\n${r.stdout}\n${r.stderr}`);
-	assert.ok(!readSettings(agentDir).packages.includes("npm:@narumitw/pi-btw"), "replacement must be absent before migration");
-	r = run("pi", ["install", "npm:pi-btw"]);
-	assert.equal(r.status, 0, `seeding legacy failed\n${r.stdout}\n${r.stderr}`);
-	assert.ok(readSettings(agentDir).packages.includes("npm:pi-btw"), "legacy seed missing");
-	r = lazypi("install --yes --only btw");
-	assert.equal(r.status, 0, `migrating install failed\n${r.stdout}\n${r.stderr}`);
-	const installAt = r.stdout.indexOf("→ pi install npm:@narumitw/pi-btw");
-	const removeAt = r.stdout.indexOf("→ pi remove npm:pi-btw");
-	assert.ok(installAt >= 0 && removeAt > installAt, "replacement installation must precede legacy cleanup");
-	check("legacy removed, fork source installed", () => {
-		const packages = readSettings(agentDir).packages;
-		assert.ok(!packages.includes("npm:pi-btw"), "legacy source still present");
-		assert.ok(packages.includes("npm:@narumitw/pi-btw"), "replacement source missing");
+	// --- Stage 5: registration preservation, not native loading --------------
+	console.log("Stage 5: preserve an older canonical pin and unmanaged registrations");
+	const oldSource = "git:github.com/tommy-ca/pstack@bdbb67f0f08212ce3136d2c22fb3b17e30bb717c";
+	const settingsFile = join(agentDir, "settings.json");
+	const seeded = readSettings(agentDir);
+	seeded.packages[0] = { source: oldSource, skills: [], metadata: { fixture: true } };
+	seeded.packages.push({ source: "npm:pi-btw@0.1.0", extensions: [], metadata: { fixture: true } });
+	writeFileSync(settingsFile, JSON.stringify(seeded, null, 2) + "\n");
+	const before = readFileSync(settingsFile, "utf8");
+	r = lazypi("install --yes --only pstack");
+	assert.equal(r.status, 0, `preservation install failed\n${r.stdout}\n${r.stderr}`);
+	assert.match(r.stdout, /Nothing to do/);
+	check("older pin and unmanaged object bytes preserved", () => {
+		assert.equal(readFileSync(settingsFile, "utf8"), before);
 	});
 
-	// --- Stage 6: remove ------------------------------------------------------
-	console.log("Stage 6: remove by id");
-	r = lazypi("remove btw");
+	// --- Stage 6: retained id and raw-source removal -------------------------
+	console.log("Stage 6: remove canonical id and exact unmanaged source");
+	r = lazypi("remove pstack npm:pi-btw@0.1.0");
 	assert.equal(r.status, 0, `remove failed\n${r.stdout}\n${r.stderr}`);
-	check("btw removed from settings", () => {
-		assert.ok(!readSettings(agentDir).packages.includes("npm:@narumitw/pi-btw"));
+	check("only requested registrations removed", () => {
+		assert.deepEqual(readSettings(agentDir), { ...seeded, packages: fullSources.slice(1) });
 	});
 
 	// --- Stage 7: doctor ------------------------------------------------------

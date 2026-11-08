@@ -1,49 +1,8 @@
 ---
 layout: docs
-title: "Autoresearch — LazyPi Docs"
+title: "Autoresearch historical reference — LazyPi Docs"
 ---
 <h1>Autoresearch</h1>
-<p class="page-desc">Autonomous experiment loops: iterate toward a measurable optimization target.</p>
-<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only autoresearch</code> or <code>pi install npm:pi-autoresearch</code>; installs of the older git source migrate automatically.</p>
-
-<h2>What it does</h2>
-<p>
-  Autoresearch sets up and runs an optimization loop for any measurable
-  target: it gathers what to optimize, then iterates experiments with
-  pre/post-iteration hooks, convergence tracking, and finalize passes
-  that collapse the best candidates into clean, reviewable branches.
-</p>
-<p>
-  Use it when a metric rewards systematic experimentation — clustering
-  quality, search relevance, prompt quality — and you want the loop to
-  run itself while you review the survivors.
-</p>
-
-<h2>Safety</h2>
-<p>
-  Autoresearch edits files, creates and reverts commits, and runs project scripts and hooks with your permissions. Use a clean dedicated branch or worktree, review <code>.auto/measure.sh</code>, <code>.auto/checks.sh</code>, and hooks before each session, and keep credentials out of scope. Use a sandbox or restricted environment for untrusted projects.
-</p>
-
-<h2>Why it's included as optional</h2>
-<p>
-  Research-loop automation is a convenience layer, not harness control
-  plane, so the promotion audit 2026-08-29 kept it out of the core
-  default. It ships as a floating npm source (<code>npm:pi-autoresearch</code>,
-  the package from the same repository), and the earlier unpinned git
-  install is treated as a legacy source that migrates automatically.
-</p>
-
-<div class="learn-more">
-  <a href="https://github.com/davebcn87/pi-autoresearch" target="_blank" rel="noopener">→ GitHub — davebcn87/pi-autoresearch</a>
-</div>
-
-<nav class="prev-next">
-  <a href="/docs/packages/interactive-shell.html" class="prev-next-link">
-    <span class="prev-next-label">Previous</span>
-    ← Previous
-  </a>
-  <a href="/docs/packages/todos.html" class="prev-next-link next">
-    <span class="prev-next-label">Next</span>
-    Next →
-  </a>
-</nav>
+<p>Historical, unmanaged package. Experiment loops, convergence tracking, and finalization hooks are deliberately no longer curated. PStack registration does not establish an equivalent replacement.</p>
+<p>Existing state stays Other, not uninstalled or disabled. Updates remain broad. Git-to-npm legacy migration is no longer resolved. The retired ID rejects in install selectors and no longer resolves catalog or legacy sources on removal. Use the exact installed source.</p>
+<p><a href="https://github.com/davebcn87/pi-autoresearch">Upstream package</a> | <a href="/docs/philosophy.html">Retirement limits</a> | <a href="/docs/packages/">Current catalog</a></p>

@@ -1,43 +1,8 @@
 ---
 layout: docs
-title: "Todos — LazyPi Docs"
+title: "Todos historical reference — LazyPi Docs"
 ---
 <h1>Todos</h1>
-<p class="page-desc">Persistent todo overlay: a task list that survives reload and compaction.</p>
-<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only todos</code> or <code>pi install npm:@juicesharp/rpiv-todo</code>; installs of the older git and npm sources migrate automatically.</p>
-
-<h2>What it does</h2>
-<p>
-  @juicesharp/rpiv-todo gives Pi a persistent todo overlay rendered as a
-  live panel above the editor. The list is rebuilt from the conversation
-  itself, so it survives <code>/reload</code> and compaction. It adds a
-  <code>todo</code> tool and a <code>/todos</code> command.
-</p>
-<p>
-  Tasks show completed, in-progress, and pending rows with activity
-  labels. The plan stays alive across long research, design, and
-  implement sessions.
-</p>
-
-<h2>Why it's included as optional</h2>
-<p>
-  Structured tracking for multi-step work is operator-workflow tooling
-  rather than control plane. The catalog now manages install, status,
-  remove, and source migration for it. The package is actively maintained
-  and replaces the older pi-manage-todo-list, which is no longer updated.
-</p>
-
-<div class="learn-more">
-  <a href="https://github.com/juicesharp/rpiv-mono/tree/main/packages/rpiv-todo" target="_blank" rel="noopener">→ GitHub — juicesharp/rpiv-mono</a>
-</div>
-
-<nav class="prev-next">
-  <a href="/docs/packages/autoresearch.html" class="prev-next-link">
-    <span class="prev-next-label">Previous</span>
-    ← Previous
-  </a>
-  <a href="/docs/packages/memory.html" class="prev-next-link next">
-    <span class="prev-next-label">Next</span>
-    Next →
-  </a>
-</nav>
+<p>Historical, unmanaged package. Persistent todo tracking is deliberately no longer curated. No equivalent replacement is proven.</p>
+<p>Existing state stays Other, not uninstalled or disabled. Updates remain broad. Former git and npm legacy sources no longer migrate through LazyPi. The retired ID rejects in install selectors and no longer resolves catalog or legacy sources on removal. Use the exact installed source.</p>
+<p><a href="https://github.com/juicesharp/rpiv-mono/tree/main/packages/rpiv-todo">Upstream package</a> | <a href="/docs/philosophy.html">Retirement limits</a> | <a href="/docs/packages/">Current catalog</a></p>
