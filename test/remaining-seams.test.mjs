@@ -60,13 +60,8 @@ function runCli(args, { cwd, home, agentDir, bin } = {}) {
 	return result;
 }
 
-test("--except todos selects 17 ids from the full catalog", () => {
-	const ids = resolveSelection({ except: ["todos"] });
-	assert.equal(PACKAGES.length, 18);
-	assert.equal(ids.size, 17);
-	assert.equal(ids.has("todos"), false);
-	assert.equal(ids.has("subagents"), true);
-	assert.equal(ids.has("memory"), true);
+test("--except web-access selects the five required ids", () => {
+	assert.deepEqual([...resolveSelection({ except: ["web-access"] })], ["pstack", "subagents", "sandbox", "verdict", "pi-ask-user"]);
 });
 
 test("doctor with no settings file warns and exits 0", (t) => {
@@ -97,7 +92,7 @@ test("doctor warns when Pi version exits unsuccessfully with error output", (t) 
 	assert.doesNotMatch(result.stdout, /✓ pi --version: Error/);
 });
 
-test("doctor warns on outsider unpinned git and skips catalog legacy git", (t) => {
+test("doctor warns on retired and outsider unpinned git", (t) => {
 	const { home, workspace, bin } = createWorkspace(t);
 	writeFakePi(bin);
 	const agentDir = join(home, ".pi", "agent");
@@ -114,7 +109,7 @@ test("doctor warns on outsider unpinned git and skips catalog legacy git", (t) =
 	const result = runCli(["doctor"], { cwd: workspace, home, agentDir, bin });
 	const output = `${result.stdout}\n${result.stderr}`;
 	assert.equal(result.status, 0, output);
-	assert.doesNotMatch(output, /VandeeFeng\/pi-memory-md is an unpinned git head/);
+	assert.match(output, /VandeeFeng\/pi-memory-md is an unpinned git head/);
 	assert.match(output, /acme\/unrelated-tool is an unpinned git head/);
 });
 
@@ -125,6 +120,6 @@ test("status prints core and optional installed counts after the catalog header"
 	const result = runCli(["status"], { cwd: workspace, home, agentDir, bin });
 	const output = `${result.stdout}\n${result.stderr}`;
 	assert.equal(result.status, 0, output);
-	assert.match(output, /Installed from LazyPi catalog \(0\/18\):/);
-	assert.match(output, /core 0\/6, optional 0\/12/);
+	assert.match(output, /Installed from LazyPi catalog \(0\/6\):/);
+	assert.match(output, /core 0\/5, optional 0\/1/);
 });

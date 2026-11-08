@@ -1,0 +1,13 @@
+---
+layout: docs
+title: "Sandbox — LazyPi Docs"
+---
+<h1>Sandbox</h1>
+<p class="page-desc">Required sandbox support in an unpublished candidate, disabled until explicitly configured.</p>
+<h2>Registration is not configuration</h2>
+<p>LazyPi registers <code>npm:pi-better-sandbox</code> without changing sandbox settings, enabling switches, or altering container controls. Installing the package alone does not establish containment, child interception, fail-closed headless behavior, or a safe unattended environment.</p>
+<p>The canonical recommendation is static-only. Local required support is stricter than upstream's capability minimum, but required registration is not a runtime certification.</p>
+<h2>Security limits</h2>
+<p>Packages run with Pi's privileges. Untrusted or unattended work requires a container or VM. A private HOME is not OS containment. Native loading, actual denial, independent child authorization, exit/recovery, and operator promotion remain unverified. Review the package's configuration in a separately authorized environment before relying on it.</p>
+<p><a href="https://www.npmjs.com/package/pi-better-sandbox">pi-better-sandbox package</a></p>
+<nav class="prev-next"><a href="/docs/packages/subagents.html" class="prev-next-link">Subagents</a><a href="/docs/packages/verdict.html" class="prev-next-link next">Verdict</a></nav>

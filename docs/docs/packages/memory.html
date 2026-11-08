@@ -1,45 +1,8 @@
 ---
 layout: docs
-title: "Memory — LazyPi Docs"
+title: "Memory historical reference — LazyPi Docs"
 ---
 <h1>Memory</h1>
-<p class="page-desc">Auto-managed markdown memory: capped MEMORY.md/USER.md stores with frozen session snapshots.</p>
-<p class="page-desc-note">Optional catalog package — install with <code>npx @tommy-ca/lazypi --only memory</code> or <code>pi install npm:@henryqw/pi-memory</code>; LazyPi replaces registrations of the older npm and git sources.</p>
-
-<h2>What it does</h2>
-<p>
-  @henryqw/pi-memory gives Pi auto-managed markdown memory: capped
-  MEMORY.md and USER.md entry stores with frozen session snapshots.
-  It uses the pi 1.5.0 native API and is actively maintained.
-</p>
-<p>
-  The package replaces the older pi-memory-md, which has not been
-  updated since May 2026. LazyPi replaces the legacy package registration after installing the replacement. It does not convert stored memory content.
-</p>
-
-<h2>Setup</h2>
-<p>
-  Memory requires Pi 1.5.0 or later in the 1.x series. Install <code>npm:@henryqw/pi-ask-question</code> and <code>npm:@henryqw/pi-task-models</code> separately, then configure a <code>balanced</code> model in <code>/task-models</code>. These companion extensions are not installed by LazyPi's memory selection.
-</p>
-
-<h2>Why it's included as optional</h2>
-<p>
-  Memory is harness infrastructure rather than control plane, so it
-  stays optional and installs on request. The catalog now manages
-  install, status, remove, and source migration for it.
-</p>
-
-<div class="learn-more">
-  <a href="https://github.com/HenryQW/pi-harness/tree/main/extensions/pi-memory" target="_blank" rel="noopener">→ GitHub — HenryQW/pi-harness</a>
-</div>
-
-<nav class="prev-next">
-  <a href="/docs/packages/todos.html" class="prev-next-link">
-    <span class="prev-next-label">Previous</span>
-    ← Previous
-  </a>
-  <a href="/docs/packages/subagents.html" class="prev-next-link next">
-    <span class="prev-next-label">Next</span>
-    Next →
-  </a>
-</nav>
+<p>Historical, unmanaged package. Persistent markdown memory and session snapshots are deliberately no longer curated. No equivalent replacement is proven.</p>
+<p>Existing state and stored memory stay intact as Other, not uninstalled or disabled. Updates remain broad. Former npm and git sources no longer migrate through LazyPi. The retired ID rejects in install selectors and no longer resolves catalog or legacy sources on removal. Use the exact installed source.</p>
+<p><a href="https://github.com/HenryQW/pi-harness/tree/main/extensions/pi-memory">Upstream package</a> | <a href="/docs/philosophy.html">Retirement limits</a> | <a href="/docs/packages/">Current catalog</a></p>

@@ -15,15 +15,17 @@ description: "How to remove LazyPi packages."
     <h2>Remove by ID</h2>
     <pre><code>npx @tommy-ca/lazypi remove subagents</code></pre>
     <p>
-      Removes a specific package by its LazyPi ID. You can see package status and IDs with <code>npx @tommy-ca/lazypi status</code>.
+      Resolves a current catalog ID to exact matching installed sources, including pins. Retired IDs no longer resolve catalog or legacy sources. Unknown targets still pass unchanged to Pi, so <code>remove btw</code> forwards <code>pi remove btw</code>. It does not resolve <code>npm:pi-btw@0.1.0</code>. Use the exact installed source instead.
     </p>
 
     <h2>Remove by raw source</h2>
     <pre><code>npx @tommy-ca/lazypi remove npm:pi-subagents@0.13.3</code></pre>
     <p>
-      Removes a package using its exact source specifier. Useful when you know the precise version installed.
+      Removes a package using its exact source specifier. This remains available for unmanaged and retired registrations. For example, use <code>npx @tommy-ca/lazypi remove npm:pi-btw@0.1.0</code>. No raw-target grammar change or retired compatibility list is introduced.
     </p>
 
+    <h2>Curation retirement is not removal</h2>
+    <p>Retiring a catalog entry does not uninstall or disable an active package, delete data, or prevent updates. Installed strings, objects, pins, metadata, order, scope, and unrelated settings remain. Retired registrations appear as Other and stay eligible for broad <code>pi update</code>. Declared source conflicts do not trigger automatic uninstall or exclusion.</p>
     <h2>Removing LazyPi itself</h2>
     <p>
       LazyPi does not require a global installation. Removing packages does not remove runner caches, subagent settings overrides, or LazyPi's timestamped settings backups. See <a href="/docs/installation.html">Installation</a> for the persisted settings and backup names, and the <a href="/faq.html">FAQ</a> for cache troubleshooting.

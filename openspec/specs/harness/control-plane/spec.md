@@ -2,37 +2,36 @@
 
 ## Purpose
 
-The harness SHALL keep the Pi coding agent minimal by layering discipline
-(AGENTS.md), capability (skills), and control plane (packages) so the operator
-owns which rules are resident, which capabilities load on demand, and which
-work goes to a child.
+The harness SHALL distinguish discipline, package registration, native loading,
+authorization, recovery, and operator promotion. The unpublished candidate
+SHALL NOT be treated as certified native PStack integration.
 
 ## Requirements
 
 ### Requirement: Layer Separation
 
-The harness SHALL maintain three layers with distinct change frequency and
-context cost: AGENTS.md discipline (resident, rarely changed), skills
-(description-resident, body on demand), and packages (always-on extensions).
+The harness SHALL distinguish resident AGENTS.md discipline, on-demand skills,
+and package registrations. Registrations SHALL NOT imply effective loading.
 
 #### Scenario: Progressive disclosure
 
-- **WHEN** a session starts
-- **THEN** only skill name and description are loaded into the system prompt
-- **AND** a full SKILL.md is read only when the agent matches it or the user invokes it
-- **AND** no more than 4–6 skills are visible by default
+- **WHEN** skills or agents are registered
+- **THEN** registration SHALL NOT certify their discovery, visibility controls,
+  role binding, effort/readonly semantics, or native tool restrictions
+- **AND** existing six builtin blank-model resets SHALL remain unchanged
 
 ### Requirement: Ask Gate
 
-The agent SHALL call the structured ask gate (`ask_user`) instead of guessing
-when the target file, create-vs-edit, acceptance criteria, or a mutually
-exclusive implementation option is undefined.
+The agent SHALL seek structured clarification rather than guess when target
+files, create-vs-edit, acceptance criteria, or mutually exclusive options are
+undefined. Ask User SHALL NOT be represented as hard approval.
 
 #### Scenario: Ambiguous request
 
 - **WHEN** a request is underspecified
-- **THEN** the agent stops and asks one focused structured question
-- **AND** no large diff is generated before a structured answer exists
+- **THEN** the agent SHALL ask a focused question before producing a large diff
+- **AND** registration SHALL NOT certify enforced human authorization or
+  fail-closed unattended behavior
 
 ### Requirement: Coding Loop
 
@@ -54,59 +53,55 @@ required before completion.
 
 ### Requirement: Control Plane Catalog
 
-The default installed package set SHALL cover: sub-agent scheduling, a
-workflow engine for sub-agent fan-out, the ask gate, skill visibility, $
-skill mention, a long-objective gate, a side-thread channel, context-budget
-visibility, code simplification review, code-discipline review, web research
-tools, and a search substrate. The default set SHALL NOT include a checkbox
-todo list. A structured todo tracker MAY exist in the optional catalog tier.
+The unpublished candidate SHALL register canonical PStack as a preservation
+reference, not a copied bundle or certified orchestration installation.
+Required support SHALL remain stricter than upstream's capability minimum.
 
-#### Scenario: Long objective
+#### Scenario: Minimal candidate
 
-- **WHEN** a goal is active
-- **THEN** the agent reports done, blocked (with evidence), or waiting on an
-  external event rather than drifting between steps
+- **WHEN** the candidate default selection is computed
+- **THEN** it SHALL contain pstack, subagents, sandbox, verdict, and pi-ask-user
+- **AND** web-access SHALL be the sole optional research package
+- **AND** no compatibility tier, alias to independent npm PStack, helper adapter,
+  copied resources, or automatic conflict exclusion SHALL be introduced
+- **AND** the canonical recommendation SHALL be described as static-only,
+  without switch enforcement
 
-#### Scenario: Harness core
+#### Scenario: Deliberate capability retirement
 
-- **WHEN** the default install completes
-- **THEN** the installed set SHALL be exactly the twelve core
-  control-plane packages
-- **AND** optional catalog entries SHALL be installable with
-  `lazypi --only optional`, `--except`, the interactive picker, or the
-  interactive everything flow
-- **AND** non-catalog extras SHALL remain installable with `pi install`
+- **WHEN** previous catalog packages leave curation
+- **THEN** discovery/hiding, mention expansion, objective stopping, side chat,
+  context telemetry, simplification/discipline review, indexed search, LSP,
+  interactive overlays, experiment/debt hooks, and persistent todos/memory
+  SHALL no longer be promised as installed capabilities
+- **AND** overlap SHALL NOT be treated as proven equivalent replacement
+- **AND** the Dynamic Workflows source conflict SHALL NOT be treated as a
+  reproduced loaded collision
+- **AND** installed state SHALL remain unmanaged Other, not uninstalled,
+  disabled, excluded from broad updates, or resolved by retired IDs/legacy maps
+- **AND** raw removal passthrough SHALL remain unchanged
 
-### Requirement: Side Thread Isolation
+#### Scenario: Native promotion remains gated
 
-Side-thread channels SHALL NOT mutate the main session unless the operator
-explicitly imports context.
-
-#### Scenario: Side question
-
-- **WHEN** the operator asks a side question via the side-thread channel
-- **THEN** the main session transcript SHALL remain unchanged
-- **AND** an answer is brought back only when the operator imports it
+- **WHEN** default activation or readiness is proposed
+- **THEN** actual loading, canonical role binding, model/tool semantics, tool
+  dispatch, independent child authorization, headless denial, exit/recovery,
+  and real-session/operator acceptance SHALL be demonstrated separately
+- **AND** static source review, fake tools, and registration SHALL NOT satisfy
+  these gates
+- **AND** the candidate SHALL remain unpublished until separate delivery approval
 
 ### Requirement: Context Hygiene
 
-The operator SHALL be able to see what is burning the context window; when the
-window is close to full, the session SHALL compact or move work onto a fresh
-lane.
+The agent SHALL avoid unbounded transcript dumps. Curation SHALL NOT promise
+context-budget telemetry or indexed paged search after their retirement.
 
 #### Scenario: Research off the writer
 
 - **WHEN** research needs the web
-- **THEN** research runs in an isolated child that cannot write project files
-- **AND** only chosen URLs are fetched deep
-
-#### Scenario: Search substrate
-
-- **WHEN** the agent searches file contents or names in a repository
-- **THEN** results SHALL come back in bounded, paged pages with a cursor for
-  the next page
-- **AND** unbounded dumps of grep hits SHALL NOT be written into the
-  transcript
+- **THEN** research SHALL use an appropriately restricted read-only child
+- **AND** Web Access registration SHALL NOT certify that restriction
+- **AND** only chosen URLs SHALL be fetched deep
 
 ### Requirement: Security Posture
 
@@ -122,6 +117,16 @@ trust prompt as a sandbox.
 - **AND** the host `~/.pi/agent` SHALL NOT be mounted into that container
   unless it should inherit credentials and sessions
 
+#### Scenario: Registration is not containment
+
+- **WHEN** Sandbox, Verdict, and Ask User are registered
+- **THEN** Sandbox SHALL remain disabled until explicitly configured
+- **AND** the installer SHALL NOT modify actual sandbox settings or container controls
+- **AND** Ask User SHALL NOT be represented as hard approval
+- **AND** Verdict summaries SHALL distinguish classifier failures from configured
+  exemptions and manual shell escapes
+- **AND** a private HOME or offline fixture SHALL NOT be called OS containment
+
 ### Requirement: Anti-Patterns
 
 The harness SHALL avoid: checkbox todos for coding work, dozens of visible
@@ -135,41 +140,3 @@ into context.
 - **THEN** one-file work SHALL stay on a single agent
 - **AND** reviewers SHALL run with fresh context rather than inheriting the
   worker transcript
-
-### Requirement: Skill Visibility
-
-The harness SHALL let the operator discover skills above the git root and
-hide unused skills so only a small visible set enters automatic discovery.
-
-#### Scenario: Hidden skills
-
-- **WHEN** the operator configures hidden skills
-- **THEN** hidden skills SHALL NOT appear in the automatic skill-discovery
-  prompt
-- **AND** hidden skills SHALL remain explicitly invokable
-
-### Requirement: Skill Mention
-
-The harness SHALL provide exactly one `$` skill-mention implementation so
-hidden skills stay reachable from the prompt, and SHALL NOT co-install a
-second mention implementation.
-
-#### Scenario: Mention invocation
-
-- **WHEN** the operator types `$skill-name` in a prompt
-- **THEN** the skill's content SHALL expand into the prompt before the model
-  sees it
-
-### Requirement: Skill Parameters
-
-The harness SHALL support shell-style skill parameters when a parameters
-package is installed.
-
-#### Scenario: Parameters and command output
-
-- **WHEN** a parameters package is installed and a skill is invoked with
-  arguments
-- **THEN** positional placeholders (`$1`, `$2`, `$ARGUMENTS`) SHALL expand in
-  the skill body
-- **AND** inline `` !`cmd` `` blocks SHALL execute and paste their output into
-  the prompt before the model reads it

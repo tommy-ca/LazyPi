@@ -1,109 +1,22 @@
 ---
 layout: docs
-title: "First Steps — LazyPi Docs"
-description: "What to do after installing LazyPi: launch Pi, authenticate, try a few high-value commands, and understand what changed."
+title: "First steps — LazyPi Docs"
+description: "Inspect registrations without treating installation as readiness."
 ---
-<h1>First Steps</h1>
-    <p class="page-desc">A short, practical path from “installed” to “I can already feel why this setup is useful.”</p>
-
-    <div class="callout">
-      <p>TTY <strong>Install everything</strong> is 18 packages. These steps describe the default core 6. Skip a step if you omitted that package.</p>
-    </div>
-
-    <h2>1. Launch Pi</h2>
-    <pre><code>pi</code></pre>
-    <p>
-      LazyPi installs and configures packages, but Pi is still the app you use day to day. Open it in a real project and you should immediately see the harness core: sub-agents, the ask gate, skill visibility, goal, web research, and workflows LazyPi added.
-    </p>
-
-    <h2>2. Authenticate</h2>
-    <p>
-      Installing LazyPi does <strong>not</strong> automatically sign you into a model provider. The easiest path is to authenticate from inside Pi:
-    </p>
-    <pre><code>/login</code></pre>
-    <p>
-      If you already use provider API keys, you can also export one before launching Pi:
-    </p>
-    <pre><code>export ANTHROPIC_API_KEY=...
-pi</code></pre>
-    <div class="callout">
-      <p>If Pi opens fine but can't actually answer questions, missing authentication is the first thing to check.</p>
-    </div>
-
-    <h2>3. Try a few quick wins</h2>
-    <p>These are the fastest ways to feel what changed after a LazyPi install.</p>
-
-    <h3>Ask Pi to inspect your project</h3>
-    <pre><code>Summarize this repository and suggest the 3 most useful next steps.</code></pre>
-    <p>
-      This is a good baseline prompt for any fresh project. It helps you confirm Pi is working, understands your codebase, and can start from a useful default posture.
-    </p>
-
-    <h3>Check the skill surface</h3>
-    <pre><code>/skill:research</code></pre>
-    <p>Invoke an available skill explicitly. The optional <code>mention-skill</code> package adds <code>$</code> fuzzy skill autocomplete.</p>
-
-    <h3>Review a real task</h3>
-    <pre><code>Review this repository and propose the 3 highest-leverage improvements</code></pre>
-    <p>
-      If you want an approval checkpoint before Pi makes changes, pair the ask gate with the goal gate: Pi clarifies ambiguity first, works toward the objective, and stops on done, blocked, or an external wait.
-    </p>
-
-    <h3>Set a long-task objective</h3>
-    <pre><code>/goal ship the webhook idempotency fix</code></pre>
-    <p>
-      On multi-step tasks, give Pi an explicit objective. It reports done, blocked, or waiting on an external event — instead of drifting between steps.
-    </p>
-
-    <h3>Try web research</h3>
-    <pre><code>Research the latest docs for [framework/tool] and summarize any important changes.</code></pre>
-    <p>
-      You don't need a slash command for this. Just ask normally and Pi can use the installed web access tooling to search, fetch docs, and summarize results.
-    </p>
-
-    <h3>Inspect the built-in sub-agents</h3>
-    <pre><code>/agents</code></pre>
-    <p>
-      This opens the sub-agent manager so you can see the built-in specialists LazyPi installed and how they are configured.
-    </p>
-
-    <h2>4. Know what changed</h2>
-    <p>
-      LazyPi keeps Pi's minimal core intact and installs a curated set of community packages on top. After installation, Pi can still do everything it could before — you just now also have the harness core: sub-agents, an ask gate, skill visibility, a long-objective gate, web research, and workflow fan-out. The optional tier adds skill mentions, side chat, context detail, search, review, and other tools.
-    </p>
-    <p>
-      In other words: LazyPi is a curated starting point, not a fork and not a separate product.
-    </p>
-    <p>
-      If you want to confirm what LazyPi is currently managing on your machine, run:
-    </p>
-    <pre><code>npx @tommy-ca/lazypi status</code></pre>
-
-    <h2>5. Remove anything you don't want</h2>
-    <pre><code>npx @tommy-ca/lazypi remove</code></pre>
-    <p>
-      LazyPi is intentionally reversible. If part of the catalog doesn't fit your workflow, remove it from the interactive picker or remove a package directly by ID. Start opinionated, then trim down to the setup you actually want.
-    </p>
-
-    <h2>6. Update later</h2>
-    <pre><code>npx @tommy-ca/lazypi update</code></pre>
-    <p>
-      Run Pi's updater to pull in upstream updates for installed packages.
-    </p>
-
-    <h2>7. Diagnose issues</h2>
-    <pre><code>npx @tommy-ca/lazypi doctor</code></pre>
-    <p>
-      If Pi or a package behaves unexpectedly, start here. It checks your environment and points out the most common setup problems.
-    </p>
-
-    <nav class="prev-next">
-      <a href="/docs/philosophy.html" class="prev-next-link">
-        <span class="prev-next-label">Previous</span>
-        ← Catalog philosophy
-      </a>
-      <a href="/docs/installation.html" class="prev-next-link next">
-        <span class="prev-next-label">Next</span>
-        Installation →
-      </a>
-    </nav>
+<h1>First steps</h1>
+<p class="page-desc">Separate package registration from effective loading and security.</p>
+<p>This checkout is an unpublished candidate. TTY <strong>Install everything</strong> is 6 packages. The default is five required registrations, with Web Access optional.</p>
+<h2>Inspect registered sources</h2>
+<pre><code>npx @tommy-ca/lazypi status</code></pre>
+<p>Status reads settings, not loaded tools. Older canonical PStack pins are preserved. Retired registrations appear as Other. See <a href="/docs/philosophy.html">retirement limits and capability losses</a>.</p>
+<h2>Check configuration before execution</h2>
+<p>PStack registration does not bind canonical roles or establish native integration. Sandbox is disabled until explicitly configured. Ask User presents questions, not hard approval. Verdict's exemptions and manual shell escapes are not classified. Use a container or VM for untrusted or unattended work.</p>
+<p>Authentication is separate from installation. In an appropriately authorized environment, Pi's <code>/login</code> configures a provider. Do not interpret registration or offline tests as authorization to execute extensions.</p>
+<h2>Inspect subagent models</h2>
+<p>Selecting Subagents resets six builtin model overrides even on an already-installed run. Other override keys remain. <a href="/docs/packages/subagents.html">Subagent settings</a> lists the names and backup behavior. Canonical role/model semantics remain unverified.</p>
+<h2>Manage installed registrations</h2>
+<pre><code>npx @tommy-ca/lazypi remove
+npx @tommy-ca/lazypi update</code></pre>
+<p>Removal lists installed catalog entries. Use exact installed sources for retired registrations because their IDs and legacy mappings no longer resolve. Update remains broad and can update unmanaged installed packages while respecting pins. Neither curation retirement nor package removal cleans runner caches, model overrides, or backups.</p>
+<p>Native loading, dispatch, independent child authorization, headless denial, exit/recovery, and operator promotion still need separate evidence. No readiness claim follows from these steps.</p>
+<nav class="prev-next"><a href="/docs/philosophy.html" class="prev-next-link">Catalog philosophy</a><a href="/docs/installation.html" class="prev-next-link next">Installation</a></nav>

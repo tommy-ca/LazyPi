@@ -28,19 +28,19 @@ appendFileSync(${JSON.stringify(log)}, JSON.stringify({command:'packed',args:pro
 const file=join(process.env.PI_CODING_AGENT_DIR,'settings.json');
 mkdirSync(process.env.PI_CODING_AGENT_DIR,{recursive:true});
 let s; try { s=JSON.parse(readFileSync(file)); } catch { s={packages:[]}; }
-const core=${JSON.stringify(PACKAGES.filter(p => p.category === "core").map(p => p.source))};
+const core=${JSON.stringify(PACKAGES.filter(p => p.category === "core").map(p => p.installSource ?? p.source))};
 const optional=${JSON.stringify(PACKAGES.filter(p => p.category === "optional").map(p => p.source))};
 const a=process.argv.slice(2);
 if(${JSON.stringify(mode)}==='stage' && a[0]==='status') { console.error('fixture status failure'); process.exit(23); }
 if(a[0]==='install') {
- const sources=a.includes('optional')?optional:a.includes('btw')?['npm:@narumitw/pi-btw']:core;
+ const sources=a.includes('optional')?optional:a.includes('pstack')?[]:core;
  const fresh=sources.filter(p=>!s.packages.includes(p));
  s.packages.push(...fresh);
- if(a.includes('btw')) { s.packages=s.packages.filter(p=>p!=='npm:pi-btw'); console.log('→ pi install npm:@narumitw/pi-btw\\n→ pi remove npm:pi-btw'); }
  s.subagents={agentOverrides:Object.fromEntries(['context-builder','planner','researcher','reviewer','scout','worker'].map(n=>[n,{model:''}]))};
  console.log(fresh.length?'Will install: '+fresh.length+'\\nInstalled '+fresh.length+' package(s)':'Nothing to do');
+ if(a.includes('pstack')) process.exit(0);
 } else if(a[0]==='status') console.log('Installed from LazyPi catalog (${PACKAGES.length}/${PACKAGES.length})\\nnone — full catalog is installed');
-else if(a[0]==='remove') s.packages=s.packages.filter(p=>p!=='npm:@narumitw/pi-btw');
+else if(a[0]==='remove') s.packages=s.packages.filter(p=>typeof p==='string');
 else if(a[0]==='doctor') console.log('\u0060pi\u0060 is on PATH\\nsettings.json readable');
 else process.exit(91);
 writeFileSync(file,JSON.stringify(s));`;
@@ -56,8 +56,7 @@ if(a[0]==='pack') {
  if(${JSON.stringify(mode)}==='install') { console.error('fixture install failure'); process.exit(22); }
  const target=path.join(process.cwd(),'node_modules','@tommy-ca','lazypi','bin'); fs.mkdirSync(target,{recursive:true});
  fs.writeFileSync(path.join(target,'lazypi.mjs'),${JSON.stringify(packed)});
-} else if(a.join(' ')==='view pi-btw version') console.log('1.0.0');
-else { console.error('unexpected npm command'); process.exit(90); }`);
+} else { console.error('unexpected npm command'); process.exit(90); }`);
 	if (!missingPi) executable("pi", `${prelude}
 if(a.join(' ')==='--version') { console.log('fixture Pi'); process.exit(${mode === "pi" ? 24 : 0}); }
 if(!['install','remove'].includes(a[0]) || a.length!==2) process.exit(90);
@@ -89,14 +88,13 @@ test("packed verification uses private state and an allowlisted environment for 
 	assert.deepEqual(r.calls.filter(c => c.command === "npm").map(c => c.args), [
 		["pack", repo, "--silent", "--pack-destination", root],
 		["install", "--omit=dev", join(root, "fixture.tgz")],
-		["view", "pi-btw", "version"],
 	]);
 	assert.deepEqual(r.calls.filter(c => c.command === "packed").map(c => c.args), [
 		["install", "--yes"], ["install", "--yes", "--only", "optional"], ["install", "--yes"],
-		["status"], ["install", "--yes", "--only", "btw"], ["remove", "btw"], ["doctor"],
+		["status"], ["install", "--yes", "--only", "pstack"], ["remove", "pstack", "npm:pi-btw@0.1.0"], ["doctor"],
 	]);
 	assert.deepEqual(r.calls.filter(c => c.command === "pi").map(c => c.args), [
-		["--version"], ["remove", "npm:@narumitw/pi-btw"], ["install", "npm:pi-btw"],
+		["--version"],
 	]);
 	for (const c of r.calls) {
 		assert.equal(c.cwd, root);
@@ -157,5 +155,5 @@ test("kept successful run retains only private artifacts and settings", posix, (
 	assert.ok(r.stdout.endsWith(`E2E PASS: 8 checks\nkept sandbox: ${root}\n`));
 	assert.equal(existsSync(join(root, "fixture.tgz")), true);
 	const settings = JSON.parse(readFileSync(join(root, "agent", "settings.json")));
-	assert.deepEqual(settings.packages, PACKAGES.filter(p => p.id !== "btw").sort((a,b) => (a.category === "core" ? 0 : 1) - (b.category === "core" ? 0 : 1)).map(p => p.source));
+	assert.deepEqual(settings.packages, PACKAGES.filter(p => p.id !== "pstack").map(p => p.source));
 });

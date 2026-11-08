@@ -8,7 +8,7 @@ import { stripVTControlCharacters } from "node:util";
 
 const cli = resolve("bin/lazypi.mjs");
 const ttyRunner = "/usr/bin/script";
-const coreSources = ["npm:pi-subagents", "npm:pi-ask-user", "npm:pi-skillful", "npm:@narumitw/pi-goal", "npm:pi-web-access", "npm:@quintinshaw/pi-dynamic-workflows"];
+const coreSources = ["git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8", "npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user"];
 
 function fixture({ installed = false, malformed = false } = {}) {
 	const root = mkdtempSync(join(tmpdir(), "selection-"));
@@ -118,9 +118,9 @@ for (const pick of [false, true]) {
 		assert.deepEqual(calls[0], ["npm", "install", "-g", "@earendil-works/pi-coding-agent"]);
 		if (pick) assert.deepEqual(calls.slice(1), coreSources.map(source => ["pi", "install", source]));
 		else {
-			assert.equal(calls.filter(call => call[1] === "install" && call[0] === "pi").length, 18);
-			assert.deepEqual(calls.at(-1), ["pi", "install", "npm:pi-verdict"]);
-			assert.deepEqual(calls.filter(call => call[1] === "remove"), [["pi", "remove", "npm:pi-btw@0.1.0"]]);
+			assert.equal(calls.filter(call => call[1] === "install" && call[0] === "pi").length, 6);
+			assert.deepEqual(calls.at(-1), ["pi", "install", "npm:pi-web-access"]);
+			assert.deepEqual(calls.filter(call => call[1] === "remove"), []);
 		}
 		const after = JSON.parse(readFileSync(f.settings, "utf8"));
 		assert.deepEqual(after.subagents.agentOverrides.reviewer, { model: "", tools: ["read"] });
@@ -131,7 +131,7 @@ for (const pick of [false, true]) {
 test("noninteractive selectors and --yes preserve selected installs without bootstrap", { skip: process.platform === "win32" }, () => {
 	for (const [args, sources] of [
 		[["--yes"], coreSources],
-		[["--only", "fff"], ["npm:@ff-labs/pi-fff"]],
+		[["--only", "web-access"], ["npm:pi-web-access"]],
 		[["--except", "optional"], coreSources],
 		[["--except", "core,optional"], []],
 	]) {
@@ -143,7 +143,7 @@ test("noninteractive selectors and --yes preserve selected installs without boot
 		if (!sources.length) {
 			assert.equal(result.stdout, "Nothing selected — nothing to install.\n");
 			assert.deepEqual(f.snapshot(), f.before);
-		} else assert.match(result.stdout, new RegExp(`Selected:          ${sources.length}/18\\n`));
+		} else assert.match(result.stdout, new RegExp(`Selected:          ${sources.length}/6\\n`));
 	}
 });
 
@@ -162,13 +162,13 @@ test("declining Pi bootstrap after selection retains exit 127 without changes", 
 
 test("unattended --yes retains accepted bootstrap before selected package actions", { skip: process.platform === "win32" }, () => {
 	const f = fixture();
-	const result = f.run(["install", "--yes", "--only", "fff"]);
+	const result = f.run(["install", "--yes", "--only", "web-access"]);
 	assert.equal(result.status, 0, result.stdout + result.stderr);
 	assert.equal(result.stderr, "");
-	assert.match(result.stdout, /Selected:          1\/18\n/);
+	assert.match(result.stdout, /Selected:          1\/6\n/);
 	assert.deepEqual(f.readCalls(), [
 		["npm", "install", "-g", "@earendil-works/pi-coding-agent"],
-		["pi", "install", "npm:@ff-labs/pi-fff"],
+		["pi", "install", "npm:pi-web-access"],
 	]);
 	assert.deepEqual(f.snapshot(), f.before);
 });
