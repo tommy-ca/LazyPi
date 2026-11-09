@@ -102,7 +102,8 @@ try {
 	const optionalSources = PACKAGES.filter((p) => p.category === "optional").map((p) => p.source);
 	const OPTIONAL_COUNT = optionalSources.length;
 	const fullSources = [...coreSources, ...optionalSources];
-	assert.match(r.stdout, new RegExp(`Will install:\\s+${OPTIONAL_COUNT}`));
+	if (OPTIONAL_COUNT === 0) assert.equal(r.stdout, "Nothing selected — nothing to install.\n");
+	else assert.match(r.stdout, new RegExp(`Will install:\\s+${OPTIONAL_COUNT}`));
 	check(`exit 0, ${OPTIONAL_COUNT} optional packages installed`, () => {
 		assert.deepEqual(readSettings(agentDir).packages, fullSources);
 	});

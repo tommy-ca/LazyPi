@@ -20,10 +20,8 @@ import {
 // ---------------------------------------------------------------------------
 // Catalog
 // ---------------------------------------------------------------------------
-// Categories. LazyPi installs the core catalog by default — "lazy" means you
-// get the harness without thinking. The optional category holds evaluated
-// packages worth managing but not part of the default; include them via the
-// interactive picker or --only / --except.
+// All current entries are core. Keep the empty optional category valid for
+// existing --only / --except selectors.
 const CATEGORIES = ["core", "optional"];
 
 export const PACKAGES = [
@@ -37,7 +35,7 @@ export const PACKAGES = [
 	{ id: "sandbox", category: "core", source: "npm:pi-better-sandbox", description: "Sandbox support", hint: "Disabled until explicitly configured; registration is not containment." },
 	{ id: "verdict", category: "core", source: "npm:pi-verdict", description: "Permission gate", hint: "Permission gate with fail-closed classifier errors; configured exemptions and manual shell escapes are not classified." },
 	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", description: "Ask-user prompts", hint: "Interactive user questions for agent workflows; not hard approval." },
-	{ id: "web-access", category: "optional", source: "npm:pi-web-access", description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
+	{ id: "web-access", category: "core", source: "npm:pi-web-access", description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -212,8 +210,8 @@ ${bold("Install options:")}
   -V, --version       Show the installed version
 
 ${bold("Default behaviour:")}
-  - Every core catalog package is installed (lazy on purpose); optional
-    category packages are installed only when selected.
+  - All 6 catalog packages are core and installed by default, including
+    Web Access. The optional category is empty.
   - On a TTY, an interactive picker appears with core pre-ticked;
     untick categories or packages before confirming.
   - With --yes, --only, or --except the picker is skipped.
@@ -222,8 +220,8 @@ ${bold("Default behaviour:")}
     nothing does not install Pi or packages or change settings.
 
 ${bold("Categories:")}
-  core         pstack, subagents, sandbox, verdict, pi-ask-user (5 required)
-  optional     web-access only (research, on request)
+  core         pstack, subagents, sandbox, verdict, pi-ask-user, web-access (6)
+  optional     empty (selector retained for compatibility)
 
   Unpublished registration candidate, not native integration or readiness.
   PStack fresh installs use audited f1571b8; existing canonical pins stay put.
@@ -236,8 +234,8 @@ ${bold("Categories:")}
 ${bold("Examples:")}
   npx @tommy-ca/lazypi                              # core catalog (interactive picker on a TTY)
   npx @tommy-ca/lazypi --yes                        # core catalog, no prompt
-  npx @tommy-ca/lazypi --only core,optional         # install optional tier too
-  npx @tommy-ca/lazypi --only optional              # just the optional tier
+  npx @tommy-ca/lazypi --only core,optional         # all 6 core entries; optional is empty
+  npx @tommy-ca/lazypi --only optional              # empty selection; no setup or changes
   npx @tommy-ca/lazypi --only subagents,web-access  # individual package ids also work
   npx @tommy-ca/lazypi --only core --local          # core into the current project
   npx @tommy-ca/lazypi status

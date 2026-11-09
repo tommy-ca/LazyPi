@@ -60,8 +60,10 @@ Required support SHALL remain stricter than upstream's capability minimum.
 #### Scenario: Minimal candidate
 
 - **WHEN** the candidate default selection is computed
-- **THEN** it SHALL contain pstack, subagents, sandbox, verdict, and pi-ask-user
-- **AND** web-access SHALL be the sole optional research package
+- **THEN** it SHALL contain pstack, subagents, sandbox, verdict, pi-ask-user,
+  and web-access in that order, all core and selected by default
+- **AND** no optional catalog entries SHALL remain
+- **AND** core/optional selector syntax SHALL remain compatible, with optional empty
 - **AND** no compatibility tier, alias to independent npm PStack, helper adapter,
   copied resources, or automatic conflict exclusion SHALL be introduced
 - **AND** the canonical recommendation SHALL be described as static-only,

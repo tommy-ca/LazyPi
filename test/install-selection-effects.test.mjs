@@ -8,7 +8,7 @@ import { stripVTControlCharacters } from "node:util";
 
 const cli = resolve("bin/lazypi.mjs");
 const ttyRunner = "/usr/bin/script";
-const coreSources = ["git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8", "npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user"];
+const coreSources = ["git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8", "npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user", "npm:pi-web-access"];
 
 function fixture({ installed = false, malformed = false } = {}) {
 	const root = mkdtempSync(join(tmpdir(), "selection-"));
@@ -131,7 +131,12 @@ for (const pick of [false, true]) {
 test("noninteractive selectors and --yes preserve selected installs without bootstrap", { skip: process.platform === "win32" }, () => {
 	for (const [args, sources] of [
 		[["--yes"], coreSources],
+		[["--only", "core"], coreSources],
+		[["--only", "core,optional"], coreSources],
+		[["--only", "optional"], []],
+		[["--except", "core"], []],
 		[["--only", "web-access"], ["npm:pi-web-access"]],
+		[["--except", "web-access"], coreSources.slice(0, -1)],
 		[["--except", "optional"], coreSources],
 		[["--except", "core,optional"], []],
 	]) {

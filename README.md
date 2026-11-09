@@ -1,6 +1,6 @@
 # LazyPi
 
-LazyPi is an opinionated package installer for [Pi](https://github.com/earendil-works/pi-mono). This checkout contains an **unpublished registration candidate**, not a release or a certified native PStack integration. It selects five required registrations and keeps Web Access as the sole optional research package.
+LazyPi is an opinionated package installer for [Pi](https://github.com/earendil-works/pi-mono). This checkout contains an **unpublished registration candidate**, not a release or a certified native PStack integration. It selects six core registrations, including Web Access by default. The optional category is empty.
 
 ## Quick start
 
@@ -15,13 +15,13 @@ LazyPi will:
 
 Cancelling selection or selecting no packages skips Pi bootstrap and package installation.
 
-`--yes` installs the five required registrations. On a TTY, Install everything installs all 6. Registration does not prove effective loading, canonical role binding, tool dispatch, authorization, recovery, or readiness. Native integration and operator promotion remain unverified.
+`--yes` installs all six core registrations. On a TTY, Install everything selects the same six, and the picker preselects all six. Registration does not prove effective loading, canonical role binding, tool dispatch, authorization, recovery, or readiness. Native integration and operator promotion remain unverified.
 
 Install reads your Pi settings and skips matching installed sources, including older pins. Selecting subagents still resets the six builtin model overrides to the session-model fallback, even when already installed. Other override keys remain. Existing settings are backed up before those changes. See `docs/docs/installation.html`.
 
 ## Catalog
 
-`--yes` installs 5 core registrations. TTY Install everything installs all 6.
+`--yes`, `--only core`, and TTY Install everything select all 6 core registrations. The picker preselects all six. The `optional` selector remains valid but empty: `--only optional` installs nothing and skips setup; `--except optional` selects all six.
 
 | id | category | why |
 | --- | --- | --- |
@@ -30,7 +30,7 @@ Install reads your Pi settings and skips matching installed sources, including o
 | sandbox | core | Required sandbox support, disabled until explicitly configured |
 | verdict | core | Required permission gate. Classifier failures fail closed; exemptions and manual shell escapes are not classified |
 | pi-ask-user | core | Required structured questions, not hard approval |
-| web-access | optional | Research-only web search and fetching on request |
+| web-access | core | Default web search and fetching for research |
 
 PStack identity is `git:github.com/tommy-ca/pstack`. Fresh installs pass
 `git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8`.
@@ -71,7 +71,7 @@ unmanaged sources. See `docs/docs/philosophy.html`.
 
 | Command | What it does |
 | --- | --- |
-| `npx @tommy-ca/lazypi` | TTY Install everything is 6. `--yes` is the 5 core registrations. Picker otherwise. |
+| `npx @tommy-ca/lazypi` | TTY Install everything and `--yes` select all 6 core registrations. Picker otherwise. |
 | `npx @tommy-ca/lazypi remove <id>` | Remove a catalog package by id (or pass a raw pi source) |
 | `npx @tommy-ca/lazypi status` | Show which catalog packages are installed, missing, or extra |
 | `npx @tommy-ca/lazypi update` | Run `pi update` for installed Pi packages |

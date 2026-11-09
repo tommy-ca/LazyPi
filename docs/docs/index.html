@@ -19,7 +19,7 @@ description: "Unpublished minimal registration candidate and its limits."
 
     <h2>What it installs</h2>
     <p>
-      The candidate selects five required registrations and keeps Web Access as the sole optional research package.
+      The candidate selects all six core registrations by default, including Web Access.
       <a href="/docs/philosophy.html">Catalog philosophy</a> explains retirement, deliberate capability losses, and the native/operator evidence still required for promotion.
     </p>
 
@@ -33,11 +33,11 @@ description: "Unpublished minimal registration candidate and its limits."
       <tbody>
         <tr>
           <td>Core (harness core)</td>
-          <td>PStack canonical checkout reference, Subagents, Sandbox, Verdict, and Ask User. Canonical pins are preserved, not forced forward.</td>
+          <td>PStack canonical checkout reference, Subagents, Sandbox, Verdict, Ask User, and Web Access. Canonical pins are preserved, not forced forward.</td>
         </tr>
         <tr>
-          <td>Optional (on request)</td>
-          <td>Web Access only, installed with <code>--only optional</code> or explicit selection.</td>
+          <td>Optional (empty)</td>
+          <td>The selector remains valid. <code>--only optional</code> skips setup and changes nothing; <code>--except optional</code> selects all six.</td>
         </tr>
       </tbody>
     </table>

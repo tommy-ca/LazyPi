@@ -20,18 +20,24 @@ for a fresh install argument. Identity matching SHALL continue to use `source`.
 - **WHEN** the candidate catalog is loaded
 - **THEN** it SHALL contain exactly 6 entries in this order: pstack, subagents,
   sandbox, verdict, pi-ask-user, web-access
-- **AND** the first five SHALL be `core` required registrations
-- **AND** web-access SHALL be the sole `optional` research package
+- **AND** all six SHALL be `core` registrations, including web-access by default
+- **AND** there SHALL be no optional catalog entries
 
 #### Scenario: Optional catalog tier
 
 - **WHEN** install selection is computed without `--only` or `--except`
-- **THEN** the selection SHALL be the 5 core entries only
-- **AND** optional SHALL be selected only via matching selectors, the picker,
-  or the interactive everything flow
-- **AND** status and remove SHALL cover optional like core
+- **THEN** the selection SHALL be all 6 core entries, including web-access
+- **AND** the picker SHALL preselect all six in catalog order
+- **AND** `core` and `optional` SHALL remain valid category selectors
+- **AND** `--only optional` and `--except core` SHALL select nothing, report
+  "Nothing selected — nothing to install.", and exit 0 before bootstrap
+- **AND** empty selections SHALL leave settings, backups, and counters unchanged
+- **AND** `--only core`, `--only core,optional`, and `--except optional` SHALL
+  select all six
+- **AND** `--only web-access` SHALL still select Web Access alone
 - **AND** `--except` SHALL subtract from all 6 entries, selecting 5 for
   `--except web-access`
+- **AND** status SHALL report core counts out of 6 and optional counts out of 0
 
 #### Scenario: Catalog membership
 
@@ -246,8 +252,9 @@ Model so a missed spec delta cannot stay green.
 
 - **WHEN** `scripts/assert-installed-packages.mjs --check-status` runs after
   a full catalog install
-- **THEN** the install SHALL have been `lazypi --yes` followed by
-  `lazypi --yes --only optional` (core then optional)
+- **THEN** `lazypi --yes` SHALL install all 6 core registrations
+- **AND** a subsequent `lazypi --yes --only optional` SHALL be a harmless empty
+  selection for existing workflow compatibility
 - **AND** it SHALL require exact equality to non-excluded fresh install sources
   (`installSource` when present, otherwise `source`), rejecting unexpected sources
 - **AND** this clean-install assertion SHALL NOT be used as preserved-profile proof
@@ -277,8 +284,8 @@ Model so a missed spec delta cannot stay green.
 - **THEN** a test SHALL fail if `PACKAGES` ids, categories, or current
   sources diverge from the Lean catalog shape scenario
 - **AND** a test SHALL fail if a Dropped packages id appears in `PACKAGES`
-- **AND** a test SHALL fail if the Windows smoke workflow asserts the full
-  catalog without installing the optional tier
+- **AND** the existing Windows smoke workflow MAY retain its empty optional
+  install step before asserting the full catalog
 - **AND** CI SHALL run `npm run spec:validate` alongside `npm test`
 
 ### Requirement: Release Flow
@@ -348,13 +355,14 @@ unmanaged packages accurately, without recommending the everything selection.
 #### Scenario: Default versus everything counts
 
 - **WHEN** README describes install counts
-- **THEN** it SHALL distinguish 5 required core registrations from all 6
-- **AND** Web Access SHALL be the sole optional research package
+- **THEN** it SHALL describe all 6 registrations as default core
+- **AND** it SHALL explain that Web Access is selected by default
+- **AND** the empty optional selector SHALL remain documented
 
 #### Scenario: Philosophy page
 
 - **WHEN** `docs/docs/philosophy.html` is read
-- **THEN** it SHALL explain the five required registrations and one optional
+- **THEN** it SHALL explain the six default core registrations and empty optional category
 - **AND** it SHALL retain the membership bar as control plane or discipline,
   not meal-prep or chrome, and require real-session/operator promotion evidence
 - **AND** it SHALL describe Dropped and retired packages as outside curation,
@@ -469,11 +477,11 @@ The active installer specification and public catalog summaries SHALL agree with
 #### Scenario: Counts and source migrations
 
 - **WHEN** active specifications and summaries describe curation
-- **THEN** they SHALL specify 6 entries: 5 core and 1 optional
+- **THEN** they SHALL specify 6 core entries and no optional entries
 - **AND** retired todos and memory IDs SHALL no longer resolve their former
   catalog or legacy source migrations
-- **AND** the new strict-minimal-pstack-catalog delta SHALL be the current test
-  association, without rewriting historical deltas
+- **AND** the essentials-web-default delta SHALL be the current test
+  association for this category change, without rewriting historical deltas
 - **AND** they SHALL distinguish unpinned identity from fresh audited argument
 
 #### Scenario: Verdict summaries
@@ -558,9 +566,9 @@ candidate, not a release, certified native integration, or readiness result.
   first steps, package index, or sidebar describes curation
 - **THEN** membership and order SHALL match `PACKAGES`
 - **AND** README SHALL list each ID, category, and rationale in catalog order
-- **AND** documentation SHALL distinguish 5 required registrations from all 6
+- **AND** documentation SHALL describe all 6 registrations as default core
 - **AND** the TTY label SHALL remain Install everything, not recommended
-- **AND** Web Access SHALL be the sole optional research package
+- **AND** Web Access SHALL be selected by default and optional SHALL remain empty
 - **AND** retired pages MAY remain only as explicitly historical/unmanaged
 - **AND** retired packages SHALL NOT remain in curated navigation or listings
 

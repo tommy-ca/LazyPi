@@ -60,7 +60,7 @@ function runCli(args, { cwd, home, agentDir, bin } = {}) {
 	return result;
 }
 
-test("--except web-access selects the five required ids", () => {
+test("--except web-access still selects the other five ids", () => {
 	assert.deepEqual([...resolveSelection({ except: ["web-access"] })], ["pstack", "subagents", "sandbox", "verdict", "pi-ask-user"]);
 });
 
@@ -121,5 +121,5 @@ test("status prints core and optional installed counts after the catalog header"
 	const output = `${result.stdout}\n${result.stderr}`;
 	assert.equal(result.status, 0, output);
 	assert.match(output, /Installed from LazyPi catalog \(0\/6\):/);
-	assert.match(output, /core 0\/5, optional 0\/1/);
+	assert.match(output, /core 0\/6, optional 0\/0/);
 });

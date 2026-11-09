@@ -12,19 +12,19 @@ extra_css: /assets/css/index.css
 </section>
 <div class="stats">
   <div class="stat"><div class="stat-num">6</div><div class="stat-label">Candidate registrations</div></div>
-  <div class="stat"><div class="stat-num">5</div><div class="stat-label">Required registrations</div></div>
-  <div class="stat"><div class="stat-num">1</div><div class="stat-label">Optional research package</div></div>
+  <div class="stat"><div class="stat-num">6</div><div class="stat-label">Default core registrations</div></div>
+  <div class="stat"><div class="stat-num">0</div><div class="stat-label">Optional packages</div></div>
 </div>
 <section id="catalog"><div class="container">
   <h2>The candidate catalog</h2>
-  <p>Default <code>--yes</code> is 5. TTY Install everything is 6. Selection finishes before Pi setup. Cancelling or selecting nothing installs nothing.</p>
+  <p>Default <code>--yes</code> and TTY Install everything select all 6 core entries, including Web Access. The picker preselects all six. The optional category is empty; <code>--only optional</code> skips setup and changes nothing. Selection finishes before Pi setup. Cancelling or selecting nothing installs nothing.</p>
   <div class="catalog-grid">
     <a class="catalog-card" href="/docs/packages/pstack.html"><span class="catalog-tag core">core</span><div class="catalog-name">pstack</div><div class="catalog-desc">Canonical Git checkout registration reference only</div></a>
     <a class="catalog-card" href="/docs/packages/subagents.html"><span class="catalog-tag core">core</span><div class="catalog-name">subagents</div><div class="catalog-desc">Required delegation support</div></a>
     <a class="catalog-card" href="/docs/packages/sandbox.html"><span class="catalog-tag core">core</span><div class="catalog-name">sandbox</div><div class="catalog-desc">Disabled until explicitly configured</div></a>
     <a class="catalog-card" href="/docs/packages/verdict.html"><span class="catalog-tag core">core</span><div class="catalog-name">verdict</div><div class="catalog-desc">Permission gate with classifier limits</div></a>
     <a class="catalog-card" href="/docs/packages/ask-user.html"><span class="catalog-tag core">core</span><div class="catalog-name">pi-ask-user</div><div class="catalog-desc">Structured questions, not hard approval</div></a>
-    <a class="catalog-card" href="/docs/packages/web-access.html"><span class="catalog-tag optional">optional</span><div class="catalog-name">web-access</div><div class="catalog-desc">Research tooling on request</div></a>
+    <a class="catalog-card" href="/docs/packages/web-access.html"><span class="catalog-tag core">core</span><div class="catalog-name">web-access</div><div class="catalog-desc">Default web research tooling</div></a>
   </div>
   <p>Existing matching canonical pins stay unchanged. Sandbox registration is not containment. Untrusted or unattended work requires a container or VM.</p>
   <p>Retirement does not uninstall or disable active packages, delete data, or prevent broad Pi updates. Retired registrations remain Other. Use exact installed sources for removal.</p>

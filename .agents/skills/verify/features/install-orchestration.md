@@ -10,7 +10,7 @@ From the repository root, use an allowlisted environment with private HOME, USER
 node --test test/pstack-retirement.test.mjs test/agent-dir.test.mjs test/install-selection-effects.test.mjs test/migration-safety.test.mjs
 ```
 
-The fixtures check five required registrations in order, Web Access optional selection, the audited fresh canonical argument, preserved older canonical pins without duplication, independent npm PStack identity, retired install-selector rejection, raw removal passthrough and exact-source removal, broad updates, settings scope/order/object metadata, and six builtin model resets. Rejected selectors leave settings, backups, and counters unchanged. Existing interactive cancellation, empty selection, and bootstrap sequencing remain covered.
+The fixtures check six default core registrations in order including Web Access, empty optional selection without bootstrap or changes, explicit Web Access selection, the audited fresh canonical argument, preserved older canonical pins without duplication, independent npm PStack identity, retired install-selector rejection, raw removal passthrough and exact-source removal, broad updates, settings scope/order/object metadata, and six builtin model resets. Rejected selectors leave settings, backups, and counters unchanged. Existing interactive cancellation, empty selection, and bootstrap sequencing remain covered.
 
 The clean-install source assertion is exact equality to fresh install arguments, not general profile preservation. Preserved profiles have separate assertions. Selecting Subagents can change builtin model overrides even when already installed.
 
