@@ -4,6 +4,7 @@ Use the setup and isolation in [the verify skill](../SKILL.md) before each drive
 
 - [Help and version](help.md)
 - [Catalog status](status.md)
+- [Catalog selection and retirement](catalog.md)
 - [Offline default-install orchestration](install-orchestration.md), a dedicated automated fixture rather than a manual drive
 - [Native PStack proof preparation](native-pstack-proof.md), offline diagnostic fixtures and the separately authorized hosted-only boundary
 
