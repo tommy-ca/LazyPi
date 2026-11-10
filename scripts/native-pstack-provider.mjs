@@ -5,7 +5,7 @@ import { PROVIDER, receipt } from "./native-pstack-proof.mjs";
 
 // Probe-owned transport. This does not change any canonical agent definition.
 export async function startProvider({ canaryPath, canary, record = receipt }) {
-	let phase = "discovery", step = 0, failure;
+	let phase = "discovery", step = 0, failure, childStarted = false;
 	const plan = [
 		["subagents_enable", {}],
 		["subagent", { action: "list" }],
@@ -50,8 +50,13 @@ export async function startProvider({ canaryPath, canary, record = receipt }) {
 	await new Promise((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
 	return {
 		baseUrl: `http://127.0.0.1:${server.address().port}/v1`, provider: PROVIDER,
-		child() { if (failure || phase !== "discovery" || step !== 4) throw new Error(failure ?? "discovery transcript incomplete"); phase = "child"; step = 0; },
-		check() { if (failure) throw new Error(failure); },
+		child() { if (failure || phase !== "discovery" || step !== 4) throw new Error(failure ?? "discovery transcript incomplete"); phase = "child"; step = 0; childStarted = true; },
+		// A recorded canary artifact is not evidence of routing. The child must have
+		// completed its own two provider round trips for this to count.
+		check() {
+			if (failure) throw new Error(failure);
+			if (childStarted && step !== 2) throw new Error("child provider transcript incomplete");
+		},
 		async close() { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); },
 	};
 }
