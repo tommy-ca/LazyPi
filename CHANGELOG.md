@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+### Bug Fixes
+
+* **settings:** refuse a symlinked or non-regular settings target before writing, so a repository-committed `.pi/settings.json` symlink can no longer copy a target's bytes into the tree or overwrite the target ([#33](https://github.com/tommy-ca/LazyPi/pull/33))
+* **settings:** write settings atomically through a same-directory temp file and rename, instead of truncating the live file in place, and give backups millisecond resolution so two mutations in one second cannot overwrite the only recovery artifact ([#33](https://github.com/tommy-ca/LazyPi/pull/33))
+* **settings:** fail closed with exit 2 when the settings document is not an object or a field has the wrong type, instead of silently discarding the write at exit 0 or throwing a raw `TypeError` at exit 1 ([#33](https://github.com/tommy-ca/LazyPi/pull/33))
+* **settings:** escape control characters from settings and auth before printing, so a committed project file cannot inject terminal or clipboard escape sequences into command output ([#33](https://github.com/tommy-ca/LazyPi/pull/33))
+* **cli:** report an invalid argument combined with `--version` as a usage error with exit 2 instead of printing the version and exiting 0 ([#33](https://github.com/tommy-ca/LazyPi/pull/33))
+* **cli:** take the interactivity decision once, so `--only core` no longer blocks on the Pi bootstrap prompt ([#33](https://github.com/tommy-ca/LazyPi/pull/33))
+* **auth:** treat a non-object `auth.json` as no providers instead of reporting phantom providers named after array indices ([#33](https://github.com/tommy-ca/LazyPi/pull/33))
+
+### Documentation
+
+* **contract:** establish the active installer spec as the single catalog authority and fail when an active change delta contradicts the catalog ([#32](https://github.com/tommy-ca/LazyPi/pull/32))
+* **verify:** add feature docs for `doctor`, `update`, `remove` and `--local`, and state the manual-versus-suite split once ([#35](https://github.com/tommy-ca/LazyPi/pull/35))
+
+### Refactor
+
+* **cli:** delete the legacy-source subsystem that no catalog entry could reach, remove the `buildSpawnOptions` identity wrapper, replace the duplicated interactive rendering with a message-value adapter, and split the executable into `bin/catalog.mjs` and `bin/pi-host.mjs` ([#34](https://github.com/tommy-ca/LazyPi/pull/34))
+
+### Tests
+
+* **verify:** make `scripts/assert-installed-packages.mjs` tier-aware, replace the CI step that could not fail with a gate asserting an empty optional selection mutates nothing, add a CLI surface coverage gate, and move native-proof fixture evidence out of the checkout ([#35](https://github.com/tommy-ca/LazyPi/pull/35))
+
 ## [0.10.4](https://github.com/tommy-ca/LazyPi/compare/v0.10.3...v0.10.4) (2026-09-01)
 
 ### Bug Fixes
