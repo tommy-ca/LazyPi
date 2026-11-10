@@ -5,7 +5,7 @@ import { resolve, join } from "node:path";
 import { fork, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
-import { privateEnvironment, runOwned, runProof, validateSupportGraph } from "../scripts/native-pstack-proof.mjs";
+import { privateEnvironment, runOwned, runProof, supportInventoryCommand, validateSupportGraph } from "../scripts/native-pstack-proof.mjs";
 
 const scratch = resolve(".atl/evidence/strict-minimal-pstack/runtime/native-proof-prep/writer/correction-fixtures");
 mkdirSync(scratch, { recursive: true });
@@ -341,4 +341,24 @@ test("support graph rejects an unresolved non-peer dependency", () => {
 test("support graph rejects a pinned version that changed", () => {
 	const graph = { name: "pi-extensions", problems: [], dependencies: { ...pinnedDeps(), "pi-verdict": { version: "0.16.1" } } };
 	assert.throws(() => validateSupportGraph(graph), /support graph/);
+});
+
+// The allowance for the support inventory is a value, not a call detail hidden in
+// argument forwarding, so removing it fails a test instead of a hosted run.
+test("support inventory command carries its allowed exit codes", () => {
+	const inventory = supportInventoryCommand("/private/agent/npm");
+	assert.deepEqual(inventory.allowExit, [0, 1]);
+	assert.deepEqual(inventory.args, ["ls", "--prefix", "/private/agent/npm", "--all", "--json"]);
+});
+test("support inventory allowance rejects an ordinary failure code", () => {
+	const inventory = supportInventoryCommand("/private/agent/npm");
+	assert.equal(inventory.allowExit.includes(0), true);
+	assert.equal(inventory.allowExit.includes(1), true);
+	assert.equal(inventory.allowExit.includes(2), false);
+});
+test("recorded hosted inventory passes the support gate", () => {
+	const recorded = JSON.parse(readFileSync("test/fixtures/native-pstack-hosted-support-graph.json", "utf8"));
+	assert.equal(recorded.problems.length, 6);
+	assert.equal(validateSupportGraph(recorded), true);
+	assert.throws(() => validateSupportGraph({ ...recorded, dependencies: { ...recorded.dependencies, "pi-verdict": { version: "0.15.0" } } }), /support graph/);
 });

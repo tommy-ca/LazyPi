@@ -141,6 +141,12 @@ const SDK_PEERS = new Set(["@earendil-works/pi-coding-agent", "@earendil-works/p
 // npm ls exits nonzero when peers resolve outside the audited tree, so the support
 // graph is judged by content: every pin present at its exact version, and every
 // reported problem about a peer the SDK provides rather than a real dependency.
+// npm ls exits 1 when peers resolve outside the audited tree, so the inventory is
+// allowed to exit 0 or 1 and its content is judged by validateSupportGraph.
+export function supportInventoryCommand(prefixDir) {
+	return { args: ["ls", "--prefix", prefixDir, "--all", "--json"], allowExit: [0, 1] };
+}
+
 export function validateSupportGraph(graph) {
 	try {
 		const expected = Object.entries(PINS).filter(([name]) => !name.startsWith("@earendil"));
@@ -260,7 +266,8 @@ async function hosted() {
 		// code is not the signal here. validateSupportGraph judges the inventory.
 		// npm ls exits 1 when peers resolve outside this tree, and install would drop
 		// that allowance, so the inventory is invoked through command directly.
-		const supportGraph = JSON.parse(await command(npm, ["ls", "--prefix", join(root, "agent/npm"), "--all", "--json"], join(root, "work"), 600000, [0, 1]));
+		const inventory = supportInventoryCommand(join(root, "agent/npm"));
+		const supportGraph = JSON.parse(await command(npm, inventory.args, join(root, "work"), 600000, inventory.allowExit));
 		validateSupportGraph(supportGraph); receipt("support-graph", supportGraph);
 			for (const file of [join(root, "agent/npm/package-lock.json"), join(sdkRoot, "package.json")]) receipt("installed-file", { path: file, contents: readFileSync(file, "utf8") });
 			// npm documents its opaque cache as cacache; use npm's own bundled API,
