@@ -10,7 +10,21 @@ title: "Ask User — LazyPi Docs"
       <code>ask_user</code> presents one focused, multiple-choice question when the target file, create-vs-edit, acceptance criteria, or a mutually exclusive implementation option is undefined. One avoided rewrite pays for the pause.
     </p>
     <p>
+      It also asks a batch of 2-4 independent questions in one prompt, with a review page before submitting. Use a batch for decisions whose prerequisites are already settled. Anything that depends on another answer belongs in a later call.
+    </p>
+    <p>
       Related workflow: when a request is ambiguous, Pi asks before producing a large diff. This is an efficiency feature — a cheap structured question in exchange for not generating the wrong thing.
+    </p>
+
+    <h2>Settings</h2>
+    <p>
+      Defaults persist in <code>~/.pi/agent/ask-user.json</code>, or in <code>&lt;agent-dir&gt;/ask-user.json</code> when <code>PI_CODING_AGENT_DIR</code> is set. The file covers display mode, single-select layout, the optional comment row, context expansion, and the overlay and comment shortcut keys.
+    </p>
+    <p>
+      Per-call tool parameters override environment variables, and environment variables override the settings file. The file is read on every call, so an edit applies without restarting Pi. A file that exists but is not valid JSON fails the call with its path in the error, so a broken configuration is visible instead of silently ignored.
+    </p>
+    <p>
+      Set <code>emitFullEvents</code> to <code>true</code> only when a trusted extension needs the data. It shares answers and prompt context with other installed extensions through lifecycle events, including selections, comments, freeform text, and offered options on cancellation. It is off by default.
     </p>
 
     <h2>Why it's included</h2>
