@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, fchmodSync, fsyncSync, lstatSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, statSync, unlinkSync, writeSync } from "node:fs";
 import { homedir, platform } from "node:os";
-import { dirname, join, posix, resolve, win32 } from "node:path";
+import { basename, dirname, join, posix, resolve, win32 } from "node:path";
 import { spawnSync } from "node:child_process";
 import { argv, cwd, exit, stdout, stderr } from "node:process";
 import { pathToFileURL } from "node:url";
@@ -54,6 +54,15 @@ const white = c("1;97");
 
 function printHeader(text) {
 	console.log(`\n${bold(text)}`);
+}
+
+// Strings read from a settings or auth file are attacker-controlled input in a
+// committed project, so C0, DEL, and C1 controls (ESC included) are escaped
+// before they reach a terminal or a CI log.
+const CONTROL_RE = /[\u0000-\u001f\u007f-\u009f]/g;
+
+function safeText(value) {
+	return String(value).replace(CONTROL_RE, (ch) => `\\u${ch.charCodeAt(0).toString(16).padStart(4, "0")}`);
 }
 
 // ASCII "Pi" logo: capital P + lowercase i, with a blue "zzz" cascade
@@ -320,35 +329,160 @@ function settingsPath(local) {
 const SUBAGENT_BUILTIN_MODELS = ["context-builder", "planner", "researcher", "reviewer", "scout", "worker"];
 
 
+function isPlainObject(value) {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function describeJsonValue(value) {
+	if (value === null) return "null";
+	if (Array.isArray(value)) return "an array";
+	if (typeof value === "object") return "an object";
+	return `a ${typeof value}`;
+}
+
+// A document LazyPi cannot round-trip safely is rejected whole: a non-object
+// top level silently drops the mutation, and a wrong-typed packages or
+// subagents block either throws from iteration or is re-keyed by spread.
+function settingsShapeProblem(parsed) {
+	if (!isPlainObject(parsed)) return `the top-level JSON value is ${describeJsonValue(parsed)}, but LazyPi needs an object`;
+	if (parsed.packages !== undefined && !Array.isArray(parsed.packages)) {
+		return `"packages" must be an array, but it is ${describeJsonValue(parsed.packages)}`;
+	}
+	if (parsed.subagents !== undefined && !isPlainObject(parsed.subagents)) {
+		return `"subagents" must be an object, but it is ${describeJsonValue(parsed.subagents)}`;
+	}
+	if (parsed.subagents?.agentOverrides !== undefined && !isPlainObject(parsed.subagents.agentOverrides)) {
+		return `"subagents.agentOverrides" must be an object, but it is ${describeJsonValue(parsed.subagents.agentOverrides)}`;
+	}
+	return null;
+}
+
 function readSettings(local) {
 	const path = settingsPath(local);
-	if (!existsSync(path)) return { path, exists: false, parsed: null, error: null };
+	let info;
 	try {
-		return { path, exists: true, parsed: JSON.parse(readFileSync(path, "utf8")), error: null };
+		info = statSync(path);
 	} catch (err) {
-		return { path, exists: true, parsed: null, error: err instanceof Error ? err.message : String(err) };
+		if (err?.code === "ENOENT") return { path, exists: false, parsed: null, problem: null, mode: null };
+		return { path, exists: true, parsed: null, problem: { kind: "unreadable", detail: err?.code ?? String(err) }, mode: null };
+	}
+	if (!info.isFile()) return { path, exists: true, parsed: null, problem: { kind: "not-regular" }, mode: null };
+	const mode = info.mode & 0o777;
+	try {
+		const parsed = JSON.parse(readFileSync(path, "utf8"));
+		const shape = settingsShapeProblem(parsed);
+		if (shape) return { path, exists: true, parsed: null, problem: { kind: "shape", detail: shape }, mode };
+		return { path, exists: true, parsed, problem: null, mode };
+	} catch (err) {
+		return { path, exists: true, parsed: null, problem: { kind: "parse", detail: err instanceof Error ? err.message : String(err) }, mode };
 	}
 }
 
+function settingsProblemMessage(current) {
+	if (!current.problem) return null;
+	if (current.problem.kind === "parse") return `Could not parse ${current.path} — ${current.problem.detail}`;
+	if (current.problem.kind === "not-regular") return `Invalid settings file ${current.path} — it is not a regular file.`;
+	if (current.problem.kind === "unreadable") return `Could not read ${current.path} — ${current.problem.detail}.`;
+	return `Invalid settings file ${current.path} — ${current.problem.detail}.`;
+}
+
+function printSettingsProblem(current) {
+	console.error(red(settingsProblemMessage(current)));
+}
+
+// Milliseconds keep two backups in the same second apart, and the counter
+// guarantees a distinct path even when the clock cannot.
 function backupPath(path) {
-	const timestamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
-	return `${path}.lazypi.${timestamp}.bak`;
+	const timestamp = new Date().toISOString().replace(/[-:]/g, "");
+	let candidate = `${path}.lazypi.${timestamp}.bak`;
+	for (let n = 1; existsSync(candidate); n++) candidate = `${path}.lazypi.${timestamp}-${n}.bak`;
+	return candidate;
+}
+
+// A temp file in the target directory, renamed over the target, so a failure
+// after the file is opened leaves the previous bytes untouched. `writeSync`
+// reports short writes without failing, so the loop is what turns a partially
+// written temp file into an error instead of a silently truncated document.
+function writeFileAtomic(path, data, mode) {
+	const temp = join(dirname(path), `.${basename(path)}.lazypi-${process.pid}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
+	const bytes = Buffer.isBuffer(data) ? data : Buffer.from(String(data), "utf8");
+	let fd = null;
+	try {
+		fd = openSync(temp, "wx", mode);
+		fchmodSync(fd, mode);
+		let offset = 0;
+		while (offset < bytes.length) {
+			const written = writeSync(fd, bytes, offset, bytes.length - offset);
+			if (written <= 0) throw new Error("short write");
+			offset += written;
+		}
+		fsyncSync(fd);
+		closeSync(fd);
+		fd = null;
+		renameSync(temp, path);
+	} catch (err) {
+		if (fd !== null) {
+			try {
+				closeSync(fd);
+			} catch {
+				// already closed
+			}
+		}
+		try {
+			unlinkSync(temp);
+		} catch {
+			// nothing to clean up
+		}
+		throw err;
+	}
+}
+
+// Refuse to write any non-regular target: following a symlinked settings file
+// copies a link target into the tree and then overwrites that target.
+function settingsWriteRefusal(path) {
+	let info;
+	try {
+		info = lstatSync(path);
+	} catch (err) {
+		if (err?.code === "ENOENT") return null;
+		return `Refusing to write ${path} — ${err?.code ?? String(err)}.`;
+	}
+	if (info.isSymbolicLink()) return `Refusing to write ${path} — it is a symbolic link.`;
+	if (!info.isFile()) return `Refusing to write ${path} — it is not a regular file.`;
+	return null;
 }
 
 function writeSettings(local, mutate) {
+	const path = settingsPath(local);
+	const refusal = settingsWriteRefusal(path);
+	if (refusal) return { ok: false, path, message: refusal };
 	const current = readSettings(local);
-	if (current.error) return { ok: false, path: current.path, error: current.error };
+	const problem = settingsProblemMessage(current);
+	if (problem) return { ok: false, path, message: problem };
 	const settings = current.parsed ?? {};
 	const changed = mutate(settings);
-	if (!changed) return { ok: true, path: current.path, backup: null, changed: false };
-	mkdirSync(dirname(current.path), { recursive: true });
+	if (!changed) return { ok: true, path, backup: null, changed: false };
+	const document = JSON.stringify(settings, null, 2) + "\n";
+	const mode = current.mode ?? 0o644;
 	let backup = null;
-	if (current.exists) {
-		backup = backupPath(current.path);
-		copyFileSync(current.path, backup);
+	try {
+		mkdirSync(dirname(path), { recursive: true });
+		if (current.exists) {
+			backup = backupPath(path);
+			writeFileAtomic(backup, readFileSync(path), mode);
+		}
+		writeFileAtomic(path, document, mode);
+	} catch (err) {
+		if (backup) {
+			try {
+				unlinkSync(backup);
+			} catch {
+				// nothing to clean up
+			}
+		}
+		return { ok: false, path, message: `Could not write ${path} — ${err?.code ?? err?.message ?? String(err)}. The file was left unchanged.` };
 	}
-	writeFileSync(current.path, JSON.stringify(settings, null, 2) + "\n", "utf8");
-	return { ok: true, path: current.path, backup, changed: true };
+	return { ok: true, path, backup, changed: true };
 }
 
 export function writeSubagentOverrides(local) {
@@ -376,14 +510,14 @@ function packageEntrySource(entry) {
 
 function readInstalledSources(local) {
 	const current = readSettings(local);
-	if (!current.exists) return { sources: new Set(), path: current.path, exists: false };
-	if (current.error) return { sources: new Set(), path: current.path, exists: true, error: current.error };
 	const sources = new Set();
-	for (const entry of current.parsed?.packages ?? []) {
-		const source = packageEntrySource(entry);
-		if (source) sources.add(source);
+	if (current.exists && !current.problem) {
+		for (const entry of current.parsed.packages ?? []) {
+			const source = packageEntrySource(entry);
+			if (source) sources.add(source);
+		}
 	}
-	return { sources, path: current.path, exists: true };
+	return { ...current, sources };
 }
 
 function commandPath(name) {
@@ -393,10 +527,6 @@ function commandPath(name) {
 	if (platform() === "win32") return pickWindowsWhereHit(probe.stdout);
 	const first = String(probe.stdout ?? "").split(/\r?\n/).map((line) => line.trim()).find(Boolean);
 	return first || null;
-}
-
-function printSettingsParseError(current) {
-	console.error(red(`Could not parse ${current.path} — ${current.error}`));
 }
 
 function legacySourcesForPackage(pkg) {
@@ -486,7 +616,8 @@ function detectAuth() {
 	for (const [name, provider] of AUTH_ENV_VARS) {
 		if (process.env[name] && !envProviders.has(provider)) envProviders.set(provider, name);
 	}
-	const auth = readJsonSafe(authJsonPath()) ?? {};
+	const document = readJsonSafe(authJsonPath());
+	const auth = isPlainObject(document) ? document : {};
 	const fileProviders = Object.keys(auth);
 	return {
 		envProviders: [...envProviders.entries()].map(([provider, envVar]) => ({ provider, envVar })),
@@ -499,7 +630,7 @@ function detectAuth() {
 function formatAuthSummary(state) {
 	const bits = [];
 	for (const { provider, envVar } of state.envProviders) bits.push(`${provider} (${envVar})`);
-	for (const provider of state.fileProviders) bits.push(`${provider} (auth.json)`);
+	for (const provider of state.fileProviders) bits.push(`${safeText(provider)} (auth.json)`);
 	return bits.length > 0 ? bits.join(", ") : "none detected";
 }
 
@@ -563,11 +694,11 @@ async function runPicker(initialSelected) {
 // ---------------------------------------------------------------------------
 // Ensure Pi is present (offer to install)
 // ---------------------------------------------------------------------------
-async function ensurePi(flags) {
+async function ensurePi(flags, interactive) {
 	if (hasCmd("pi")) return true;
 
 	log.warn("Could not find the `pi` command on PATH.");
-	if (!flags.yes && !isInteractive()) {
+	if (!flags.yes && !interactive) {
 		log.error("Install Pi first (`npm install -g @earendil-works/pi-coding-agent`), then re-run `npx @tommy-ca/lazypi`.");
 		return false;
 	}
@@ -608,12 +739,12 @@ async function cmdInstall(flags) {
 	}
 
 	const settings = readSettings(flags.local);
-	if (settings.error) {
+	if (settings.problem) {
 		if (interactive) {
-			log.error(`Could not parse ${settings.path} — ${settings.error}`);
+			log.error(settingsProblemMessage(settings));
 			outro(red("Aborted."));
 		} else {
-			printSettingsParseError(settings);
+			printSettingsProblem(settings);
 		}
 		return 2;
 	}
@@ -634,7 +765,7 @@ async function cmdInstall(flags) {
 		return 0;
 	}
 
-	if (!(await ensurePi(flags))) return 127;
+	if (!(await ensurePi(flags, interactive))) return 127;
 
 	const { sources: installedSources } = readInstalledSources(flags.local);
 
@@ -666,7 +797,7 @@ async function cmdInstall(flags) {
 	if (selected.some((p) => p.id === "subagents")) {
 		const overrideResult = writeSubagentOverrides(flags.local);
 		if (!overrideResult.ok) {
-			const message = `Refusing to update ${overrideResult.path} because it is not valid JSON (${overrideResult.error}). Fix the file first, then rerun lazypi.`;
+			const message = overrideResult.message;
 			if (interactive) {
 				log.error(message);
 				outro(red("Aborted."));
@@ -786,12 +917,19 @@ function printCheatsheet(selected, interactive) {
 // status
 // ---------------------------------------------------------------------------
 function cmdStatus(flags) {
-	const { sources, path, exists, error } = readInstalledSources(flags.local);
+	const installedSettings = readInstalledSources(flags.local);
+	const { sources, path, exists } = installedSettings;
 	console.log(`Settings file: ${bold(path)}`);
 	if (!exists) {
 		console.log(yellow("  (not found — Pi has not written settings yet)"));
-	} else if (error) {
-		console.error(red(`  could not parse: ${error}`));
+	} else if (installedSettings.problem) {
+		// Keep the original diagnostic for the pre-existing failure mode; the
+		// shared printer adds a path prefix this branch never had.
+		if (installedSettings.problem.kind === "parse") {
+			console.error(red(`  could not parse: ${installedSettings.problem.detail}`));
+		} else {
+			printSettingsProblem(installedSettings);
+		}
 		return 2;
 	}
 
@@ -811,13 +949,13 @@ function cmdStatus(flags) {
 	if (installed.length === 0) console.log(dim("  none"));
 	for (const pkg of installed) {
 		const installedSource = [...sources].find((src) => sourcesMatch(pkg.source, src)) ?? pkg.source;
-		console.log(`  ${green("✓")} [${pkg.category}] ${pkg.id.padEnd(20)} ${dim(installedSource)}`);
+		console.log(`  ${green("✓")} [${pkg.category}] ${pkg.id.padEnd(20)} ${dim(safeText(installedSource))}`);
 	}
 
 	printHeader(`Installed with legacy catalog sources (${legacy.length}):`);
 	if (legacy.length === 0) console.log(dim("  none"));
 	for (const pkg of legacy) {
-		const detail = findLegacyInstalledSources(pkg, sources).map((src) => dim(src)).join(", ");
+		const detail = findLegacyInstalledSources(pkg, sources).map((src) => dim(safeText(src))).join(", ");
 		console.log(`  ${yellow("!")} [${pkg.category}] ${pkg.id.padEnd(20)} ${detail}`);
 	}
 
@@ -829,7 +967,7 @@ function cmdStatus(flags) {
 
 	printHeader(`Other Pi packages outside the LazyPi catalog (${others.length}):`);
 	if (others.length === 0) console.log(dim("  none"));
-	for (const src of others) console.log(`  ${cyan("·")} ${src}`);
+	for (const src of others) console.log(`  ${cyan("·")} ${safeText(src)}`);
 
 	return 0;
 }
@@ -839,12 +977,12 @@ function cmdStatus(flags) {
 // ---------------------------------------------------------------------------
 async function cmdUpdate(flags) {
 	const settings = readSettings(flags.local);
-	if (settings.error) {
-		printSettingsParseError(settings);
+	if (settings.problem) {
+		printSettingsProblem(settings);
 		return 2;
 	}
 
-	if (!(await ensurePi(flags))) return 127;
+	if (!(await ensurePi(flags, !flags.yes && isInteractive()))) return 127;
 
 	console.log(bold("pi update"));
 
@@ -856,8 +994,8 @@ async function cmdUpdate(flags) {
 // ---------------------------------------------------------------------------
 function cmdDoctor(flags) {
 	const settings = readSettings(flags.local);
-	if (settings.error) {
-		printSettingsParseError(settings);
+	if (settings.problem) {
+		printSettingsProblem(settings);
 		return 2;
 	}
 
@@ -897,22 +1035,23 @@ function cmdDoctor(flags) {
 	}
 
 	printHeader("Settings");
-	const { sources, path, exists, error } = readInstalledSources(flags.local);
+	const installedSettings = readInstalledSources(flags.local);
+	const { sources, path, exists } = installedSettings;
 	if (!exists) warn(`${path} does not exist yet (Pi has not been run)`);
-	else if (error) fail(`${path} is not valid JSON — ${error}`);
+	else if (installedSettings.problem) fail(settingsProblemMessage(installedSettings));
 	else {
 		pass(`${path} is readable`);
 		const unpinnedGit = [...sources].filter((src) => {
 			if (!/^git:github\.com\/[^/@]+\/[^@\s]+$/.test(src)) return false;
 			return !PACKAGES.some((pkg) => sourcesMatch(pkg.source, src) || isLegacySourceForPackage(pkg, src));
 		});
-		for (const src of unpinnedGit) warn(`${src} is an unpinned git head — pin it to a commit for reproducible installs`, { fatal: false });
+		for (const src of unpinnedGit) warn(`${safeText(src)} is an unpinned git head — pin it to a commit for reproducible installs`, { fatal: false });
 	}
 
 	printHeader("Auth");
 	const auth = detectAuth();
 	for (const { provider, envVar } of auth.envProviders) pass(`env var ${envVar} → ${provider}`);
-	if (auth.fileProviders.length > 0) pass(`${auth.path} → ${auth.fileProviders.join(", ")}`);
+	if (auth.fileProviders.length > 0) pass(`${auth.path} → ${auth.fileProviders.map(safeText).join(", ")}`);
 	if (!auth.authed) warn("No credentials detected — run `pi` then `/login`, or export a provider API key", { fatal: false });
 
 	console.log("");
@@ -933,8 +1072,8 @@ function cmdDoctor(flags) {
 // ---------------------------------------------------------------------------
 async function cmdRemove(flags, targets) {
 	const installed = readInstalledSources(flags.local);
-	if (installed.error) {
-		printSettingsParseError(installed);
+	if (installed.problem) {
+		printSettingsProblem(installed);
 		return 2;
 	}
 
@@ -998,7 +1137,7 @@ async function cmdRemove(flags, targets) {
 // ---------------------------------------------------------------------------
 async function main() {
 	const flags = parseArgs(argv.slice(2));
-	if (flags.version && !flags.usageError) {
+	if (flags.version && !flags.usageError && !flags.badArg) {
 		console.log(`@tommy-ca/lazypi ${VERSION}`);
 		return 0;
 	}
