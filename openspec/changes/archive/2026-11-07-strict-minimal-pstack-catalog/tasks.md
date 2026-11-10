@@ -22,6 +22,11 @@ deferred native, security, promotion, or delivery claims below are established.
 
 ## Explicitly deferred
 
-- [ ] Native loading, canonical role binding and model/tool semantics.
-- [ ] Effective containment, independent child authorization, headless denial, and exit/recovery.
-- [ ] Operator promotion, default activation, release, and shipping.
+The following were never deliverables of this change. They were recorded here as
+deferrals at the time and are tracked as open delivery work, not as unfinished
+tasks of this change. They are deliberately not checkboxes, because this change
+did not and will not complete them.
+
+Native loading, canonical role binding, and model/tool semantics. Effective
+containment, independent child authorization, headless denial, and exit and
+recovery. Operator promotion, default activation, release, and shipping.
