@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { PACKAGES, resolveSelection } from "../bin/lazypi.mjs";
 
-const delta = "openspec/changes/essentials-web-default";
+const delta = "openspec/changes/archive/2026-11-10-essentials-web-default";
 const retirementDelta = "openspec/changes/2026-11-07-strict-minimal-pstack-catalog";
 const section = (text, name) => text.split(`### Requirement: ${name}\n`)[1]?.split(/\n### Requirement:|\n## (?:ADDED|MODIFIED|REMOVED) Requirements/)[0].trim();
 
