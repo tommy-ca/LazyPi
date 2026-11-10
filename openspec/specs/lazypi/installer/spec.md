@@ -480,8 +480,10 @@ The active installer specification and public catalog summaries SHALL agree with
 - **THEN** they SHALL specify 6 core entries and no optional entries
 - **AND** retired todos and memory IDs SHALL no longer resolve their former
   catalog or legacy source migrations
-- **AND** the essentials-web-default delta SHALL be the current test
-  association for this category change, without rewriting historical deltas
+- **AND** the active installer specification SHALL be the single catalog
+  authority; tests SHALL assert against it directly rather than associating a
+  change or archived delta with it, and historical deltas SHALL remain on disk
+  unmodified as history
 - **AND** they SHALL distinguish unpinned identity from fresh audited argument
 
 #### Scenario: Verdict summaries
