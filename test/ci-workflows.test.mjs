@@ -33,12 +33,43 @@ function assertCommandsInOrder(workflow, commands) {
 	}
 }
 
+function job(workflow, name) {
+	const match = workflow.match(new RegExp(`^  ${name}:\\r?\\n([\\s\\S]*?)(?=^  [a-z][a-z_-]*:|$(?![\\s\\S]))`, "m"));
+	assert.ok(match, `Missing job: ${name}`);
+	return match[1];
+}
+
+function enabled(block, github) {
+	const condition = block.match(/^    if: \$\{\{ (.+) \}\}$/m);
+	if (!condition) return true;
+	const expression = condition[1].replace(/github\.(event_name|repository|ref)/g, (_, key) => JSON.stringify(github[key]));
+	assert.match(expression, /^[\w\s'"/().=!&|:-]+$/);
+	return Function(`"use strict"; return (${expression});`)();
+}
+
+test("only the exact authorized manual repository and branch select the native job", () => {
+	const workflow = readWorkflow(".github/workflows/test.yml");
+	for (const [event_name, repository, ref, ordinary, native] of [
+		["workflow_dispatch", "tommy-ca/LazyPi", "refs/heads/feat/strict-native-pstack-proof", false, true],
+		["pull_request", "tommy-ca/LazyPi", "refs/heads/feat/strict-native-pstack-proof", true, false],
+		["push", "tommy-ca/LazyPi", "refs/heads/master", true, false],
+		["workflow_dispatch", "fork/LazyPi", "refs/heads/feat/strict-native-pstack-proof", true, false],
+		["workflow_dispatch", "tommy-ca/LazyPi", "refs/heads/master", true, false],
+		["workflow_dispatch", "tommy-ca/LazyPi", "refs/tags/feat/strict-native-pstack-proof", true, false],
+	]) {
+		const context = { event_name, repository, ref };
+		assert.equal(enabled(job(workflow, "test"), context), ordinary, JSON.stringify(context));
+		assert.equal(enabled(job(workflow, "native-pstack"), context), native, JSON.stringify(context));
+	}
+});
+
 test("packed CLI smoke script exists", () => {
 	assert.equal(existsSync("scripts/packed-cli-smoke.mjs"), true);
 });
 
 test("linux CI executes gates and packed CLI checks in order", () => {
-	assertCommandsInOrder(readWorkflow(".github/workflows/test.yml"), [
+	const ordinary = job(readWorkflow(".github/workflows/test.yml"), "test");
+	assertCommandsInOrder(ordinary.slice(ordinary.indexOf("    steps:")), [
 		"npm test",
 		"npm run spec:validate",
 		PACKED_CLI_SMOKE_COMMAND,

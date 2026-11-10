@@ -12,6 +12,7 @@ concurrency:
 
 jobs:
   test:
+    if: ${{ !(github.event_name == 'workflow_dispatch' && github.repository == 'tommy-ca/LazyPi' && github.ref == 'refs/heads/feat/strict-native-pstack-proof') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -48,3 +49,22 @@ jobs:
 
       - name: Run packed-CLI e2e harness (real pi, sandboxed)
         run: node scripts/e2e-install.mjs
+
+  native-pstack:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'tommy-ca/LazyPi' && github.ref == 'refs/heads/feat/strict-native-pstack-proof' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+
+      - name: Native discovery and conditional one-child proof
+        run: node scripts/native-pstack-proof.mjs --hosted
