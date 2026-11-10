@@ -34,7 +34,7 @@ export const PACKAGES = [
 	{ id: "subagents", category: "core", source: "npm:pi-subagents", description: "Sub-agent execution", hint: "Run isolated sub-agents for parallel work." },
 	{ id: "sandbox", category: "core", source: "npm:pi-better-sandbox", description: "Sandbox support", hint: "Disabled until explicitly configured; registration is not containment." },
 	{ id: "verdict", category: "core", source: "npm:pi-verdict", description: "Permission gate", hint: "Permission gate with fail-closed classifier errors; configured exemptions and manual shell escapes are not classified." },
-	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", description: "Ask-user prompts", hint: "Interactive user questions for agent workflows; not hard approval." },
+	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", description: "Ask-user prompts", hint: "Interactive user questions, single or 2-4 question batches; not hard approval." },
 	{ id: "web-access", category: "core", source: "npm:pi-web-access", description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
 ];
 

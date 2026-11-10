@@ -16,7 +16,7 @@ const hints = {
 	subagents: "Run isolated sub-agents for parallel work.",
 	sandbox: "Disabled until explicitly configured; registration is not containment.",
 	verdict: "Permission gate with fail-closed classifier errors; configured exemptions and manual shell escapes are not classified.",
-	"pi-ask-user": "Interactive user questions for agent workflows; not hard approval.",
+	"pi-ask-user": "Interactive user questions, single or 2-4 question batches; not hard approval.",
 	"web-access": "Built-in web search and URL fetching.",
 };
 
