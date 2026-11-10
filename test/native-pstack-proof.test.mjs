@@ -1,14 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { resolve, join } from "node:path";
 import { fork, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { privateEnvironment, runOwned, runProof, supportInventoryCommand, validateSupportGraph } from "../scripts/native-pstack-proof.mjs";
 
-const scratch = resolve(".atl/evidence/strict-minimal-pstack/runtime/native-proof-prep/writer/correction-fixtures");
-mkdirSync(scratch, { recursive: true });
+// Fixture evidence lives outside the checkout and is removed when this test
+// process exits. The previous in-checkout tree was never cleaned up and reached
+// 1.2 GB; growth is now bounded by a single run.
+const scratch = mkdtempSync(join(tmpdir(), "lazypi-native-proof-"));
+process.on("exit", () => rmSync(scratch, { recursive: true, force: true }));
 const script = resolve("scripts/native-pstack-proof.mjs");
 const pin = "f1571b8431034dcd195f4ea055ccf1c84fc14fc8";
 const roleHash = "bc3815ef60257540414371a480a53c4dbabe7097a94a17ecfd750e1acd798c33";
