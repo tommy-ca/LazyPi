@@ -24,7 +24,7 @@ title: "Ask User — LazyPi Docs"
       Per-call tool parameters override environment variables, and environment variables override the settings file. The file is read on every call, so an edit applies without restarting Pi. A file that exists but is not valid JSON fails the call with its path in the error, so a broken configuration is visible instead of silently ignored.
     </p>
     <p>
-      Set <code>emitFullEvents</code> to <code>true</code> only when a trusted extension needs the data. It shares answers, comments, freeform text, and offered options with other installed extensions through lifecycle events, and it is off by default.
+      Set <code>emitFullEvents</code> to <code>true</code> only when a trusted extension needs the data. It shares answers and prompt context with other installed extensions through lifecycle events, including selections, comments, freeform text, and offered options on cancellation. It is off by default.
     </p>
 
     <h2>Why it's included</h2>
