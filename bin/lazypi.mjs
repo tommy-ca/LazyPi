@@ -1,9 +1,7 @@
 #!/usr/bin/env node
-import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
-import { homedir, platform } from "node:os";
-import { dirname, join, posix, resolve, win32 } from "node:path";
-import { spawnSync } from "node:child_process";
-import { argv, cwd, exit, stdout, stderr } from "node:process";
+import { readFileSync, realpathSync } from "node:fs";
+import { resolve } from "node:path";
+import { argv, exit, stderr, stdin, stdout } from "node:process";
 import { pathToFileURL } from "node:url";
 import {
 	cancel as clackCancel,
@@ -16,44 +14,69 @@ import {
 	outro,
 	select,
 } from "@clack/prompts";
+import { CATEGORIES, PACKAGES, isPackageInstalled, parseList, resolveSelection, sourcesMatch } from "./catalog.mjs";
+import {
+	detectAuth,
+	hasCmd,
+	pickWindowsWhereHit,
+	quoteCmdArg,
+	readInstalledSources,
+	readSettings,
+	resolveAgentConfigDir,
+	settingsPath,
+	settingsProblemMessage,
+	spawnCommand,
+	windowsComSpec,
+	windowsSpawnArgv,
+	writeSubagentOverrides,
+} from "./pi-host.mjs";
 
-// ---------------------------------------------------------------------------
-// Catalog
-// ---------------------------------------------------------------------------
-// All current entries are core. Keep the empty optional category valid for
-// existing --only / --except selectors.
-const CATEGORIES = ["core", "optional"];
-
-export const PACKAGES = [
-	{
-		id: "pstack", category: "core", source: "git:github.com/tommy-ca/pstack",
-		installSource: "git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8",
-		description: "Canonical PStack registration reference",
-		hint: "Canonical checkout registration only; native role binding and loading remain unverified.",
-	},
-	{ id: "subagents", category: "core", source: "npm:pi-subagents", description: "Sub-agent execution", hint: "Run isolated sub-agents for parallel work." },
-	{ id: "sandbox", category: "core", source: "npm:pi-better-sandbox", description: "Sandbox support", hint: "Disabled until explicitly configured; registration is not containment." },
-	{ id: "verdict", category: "core", source: "npm:pi-verdict", description: "Permission gate", hint: "Permission gate with fail-closed classifier errors; configured exemptions and manual shell escapes are not classified." },
-	{ id: "pi-ask-user", category: "core", source: "npm:pi-ask-user", description: "Ask-user prompts", hint: "Interactive user questions, single or 2-4 question batches; not hard approval." },
-	{ id: "web-access", category: "core", source: "npm:pi-web-access", description: "Web search and page fetch", hint: "Built-in web search and URL fetching." },
-];
+// The executable keeps re-exporting every name the test suite and the CI
+// scripts import from this specifier, even though the definitions now live in
+// bin/catalog.mjs and bin/pi-host.mjs.
+export { PACKAGES, parseList, resolveSelection, sourcesMatch } from "./catalog.mjs";
+export {
+	pickWindowsWhereHit,
+	quoteCmdArg,
+	resolveAgentConfigDir,
+	windowsComSpec,
+	windowsSpawnArgv,
+	writeSubagentOverrides,
+} from "./pi-host.mjs";
 
 // ---------------------------------------------------------------------------
 // Output helpers
 // ---------------------------------------------------------------------------
-const isTTY = Boolean(stdout.isTTY);
-const c = (code) => (s) => (isTTY ? `\x1b[${code}m${s}\x1b[0m` : String(s));
-const bold = c("1");
-const dim = c("2");
-const red = c("31");
-const green = c("32");
-const yellow = c("33");
-const cyan = c("36");
-const blue = c("94");
-const white = c("1;97");
+// Interactivity decides whether a prompt can run; colour decides whether output
+// carries ANSI codes. Both follow a TTY, and one never stands in for the other.
+const colourEnabled = () => Boolean(stdout.isTTY);
+const interactiveSession = () => Boolean(stdin.isTTY && stdout.isTTY);
+
+const paint = (code) => (text) => (colourEnabled() ? `\x1b[${code}m${text}\x1b[0m` : String(text));
+const bold = paint("1");
+const dim = paint("2");
+const red = paint("31");
+const green = paint("32");
+const yellow = paint("33");
+const cyan = paint("36");
+const blue = paint("94");
+const white = paint("1;97");
 
 function printHeader(text) {
 	console.log(`\n${bold(text)}`);
+}
+
+function printSettingsProblem(current) {
+	console.error(red(settingsProblemMessage(current)));
+}
+
+// Strings read from a settings or auth file are attacker-controlled input in a
+// committed project, so C0, DEL, and C1 controls (ESC included) are escaped
+// before they reach a terminal or a CI log.
+const CONTROL_RE = /[\u0000-\u001f\u007f-\u009f]/g;
+
+function safeText(value) {
+	return String(value).replace(CONTROL_RE, (ch) => `\\u${ch.charCodeAt(0).toString(16).padStart(4, "0")}`);
 }
 
 // ASCII "Pi" logo: capital P + lowercase i, with a blue "zzz" cascade
@@ -75,6 +98,91 @@ function renderLogo() {
 		"",
 	].join("\n");
 }
+
+// ---------------------------------------------------------------------------
+// Messages
+// ---------------------------------------------------------------------------
+// clack and plain console rendering differ in prefix, indentation, colour,
+// target stream, and whether an outro fires, so a message is a value that
+// carries one rendering per mode instead of text handed to a single helper. A
+// command picks its mode once, when it decides interactivity, and then only
+// names messages.
+const CLACK = "clack";
+const PLAIN = "plain";
+
+function outputFor(interactive) {
+	const mode = interactive ? CLACK : PLAIN;
+	return (message) => message[mode]();
+}
+
+function failureLines(failed) {
+	return failed.map((pkg) => `- ${pkg.id} (${pkg.source})`).join("\n");
+}
+
+const messages = {
+	welcome: () => ({
+		[CLACK]: () => {
+			console.log(renderLogo());
+			intro(bold("LazyPi"));
+		},
+		[PLAIN]: () => {},
+	}),
+	abort: (reason) => ({
+		[CLACK]: () => {
+			log.error(reason);
+			outro(red("Aborted."));
+		},
+		[PLAIN]: () => console.error(red(reason)),
+	}),
+	plan: (summary) => ({
+		[CLACK]: () => note(summary, "Plan"),
+		[PLAIN]: () => console.log(summary),
+	}),
+	nothingSelected: () => ({
+		[CLACK]: () => outro("Nothing selected — nothing to install."),
+		[PLAIN]: () => console.log(yellow("Nothing selected — nothing to install.")),
+	}),
+	step: (action) => ({
+		[CLACK]: () => log.step(action),
+		[PLAIN]: () => console.log(`\n→ ${action}`),
+	}),
+	installFailed: (id) => ({
+		[CLACK]: () => log.error(`failed to install ${id}`),
+		[PLAIN]: () => console.error(red(`  ✗ failed to install ${id}`)),
+	}),
+	done: (text) => ({
+		[CLACK]: () => log.success(green(text)),
+		[PLAIN]: () => console.log(green(text)),
+	}),
+	cheatsheet: (lines) => ({
+		[CLACK]: () => note(lines.join("\n"), "What you've got"),
+		[PLAIN]: () => {
+			printHeader("What you've got:");
+			for (const line of lines) console.log(`  ${line}`);
+			console.log(dim("\nRemove pi packages with `pi remove <source>`."));
+		},
+	}),
+	nextSteps: (title, body) => ({
+		[CLACK]: () => {
+			note(body, title);
+			outro(green("Done."));
+		},
+		[PLAIN]: () => {
+			printHeader(`${title}:`);
+			console.log(body);
+		},
+	}),
+	failures: (failed) => ({
+		[CLACK]: () => {
+			note(failureLines(failed), "Failures");
+			outro(red(`Finished with ${failed.length} failure(s).`));
+		},
+		[PLAIN]: () => {
+			console.error(red(`\nLazyPi finished with ${failed.length} failure(s):`));
+			console.error(failureLines(failed));
+		},
+	}),
+};
 
 // ---------------------------------------------------------------------------
 // Arg parsing
@@ -149,42 +257,6 @@ function parseArgs(args) {
 	return flags;
 }
 
-export function parseList(value) {
-	if (!value) return [];
-	return value
-		.split(",")
-		.map((s) => s.trim())
-		.filter(Boolean);
-}
-
-function validateSelectors(list, label) {
-	const ids = new Set(PACKAGES.map((p) => p.id));
-	const bad = list.filter((name) => !CATEGORIES.includes(name) && !ids.has(name));
-	if (bad.length > 0) {
-		console.error(red(`Unknown ${label}: ${bad.join(", ")}`));
-		console.error(`Valid categories: ${CATEGORIES.join(", ")}`);
-		console.error(`Valid package ids: ${[...ids].join(", ")}`);
-		return false;
-	}
-	return true;
-}
-
-function matchesSelector(pkg, selectors) {
-	return selectors.some((name) => name === pkg.category || name === pkg.id);
-}
-
-export function resolveSelection(flags) {
-	if (flags.only) {
-		if (!validateSelectors(flags.only, "--only")) return null;
-		return new Set(PACKAGES.filter((p) => matchesSelector(p, flags.only)).map((p) => p.id));
-	}
-	if (flags.except) {
-		if (!validateSelectors(flags.except, "--except")) return null;
-		return new Set(PACKAGES.filter((p) => !matchesSelector(p, flags.except)).map((p) => p.id));
-	}
-	return new Set(PACKAGES.filter((p) => p.category === "core").map((p) => p.id));
-}
-
 // ---------------------------------------------------------------------------
 // Help
 // ---------------------------------------------------------------------------
@@ -243,273 +315,20 @@ ${bold("Examples:")}
 }
 
 // ---------------------------------------------------------------------------
-// Pi / settings plumbing
+// Version and auth summary
 // ---------------------------------------------------------------------------
 const VERSION = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
-export function buildSpawnOptions(options = {}, _platformName = platform()) {
-	return { ...options };
-}
-
-function isWindowsCmdOrBat(resolved, platformName = platform()) {
-	return platformName === "win32" && /\.(cmd|bat)$/i.test(String(resolved));
-}
-
-const CMD_QUOTE_RE = /[\s&|<>^%!"()]/;
-
-export function quoteCmdArg(value, { always = false } = {}) {
-	const text = String(value);
-	if (!always && text !== "" && !CMD_QUOTE_RE.test(text)) return text;
-	return `"${text.replaceAll("%", "%%").replaceAll('"', '""')}"`;
-}
-
-export function windowsComSpec(env = process.env) {
-	const comspec = env.ComSpec;
-	if (comspec && /(^|[\\/])cmd\.exe$/i.test(comspec)) return comspec;
-	const root = env.SystemRoot || "C:\\Windows";
-	return `${root}\\System32\\cmd.exe`;
-}
-
-export function pickWindowsWhereHit(stdout) {
-	const lines = String(stdout ?? "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-	return lines.find((line) => /\.(cmd|bat|exe|com)$/i.test(line)) ?? lines[0] ?? null;
-}
-
-export function windowsSpawnArgv(resolved, args = [], platformName = platform()) {
-	if (isWindowsCmdOrBat(resolved, platformName)) {
-		return {
-			command: windowsComSpec(),
-			args: ["/d", "/s", "/c", "call", quoteCmdArg(resolved, { always: true }), ...args.map((arg) => quoteCmdArg(arg))],
-		};
-	}
-	return { command: resolved, args: [...args] };
-}
-
-function spawnCommand(command, args = [], options = {}) {
-	const resolved = command === "pi" || command === "npm" ? commandPath(command) ?? command : command;
-	const spawned = windowsSpawnArgv(resolved, args);
-	const spawnOptions = isWindowsCmdOrBat(resolved)
-		? { ...buildSpawnOptions(options), shell: false, windowsVerbatimArguments: true }
-		: buildSpawnOptions(options);
-	return spawnSync(spawned.command, spawned.args, spawnOptions);
-}
-
-function hasCmd(name) {
-	return commandPath(name) !== null;
-}
-
-export function resolveAgentConfigDir(configured, home = homedir(), platformName = platform()) {
-	const joinPath = platformName === "win32" ? win32.join : posix.join;
-	if (!configured) return joinPath(home, ".pi", "agent");
-	if (configured === "~") return home;
-	if (configured.startsWith("~/") || (platformName === "win32" && configured.startsWith("~\\"))) {
-		return joinPath(home, configured.slice(2));
-	}
-	return configured;
-}
-
-function agentConfigDir() {
-	return resolveAgentConfigDir(process.env.PI_CODING_AGENT_DIR);
-}
-
-function settingsPath(local) {
-	return local ? join(cwd(), ".pi", "settings.json") : join(agentConfigDir(), "settings.json");
-}
-
-// Builtin pi-subagents agents that hardcode a specific model — blank them out
-// so they fall back to the user's active session model instead.
-const SUBAGENT_BUILTIN_MODELS = ["context-builder", "planner", "researcher", "reviewer", "scout", "worker"];
-
-
-function readSettings(local) {
-	const path = settingsPath(local);
-	if (!existsSync(path)) return { path, exists: false, parsed: null, error: null };
-	try {
-		return { path, exists: true, parsed: JSON.parse(readFileSync(path, "utf8")), error: null };
-	} catch (err) {
-		return { path, exists: true, parsed: null, error: err instanceof Error ? err.message : String(err) };
-	}
-}
-
-function backupPath(path) {
-	const timestamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
-	return `${path}.lazypi.${timestamp}.bak`;
-}
-
-function writeSettings(local, mutate) {
-	const current = readSettings(local);
-	if (current.error) return { ok: false, path: current.path, error: current.error };
-	const settings = current.parsed ?? {};
-	const changed = mutate(settings);
-	if (!changed) return { ok: true, path: current.path, backup: null, changed: false };
-	mkdirSync(dirname(current.path), { recursive: true });
-	let backup = null;
-	if (current.exists) {
-		backup = backupPath(current.path);
-		copyFileSync(current.path, backup);
-	}
-	writeFileSync(current.path, JSON.stringify(settings, null, 2) + "\n", "utf8");
-	return { ok: true, path: current.path, backup, changed: true };
-}
-
-export function writeSubagentOverrides(local) {
-	return writeSettings(local, (settings) => {
-		const existing = settings.subagents?.agentOverrides ?? {};
-		const overrides = { ...existing };
-		let changed = false;
-		for (const name of SUBAGENT_BUILTIN_MODELS) {
-			const current = overrides[name];
-			if (current && typeof current === "object" && !Array.isArray(current) && current.model === "") continue;
-			overrides[name] = { ...(current && typeof current === "object" && !Array.isArray(current) ? current : {}), model: "" };
-			changed = true;
-		}
-		if (!changed) return false;
-		settings.subagents = { ...(settings.subagents ?? {}), agentOverrides: overrides };
-		return true;
-	});
-}
-
-function packageEntrySource(entry) {
-	if (typeof entry === "string") return entry;
-	if (entry && typeof entry === "object" && typeof entry.source === "string") return entry.source;
-	return null;
-}
-
-function readInstalledSources(local) {
-	const current = readSettings(local);
-	if (!current.exists) return { sources: new Set(), path: current.path, exists: false };
-	if (current.error) return { sources: new Set(), path: current.path, exists: true, error: current.error };
-	const sources = new Set();
-	for (const entry of current.parsed?.packages ?? []) {
-		const source = packageEntrySource(entry);
-		if (source) sources.add(source);
-	}
-	return { sources, path: current.path, exists: true };
-}
-
-function commandPath(name) {
-	const command = platform() === "win32" ? "where" : "which";
-	const probe = spawnSync(command, [name], buildSpawnOptions({ encoding: "utf8" }));
-	if (probe.status !== 0) return null;
-	if (platform() === "win32") return pickWindowsWhereHit(probe.stdout);
-	const first = String(probe.stdout ?? "").split(/\r?\n/).map((line) => line.trim()).find(Boolean);
-	return first || null;
-}
-
-function printSettingsParseError(current) {
-	console.error(red(`Could not parse ${current.path} — ${current.error}`));
-}
-
-function legacySourcesForPackage(pkg) {
-	return Array.isArray(pkg.legacySources) ? pkg.legacySources : [];
-}
-
-// An installed source matches a catalog source when equal or when it is the
-// same source with a version/pin suffix (npm:pkg vs npm:pkg@x.y.z,
-// git:... vs git:...@sha).
-export function sourcesMatch(catalogSource, installedSource) {
-	return catalogSource === installedSource || installedSource.startsWith(`${catalogSource}@`);
-}
-
-function isLegacySourceForPackage(pkg, source) {
-	return legacySourcesForPackage(pkg).some((legacy) => sourcesMatch(legacy, source));
-}
-
-function findLegacyInstalledSources(pkg, installedPiSources) {
-	return [...installedPiSources].filter((source) => isLegacySourceForPackage(pkg, source));
-}
-
-function removeLegacy(pkg, installedPiSources, local, interactive) {
-	let status = 0;
-	for (const legacySource of findLegacyInstalledSources(pkg, installedPiSources)) {
-		const action = `pi remove ${legacySource}`;
-		if (interactive) log.step(action);
-		else console.log(`\n→ ${action}`);
-		status = spawnCommand("pi", local ? ["remove", "-l", "--approve", legacySource] : ["remove", legacySource], { stdio: "inherit" }).status ?? 1;
-		if (status !== 0) break;
-	}
-	return status;
-}
-
-function packageInstallStatus(pkg, installedPiSources) {
-	const legacySources = findLegacyInstalledSources(pkg, installedPiSources);
-	const installed = [...installedPiSources].some((src) => sourcesMatch(pkg.source, src));
-	return {
-		installed,
-		legacy: legacySources.length > 0,
-		present: installed || legacySources.length > 0,
-	};
-}
-
-function isPackageInstalled(pkg, installedPiSources) {
-	return packageInstallStatus(pkg, installedPiSources).installed;
-}
-
-function isPackagePresent(pkg, installedPiSources) {
-	return packageInstallStatus(pkg, installedPiSources).present;
-}
-
-// ---------------------------------------------------------------------------
-// Pi / settings plumbing (shared helpers)
-// ---------------------------------------------------------------------------
-function readJsonSafe(path) {
-	try {
-		if (!existsSync(path)) return null;
-		return JSON.parse(readFileSync(path, "utf8"));
-	} catch {
-		return null;
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Auth detection (read-only)
-// ---------------------------------------------------------------------------
-// Pi reads credentials from auth.json in its agent config directory and also
-// honors provider env vars. LazyPi reports the available credentials so users
-// know whether to run `pi /login` first.
-const AUTH_ENV_VARS = [
-	["ANTHROPIC_API_KEY", "anthropic"],
-	["OPENAI_API_KEY", "openai"],
-	["GOOGLE_API_KEY", "google"],
-	["GEMINI_API_KEY", "google"],
-	["OPENROUTER_API_KEY", "openrouter"],
-	["TOGETHER_API_KEY", "together"],
-	["GROQ_API_KEY", "groq"],
-	["MISTRAL_API_KEY", "mistral"],
-];
-
-function authJsonPath() {
-	return join(agentConfigDir(), "auth.json");
-}
-
-function detectAuth() {
-	const envProviders = new Map(); // provider -> env var name
-	for (const [name, provider] of AUTH_ENV_VARS) {
-		if (process.env[name] && !envProviders.has(provider)) envProviders.set(provider, name);
-	}
-	const auth = readJsonSafe(authJsonPath()) ?? {};
-	const fileProviders = Object.keys(auth);
-	return {
-		envProviders: [...envProviders.entries()].map(([provider, envVar]) => ({ provider, envVar })),
-		fileProviders,
-		path: authJsonPath(),
-		authed: envProviders.size > 0 || fileProviders.length > 0,
-	};
-}
 
 function formatAuthSummary(state) {
 	const bits = [];
 	for (const { provider, envVar } of state.envProviders) bits.push(`${provider} (${envVar})`);
-	for (const provider of state.fileProviders) bits.push(`${provider} (auth.json)`);
+	for (const provider of state.fileProviders) bits.push(`${safeText(provider)} (auth.json)`);
 	return bits.length > 0 ? bits.join(", ") : "none detected";
 }
 
 // ---------------------------------------------------------------------------
 // Interactive prompts (powered by @clack/prompts)
 // ---------------------------------------------------------------------------
-function isInteractive() {
-	return Boolean(process.stdin.isTTY && process.stdout.isTTY);
-}
-
 function abortIfCancelled(value) {
 	if (isCancel(value)) {
 		clackCancel("Aborted.");
@@ -540,10 +359,10 @@ async function askLazyOrPick(totalCount) {
 async function runPicker(initialSelected) {
 	const idWidth = Math.max(...PACKAGES.map((p) => p.id.length));
 	const options = {};
-	for (const cat of CATEGORIES) {
-		const pkgs = PACKAGES.filter((p) => p.category === cat);
+	for (const category of CATEGORIES) {
+		const pkgs = PACKAGES.filter((p) => p.category === category);
 		if (pkgs.length === 0) continue;
-		options[cat] = pkgs.map((pkg) => ({
+		options[category] = pkgs.map((pkg) => ({
 			value: pkg.id,
 			label: `${pkg.id.padEnd(idWidth + 2)}${pkg.description}`,
 		}));
@@ -563,11 +382,11 @@ async function runPicker(initialSelected) {
 // ---------------------------------------------------------------------------
 // Ensure Pi is present (offer to install)
 // ---------------------------------------------------------------------------
-async function ensurePi(flags) {
+async function ensurePi(flags, interactive) {
 	if (hasCmd("pi")) return true;
 
 	log.warn("Could not find the `pi` command on PATH.");
-	if (!flags.yes && !isInteractive()) {
+	if (!flags.yes && !interactive) {
 		log.error("Install Pi first (`npm install -g @earendil-works/pi-coding-agent`), then re-run `npx @tommy-ca/lazypi`.");
 		return false;
 	}
@@ -600,104 +419,57 @@ async function cmdInstall(flags) {
 	if (!selectedIds) return 2;
 
 	const usedSelectionFlag = Boolean(flags.only || flags.except);
-	const interactive = !flags.yes && !usedSelectionFlag && isInteractive();
+	const interactive = !flags.yes && !usedSelectionFlag && interactiveSession();
+	const send = outputFor(interactive);
 
-	if (interactive) {
-		console.log(renderLogo());
-		intro(bold("LazyPi"));
-	}
+	send(messages.welcome());
 
 	const settings = readSettings(flags.local);
-	if (settings.error) {
-		if (interactive) {
-			log.error(`Could not parse ${settings.path} — ${settings.error}`);
-			outro(red("Aborted."));
-		} else {
-			printSettingsParseError(settings);
-		}
+	if (settings.problem) {
+		send(messages.abort(settingsProblemMessage(settings)));
 		return 2;
 	}
 
 	if (interactive) {
 		const choice = await askLazyOrPick(PACKAGES.length);
-		if (choice === "pick") {
-			selectedIds = await runPicker(selectedIds);
-		} else {
-			selectedIds = new Set(PACKAGES.map((p) => p.id));
-		}
+		selectedIds = choice === "pick" ? await runPicker(selectedIds) : new Set(PACKAGES.map((p) => p.id));
 	}
 
 	const selected = PACKAGES.filter((p) => selectedIds.has(p.id));
 	if (selected.length === 0) {
-		if (interactive) outro("Nothing selected — nothing to install.");
-		else console.log(yellow("Nothing selected — nothing to install."));
+		send(messages.nothingSelected());
 		return 0;
 	}
 
-	if (!(await ensurePi(flags))) return 127;
+	if (!(await ensurePi(flags, interactive))) return 127;
 
 	const { sources: installedSources } = readInstalledSources(flags.local);
-
-	const toInstall = selected.filter((pkg) => {
-		return !isPackageInstalled(pkg, installedSources);
-	});
-	const alreadyInstalled = selected.filter((pkg) => {
-		return isPackageInstalled(pkg, installedSources);
-	});
-	const legacyInstalled = selected.filter((pkg) => {
-		return !isPackageInstalled(pkg, installedSources) && isPackagePresent(pkg, installedSources);
-	});
-	const migrateOnly = alreadyInstalled.filter((pkg) => findLegacyInstalledSources(pkg, installedSources).length > 0);
-	const migrations = legacyInstalled.length + migrateOnly.length;
-	const installLabel = migrations > 0 ? `${toInstall.length} (${migrations} migration${migrations === 1 ? "" : "s"})` : String(toInstall.length);
+	const toInstall = selected.filter((pkg) => !isPackageInstalled(pkg, installedSources));
+	const alreadyInstalled = selected.filter((pkg) => isPackageInstalled(pkg, installedSources));
 	const scope = flags.local ? "project (.pi/settings.json)" : `global (${settingsPath(false)})`;
 
-	const preInstallAuth = detectAuth();
-	const summary = [
+	send(messages.plan([
 		`Target:            ${scope}`,
 		`Selected:          ${selected.length}/${PACKAGES.length}`,
 		`Already installed: ${alreadyInstalled.length}`,
-		`Will install:      ${installLabel}`,
-		`Pi credentials:    ${formatAuthSummary(preInstallAuth)}`,
-	].join("\n");
-	if (interactive) note(summary, "Plan");
-	else console.log(summary);
+		`Will install:      ${toInstall.length}`,
+		`Pi credentials:    ${formatAuthSummary(detectAuth())}`,
+	].join("\n")));
 
 	if (selected.some((p) => p.id === "subagents")) {
 		const overrideResult = writeSubagentOverrides(flags.local);
 		if (!overrideResult.ok) {
-			const message = `Refusing to update ${overrideResult.path} because it is not valid JSON (${overrideResult.error}). Fix the file first, then rerun lazypi.`;
-			if (interactive) {
-				log.error(message);
-				outro(red("Aborted."));
-			} else {
-				console.error(red(message));
-			}
+			send(messages.abort(overrideResult.message));
 			return 2;
 		}
 	}
 
 	const failed = [];
 
-	// Remove stale legacy sources even when the replacement is already installed.
-	for (const pkg of migrateOnly) {
-		const status = removeLegacy(pkg, installedSources, flags.local, interactive);
-		if (status !== 0) {
-			failed.push(pkg);
-			if (interactive) log.error(`failed to migrate ${pkg.id}`);
-			else console.error(red(`  ✗ failed to migrate ${pkg.id}`));
-		}
-	}
-
-	if (toInstall.length === 0 && failed.length === 0) {
-		printCheatsheet(selected, interactive);
-		const done = migrations === 0
-			? "Nothing to do — every selected package is already installed."
-			: "Nothing new to install — stale legacy sources removed.";
-		if (interactive) log.success(green(done));
-		else console.log(green(done));
-		const authState = detectAuth();
-		printNextSteps(authState, 0, interactive);
+	if (toInstall.length === 0) {
+		printCheatsheet(selected, send);
+		send(messages.done("Nothing to do — every selected package is already installed."));
+		printNextSteps(detectAuth(), 0, send);
 		return 0;
 	}
 
@@ -705,45 +477,26 @@ async function cmdInstall(flags) {
 
 	for (const pkg of toInstall) {
 		const source = pkg.installSource ?? pkg.source;
-		const action = `pi install ${source}`;
-		if (interactive) log.step(action);
-		else console.log(`\n→ ${action}`);
+		send(messages.step(`pi install ${source}`));
 		const status = spawnCommand("pi", [...piArgs, source], { stdio: "inherit" }).status;
 		if (status !== 0) {
 			failed.push(pkg);
-			if (interactive) log.error(`failed to install ${pkg.id}`);
-			else console.error(red(`  ✗ failed to install ${pkg.id}`));
-			continue;
-		}
-
-		const migrationStatus = removeLegacy(pkg, installedSources, flags.local, interactive);
-		if (migrationStatus !== 0) {
-			failed.push(pkg);
-			if (interactive) log.error(`failed to migrate ${pkg.id}`);
-			else console.error(red(`  ✗ failed to migrate ${pkg.id}`));
+			send(messages.installFailed(pkg.id));
 		}
 	}
 
 	const installedCount = toInstall.length - failed.length;
 	if (failed.length === 0) {
-		printCheatsheet(selected, interactive);
-		const authState = detectAuth();
-		printNextSteps(authState, installedCount, interactive);
+		printCheatsheet(selected, send);
+		printNextSteps(detectAuth(), installedCount, send);
 		return 0;
 	}
 
-	const failureList = failed.map((p) => `- ${p.id} (${p.source})`).join("\n");
-	if (interactive) {
-		note(failureList, "Failures");
-		outro(red(`Finished with ${failed.length} failure(s).`));
-	} else {
-		console.error(red(`\nLazyPi finished with ${failed.length} failure(s):`));
-		console.error(failureList);
-	}
+	send(messages.failures(failed));
 	return 1;
 }
 
-function printNextSteps(state, installedCount, interactive) {
+function printNextSteps(state, installedCount, send) {
 	const lines = [];
 	if (state.authed) {
 		lines.push(`Pi credentials: ${formatAuthSummary(state)}`);
@@ -761,46 +514,37 @@ function printNextSteps(state, installedCount, interactive) {
 	const title = installedCount > 0
 		? `Installed ${installedCount} package(s) — next steps`
 		: "Next steps";
-	const body = lines.join("\n");
-	if (interactive) {
-		note(body, title);
-		outro(green("Done."));
-	} else {
-		printHeader(title + ":");
-		console.log(body);
-	}
+	send(messages.nextSteps(title, lines.join("\n")));
 }
 
-function printCheatsheet(selected, interactive) {
+function printCheatsheet(selected, send) {
 	if (selected.length === 0) return;
-	const lines = selected.map((p) => `${p.id.padEnd(20)} ${p.hint}`);
-	if (interactive) note(lines.join("\n"), "What you've got");
-	else {
-		printHeader("What you've got:");
-		for (const line of lines) console.log(`  ${line}`);
-		console.log(dim("\nRemove pi packages with `pi remove <source>`."));
-	}
+	send(messages.cheatsheet(selected.map((p) => `${p.id.padEnd(20)} ${p.hint}`)));
 }
 
 // ---------------------------------------------------------------------------
 // status
 // ---------------------------------------------------------------------------
 function cmdStatus(flags) {
-	const { sources, path, exists, error } = readInstalledSources(flags.local);
+	const installedSettings = readInstalledSources(flags.local);
+	const { sources, path, exists } = installedSettings;
 	console.log(`Settings file: ${bold(path)}`);
 	if (!exists) {
 		console.log(yellow("  (not found — Pi has not written settings yet)"));
-	} else if (error) {
-		console.error(red(`  could not parse: ${error}`));
+	} else if (installedSettings.problem) {
+		// Keep the original diagnostic for the pre-existing failure mode; the
+		// shared printer adds a path prefix this branch never had.
+		if (installedSettings.problem.kind === "parse") {
+			console.error(red(`  could not parse: ${installedSettings.problem.detail}`));
+		} else {
+			printSettingsProblem(installedSettings);
+		}
 		return 2;
 	}
 
-	const installed = PACKAGES.filter((pkg) => packageInstallStatus(pkg, sources).installed);
-	const legacy = PACKAGES.filter((pkg) => packageInstallStatus(pkg, sources).legacy);
-	const missing = PACKAGES.filter((pkg) => !packageInstallStatus(pkg, sources).present);
-	const others = [...sources].filter(
-		(src) => !PACKAGES.some((pkg) => sourcesMatch(pkg.source, src) || isLegacySourceForPackage(pkg, src)),
-	);
+	const installed = PACKAGES.filter((pkg) => isPackageInstalled(pkg, sources));
+	const missing = PACKAGES.filter((pkg) => !isPackageInstalled(pkg, sources));
+	const others = [...sources].filter((src) => !PACKAGES.some((pkg) => sourcesMatch(pkg.source, src)));
 
 	printHeader(`Installed from LazyPi catalog (${installed.length}/${PACKAGES.length}):`);
 	const coreTotal = PACKAGES.filter((pkg) => pkg.category === "core").length;
@@ -811,14 +555,7 @@ function cmdStatus(flags) {
 	if (installed.length === 0) console.log(dim("  none"));
 	for (const pkg of installed) {
 		const installedSource = [...sources].find((src) => sourcesMatch(pkg.source, src)) ?? pkg.source;
-		console.log(`  ${green("✓")} [${pkg.category}] ${pkg.id.padEnd(20)} ${dim(installedSource)}`);
-	}
-
-	printHeader(`Installed with legacy catalog sources (${legacy.length}):`);
-	if (legacy.length === 0) console.log(dim("  none"));
-	for (const pkg of legacy) {
-		const detail = findLegacyInstalledSources(pkg, sources).map((src) => dim(src)).join(", ");
-		console.log(`  ${yellow("!")} [${pkg.category}] ${pkg.id.padEnd(20)} ${detail}`);
+		console.log(`  ${green("✓")} [${pkg.category}] ${pkg.id.padEnd(20)} ${dim(safeText(installedSource))}`);
 	}
 
 	printHeader(`Missing from LazyPi catalog (${missing.length}):`);
@@ -829,7 +566,7 @@ function cmdStatus(flags) {
 
 	printHeader(`Other Pi packages outside the LazyPi catalog (${others.length}):`);
 	if (others.length === 0) console.log(dim("  none"));
-	for (const src of others) console.log(`  ${cyan("·")} ${src}`);
+	for (const src of others) console.log(`  ${cyan("·")} ${safeText(src)}`);
 
 	return 0;
 }
@@ -839,12 +576,12 @@ function cmdStatus(flags) {
 // ---------------------------------------------------------------------------
 async function cmdUpdate(flags) {
 	const settings = readSettings(flags.local);
-	if (settings.error) {
-		printSettingsParseError(settings);
+	if (settings.problem) {
+		printSettingsProblem(settings);
 		return 2;
 	}
 
-	if (!(await ensurePi(flags))) return 127;
+	if (!(await ensurePi(flags, !flags.yes && interactiveSession()))) return 127;
 
 	console.log(bold("pi update"));
 
@@ -856,8 +593,8 @@ async function cmdUpdate(flags) {
 // ---------------------------------------------------------------------------
 function cmdDoctor(flags) {
 	const settings = readSettings(flags.local);
-	if (settings.error) {
-		printSettingsParseError(settings);
+	if (settings.problem) {
+		printSettingsProblem(settings);
 		return 2;
 	}
 
@@ -883,7 +620,6 @@ function cmdDoctor(flags) {
 	else fail("npm is not on PATH — LazyPi can't install Pi for you");
 
 	if (hasCmd("git")) pass("git is on PATH");
-	else warn("git is not on PATH — needed to migrate leftover git: legacy sources");
 
 	printHeader("Pi");
 	if (hasCmd("pi")) {
@@ -897,22 +633,23 @@ function cmdDoctor(flags) {
 	}
 
 	printHeader("Settings");
-	const { sources, path, exists, error } = readInstalledSources(flags.local);
+	const installedSettings = readInstalledSources(flags.local);
+	const { sources, path, exists } = installedSettings;
 	if (!exists) warn(`${path} does not exist yet (Pi has not been run)`);
-	else if (error) fail(`${path} is not valid JSON — ${error}`);
+	else if (installedSettings.problem) fail(settingsProblemMessage(installedSettings));
 	else {
 		pass(`${path} is readable`);
 		const unpinnedGit = [...sources].filter((src) => {
 			if (!/^git:github\.com\/[^/@]+\/[^@\s]+$/.test(src)) return false;
-			return !PACKAGES.some((pkg) => sourcesMatch(pkg.source, src) || isLegacySourceForPackage(pkg, src));
+			return !PACKAGES.some((pkg) => sourcesMatch(pkg.source, src));
 		});
-		for (const src of unpinnedGit) warn(`${src} is an unpinned git head — pin it to a commit for reproducible installs`, { fatal: false });
+		for (const src of unpinnedGit) warn(`${safeText(src)} is an unpinned git head — pin it to a commit for reproducible installs`, { fatal: false });
 	}
 
 	printHeader("Auth");
 	const auth = detectAuth();
 	for (const { provider, envVar } of auth.envProviders) pass(`env var ${envVar} → ${provider}`);
-	if (auth.fileProviders.length > 0) pass(`${auth.path} → ${auth.fileProviders.join(", ")}`);
+	if (auth.fileProviders.length > 0) pass(`${auth.path} → ${auth.fileProviders.map(safeText).join(", ")}`);
 	if (!auth.authed) warn("No credentials detected — run `pi` then `/login`, or export a provider API key", { fatal: false });
 
 	console.log("");
@@ -933,18 +670,18 @@ function cmdDoctor(flags) {
 // ---------------------------------------------------------------------------
 async function cmdRemove(flags, targets) {
 	const installed = readInstalledSources(flags.local);
-	if (installed.error) {
-		printSettingsParseError(installed);
+	if (installed.problem) {
+		printSettingsProblem(installed);
 		return 2;
 	}
 
 	if (targets.length === 0) {
-		if (!isInteractive()) {
+		if (!interactiveSession()) {
 			console.error(red("Usage: npx @tommy-ca/lazypi remove <id|source> [...]"));
 			return 2;
 		}
 		const { sources } = installed;
-		const installedPkgs = PACKAGES.filter((p) => isPackagePresent(p, sources));
+		const installedPkgs = PACKAGES.filter((pkg) => isPackageInstalled(pkg, sources));
 		if (installedPkgs.length === 0) {
 			console.log(yellow("No catalog packages are installed."));
 			return 0;
@@ -953,9 +690,9 @@ async function cmdRemove(flags, targets) {
 		const { multiselect } = await import("@clack/prompts");
 		const picked = await multiselect({
 			message: "Select packages to remove",
-			options: installedPkgs.map((p) => ({
-				value: p.id,
-				label: `${p.id.padEnd(idWidth + 2)}${p.description}`,
+			options: installedPkgs.map((pkg) => ({
+				value: pkg.id,
+				label: `${pkg.id.padEnd(idWidth + 2)}${pkg.description}`,
 			})),
 			required: false,
 		});
@@ -973,13 +710,8 @@ async function cmdRemove(flags, targets) {
 		const pkg = PACKAGES.find((p) => p.id === target);
 		const source = pkg ? pkg.source : target;
 
-		const sourcesToRemove = pkg
-			? [
-				...[...installedSources].filter((src) => sourcesMatch(pkg.source, src)),
-				...findLegacyInstalledSources(pkg, installedSources),
-			]
-			: [source];
-		const uniqueSources = [...new Set(sourcesToRemove.length > 0 ? sourcesToRemove : [source])];
+		const matched = pkg ? [...installedSources].filter((src) => sourcesMatch(pkg.source, src)) : [];
+		const uniqueSources = [...new Set(matched.length > 0 ? matched : [source])];
 		for (const resolvedSource of uniqueSources) {
 			const piArgs = flags.local ? ["remove", "-l", "--approve", resolvedSource] : ["remove", resolvedSource];
 			const result = spawnCommand("pi", piArgs, { stdio: "inherit" });
@@ -998,7 +730,7 @@ async function cmdRemove(flags, targets) {
 // ---------------------------------------------------------------------------
 async function main() {
 	const flags = parseArgs(argv.slice(2));
-	if (flags.version && !flags.usageError) {
+	if (flags.version && !flags.usageError && !flags.badArg) {
 		console.log(`@tommy-ca/lazypi ${VERSION}`);
 		return 0;
 	}
