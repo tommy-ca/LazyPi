@@ -240,7 +240,12 @@ async function hosted() {
 	const transport = {
 		async install() {
 			const start = Date.now();
-			const install = (cmd, args) => command(cmd, args, join(root, "work"), Math.max(1, 600000 - (Date.now() - start)));
+			// install keeps the shared time budget and refuses extra arguments, so a
+			// caller cannot silently drop an option such as an allowed exit code.
+			const install = (cmd, args, ...rest) => {
+				requireFact(rest.length === 0, "install: unsupported extra arguments");
+				return command(cmd, args, join(root, "work"), Math.max(1, 600000 - (Date.now() - start)));
+			};
 			receipt("versions", { node: process.version, npm: await install(npm, ["--version"]) });
 			await install(npm, ["install", "--global", "@earendil-works/pi-coding-agent@1.5.0"]);
 			for (const [name, version] of Object.entries(PINS).slice(1)) await install(process.execPath, [pi, "install", `npm:${name}@${version}`]);
@@ -253,7 +258,9 @@ async function hosted() {
 			receipt("dependency-graph", graph);
 			// npm ls reports satisfied out-of-tree peers as problems and exits 1, so the exit
 		// code is not the signal here. validateSupportGraph judges the inventory.
-		const supportGraph = JSON.parse(await install(npm, ["ls", "--prefix", join(root, "agent/npm"), "--all", "--json"], join(root, "work"), Math.max(1, 600000 - (Date.now() - start)), [0, 1]));
+		// npm ls exits 1 when peers resolve outside this tree, and install would drop
+		// that allowance, so the inventory is invoked through command directly.
+		const supportGraph = JSON.parse(await command(npm, ["ls", "--prefix", join(root, "agent/npm"), "--all", "--json"], join(root, "work"), 600000, [0, 1]));
 		validateSupportGraph(supportGraph); receipt("support-graph", supportGraph);
 			for (const file of [join(root, "agent/npm/package-lock.json"), join(sdkRoot, "package.json")]) receipt("installed-file", { path: file, contents: readFileSync(file, "utf8") });
 			// npm documents its opaque cache as cacache; use npm's own bundled API,
