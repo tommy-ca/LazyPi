@@ -13,7 +13,7 @@ title: "Web Access — LazyPi Docs"
       The package is zero-config when used via Exa MCP. It also supports Perplexity and Gemini as providers, with smart fallback across them. Specialized capabilities include YouTube video understanding, local video file analysis, GitHub repository cloning for deeper inspection, and PDF extraction.
     </p>
 
-    <p>Web Access is the sole optional research package, installed with <code>--only web-access</code> or <code>--only optional</code>. It is not part of the five required registrations. Registration does not prove loaded tools or provider behavior.</p>
+    <p>Web Access is a core registration selected by default with <code>--yes</code>, <code>--only core</code>, and the picker. Use <code>--only web-access</code> to select it alone, or <code>--except web-access</code> to select the other five. The optional category is empty, so <code>--only optional</code> installs nothing. This remains an unpublished registration candidate. Registration does not prove loaded tools, provider behavior, or native readiness.</p>
     <h2>Why it's included</h2>
     <p>
       A coding agent that can't look things up has to rely entirely on training data. That's a significant limitation for anything involving recent library versions, documentation, Stack Overflow answers, or API references. Web Access makes Pi a genuinely useful research partner, not just a code completer.

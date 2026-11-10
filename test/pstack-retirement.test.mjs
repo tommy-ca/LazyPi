@@ -10,7 +10,7 @@ const test = (name, fn) => nodeTest(name, { skip: process.platform === "win32" &
 const cli = resolve("bin/lazypi.mjs");
 const identity = "git:github.com/tommy-ca/pstack";
 const pinned = `${identity}@f1571b8431034dcd195f4ea055ccf1c84fc14fc8`;
-const core = [pinned, "npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user"];
+const core = [pinned, "npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user", "npm:pi-web-access"];
 const hints = {
 	pstack: "Canonical checkout registration only; native role binding and loading remain unverified.",
 	subagents: "Run isolated sub-agents for parallel work.",
@@ -93,12 +93,12 @@ if(a[0]!=='update') writeFileSync(file,JSON.stringify(s,null,2)+'\\n');`);
 }
 
 for (const local of [false, true]) {
-	test(`${local ? "local" : "global"} fresh default registers only five required sources and preserves retired state`, () => {
+	test(`${local ? "local" : "global"} fresh default registers all six core sources and preserves retired state`, () => {
 		const packages = [{ source: "npm:pi-btw@0.1.0", extensions: [], metadata: { owner: "fixture" } }, "npm:@quintinshaw/pi-dynamic-workflows@3", "npm:@zenspc/pi-pstack@1"];
 		const f = fixture({ local, packages, overrides: false });
 		const r = f.run(["install", "--yes"]);
 		assert.equal(r.status, 0, r.stdout + r.stderr); assert.equal(r.stderr, "");
-		assert.equal(r.stdout, installOutput(f, ["pstack", "subagents", "sandbox", "verdict", "pi-ask-user"], core, 0, local));
+		assert.equal(r.stdout, installOutput(f, ["pstack", "subagents", "sandbox", "verdict", "pi-ask-user", "web-access"], core, 0, local));
 		assert.deepEqual(f.readCalls(), core.map(s => ["install", ...(local ? ["-l", "--approve"] : []), s]));
 		const after = JSON.parse(readFileSync(f.settings));
 		assert.deepEqual(after, { ...f.original, packages: [...packages, ...core], subagents: { agentOverrides: Object.fromEntries(builtins.map(n => [n, { model: "", tools: ["read"] }])) } });
@@ -136,12 +136,22 @@ test("retired install selectors reject before any package command and leave sett
 	}
 });
 
-test("optional selection registers only web access with unchanged npm semantics", () => {
-	const f = fixture(); const r = f.run(["install", "--yes", "--only", "optional"]);
+test("empty optional selector skips bootstrap and preserves settings, backups, and counters", () => {
+	const f = fixture({ missingPi: true, packages: [{ source: "npm:pi-web-access@1", metadata: { keep: true } }] });
+	const r = f.run(["install", "--yes", "--only", "optional"]);
 	assert.equal(r.status, 0, r.stdout + r.stderr); assert.equal(r.stderr, "");
-	assert.equal(r.stdout, installOutput(f, ["web-access"], ["npm:pi-web-access"]));
-	assert.deepEqual(f.readCalls(), [["install", "npm:pi-web-access"]]);
-	assert.deepEqual(JSON.parse(readFileSync(f.settings)), { ...f.original, packages: ["npm:pi-web-access"] });
+	assert.equal(r.stdout, "Nothing selected — nothing to install.\n");
+	assert.deepEqual(f.readCalls(), []);
+	assert.deepEqual(f.snapshot(), f.before);
+});
+
+test("web access remains individually selectable and preserves an existing pinned object", () => {
+	const f = fixture({ packages: [{ source: "npm:pi-web-access@1", extensions: [], metadata: { keep: true } }] });
+	const r = f.run(["install", "--yes", "--only", "web-access"]);
+	assert.equal(r.status, 0, r.stdout + r.stderr); assert.equal(r.stderr, "");
+	assert.equal(r.stdout, installOutput(f, ["web-access"], [], 1));
+	assert.deepEqual(f.readCalls(), []);
+	assert.deepEqual(f.snapshot(), f.before);
 });
 
 test("status classifies retired and independent registrations as Other without changing bytes", () => {
@@ -150,7 +160,7 @@ test("status classifies retired and independent registrations as Other without c
 	assert.equal(r.status, 0); assert.equal(r.stderr, "");
 	assert.equal(r.stdout, [
 		`Settings file: ${f.settings}`, "",
-		"Installed from LazyPi catalog (1/6):", "  core 1/5, optional 0/1",
+		"Installed from LazyPi catalog (1/6):", "  core 1/6, optional 0/0",
 		"  ✓ [core] pstack               git:github.com/tommy-ca/pstack@old", "",
 		"Installed with legacy catalog sources (0):", "  none", "",
 		"Missing from LazyPi catalog (5):",
@@ -158,7 +168,7 @@ test("status classifies retired and independent registrations as Other without c
 		"  · [core] sandbox              npm:pi-better-sandbox",
 		"  · [core] verdict              npm:pi-verdict",
 		"  · [core] pi-ask-user          npm:pi-ask-user",
-		"  · [optional] web-access           npm:pi-web-access", "",
+		"  · [core] web-access           npm:pi-web-access", "",
 		"Other Pi packages outside the LazyPi catalog (2):",
 		"  · npm:pi-btw@0.1.0", "  · npm:@zenspc/pi-pstack@1", "",
 	].join("\n"));

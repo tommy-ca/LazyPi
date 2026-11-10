@@ -19,6 +19,15 @@ test("README, sidebar, landing, and package index agree with catalog order and t
 	}
 });
 
+test("active selection docs describe default Web Access and empty optional compatibility", () => {
+	for (const file of ["README.md", "docs/index.html", "docs/faq.html", "docs/docs/index.html", "docs/docs/installation.html", "docs/docs/first-steps.html", "docs/docs/philosophy.html", "docs/docs/packages/web-access.html"]) {
+		const text = read(file);
+		assert.match(text, /Web Access/, file);
+		assert.match(text, /optional[^.]*empty|empty optional|no optional packages remain/i, file);
+		assert.doesNotMatch(text, /five required registrations|5 required|5 core|sole optional|Web Access[^.]*optional/i, file);
+	}
+});
+
 test("retired pages are historical and no active page links to them as curated navigation", () => {
 	const active=["docs/index.html","docs/faq.html","docs/docs/index.html","docs/docs/first-steps.html","docs/docs/installation.html","docs/_includes/sidebar.html","docs/docs/packages/index.html",...PACKAGES.map(p=>`docs/docs/packages/${slug(p.id)}.html`)];
 	for(const id of retired) {

@@ -5,7 +5,7 @@ description: "Inspect registrations without treating installation as readiness."
 ---
 <h1>First steps</h1>
 <p class="page-desc">Separate package registration from effective loading and security.</p>
-<p>This checkout is an unpublished candidate. TTY <strong>Install everything</strong> is 6 packages. The default is five required registrations, with Web Access optional.</p>
+<p>This checkout is an unpublished candidate. TTY <strong>Install everything</strong> is 6 packages. The default and picker preselection are all six core registrations, including Web Access. The optional category is empty. <code>--only optional</code> skips setup and changes nothing.</p>
 <h2>Inspect registered sources</h2>
 <pre><code>npx @tommy-ca/lazypi status</code></pre>
 <p>Status reads settings, not loaded tools. Older canonical PStack pins are preserved. Retired registrations appear as Other. See <a href="/docs/philosophy.html">retirement limits and capability losses</a>.</p>

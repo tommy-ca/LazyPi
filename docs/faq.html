@@ -31,7 +31,7 @@ extra_css: /assets/css/faq.css
   <div class="faq-item">
     <div class="faq-q">What does LazyPi install?</div>
     <div class="faq-a">
-      Five required registrations: canonical PStack, Subagents, Sandbox, Verdict, and Ask User. Web Access is the sole optional research package. Fresh canonical installs use audited f1571b8; older matching pins remain unchanged. <code>npm:@zenspc/pi-pstack</code> is independent, not an alias. See <a href="/docs/philosophy.html">retirement classifications and capability losses</a>.
+      Six core registrations: canonical PStack, Subagents, Sandbox, Verdict, Ask User, and Web Access. All six are selected by default. The optional category is empty. Fresh canonical installs use audited f1571b8; older matching pins remain unchanged. <code>npm:@zenspc/pi-pstack</code> is independent, not an alias. See <a href="/docs/philosophy.html">retirement classifications and capability losses</a>.
     </div>
   </div>
 
@@ -56,7 +56,7 @@ extra_css: /assets/css/faq.css
   <div class="faq-item">
     <div class="faq-q">Can I choose what to install?</div>
     <div class="faq-a">
-      Yes. On a TTY, the first option is Install everything (the full 6-package catalog) or an interactive picker with core pre-ticked. <code>--yes</code> with no other flags installs the 5 required registrations only. Add the optional tier with <code>--only optional</code> or the picker.
+      Yes. On a TTY, the first option is Install everything (the full 6-package catalog) or an interactive picker with core pre-ticked. <code>--yes</code> with no other flags installs all six core registrations, including Web Access. The <code>optional</code> selector remains valid but empty. <code>--only optional</code> installs nothing and skips Pi setup; <code>--except optional</code> selects all six.
     </div>
   </div>
 

@@ -33,6 +33,7 @@ const optional=${JSON.stringify(PACKAGES.filter(p => p.category === "optional").
 const a=process.argv.slice(2);
 if(${JSON.stringify(mode)}==='stage' && a[0]==='status') { console.error('fixture status failure'); process.exit(23); }
 if(a[0]==='install') {
+ if(a.includes('optional') && optional.length===0) { console.log('Nothing selected — nothing to install.'); process.exit(0); }
  const sources=a.includes('optional')?optional:a.includes('pstack')?[]:core;
  const fresh=sources.filter(p=>!s.packages.includes(p));
  s.packages.push(...fresh);

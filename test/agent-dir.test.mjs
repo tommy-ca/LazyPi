@@ -136,13 +136,14 @@ for (const [name, selection] of [["default", []], ["explicit core", ["--only", "
 		const result = runCli(["install", "--yes", ...selection], { cwd: workspace, home, agentDir, bin, callsPath });
 
 		assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
-		assert.match(result.stdout, /Selected:\s+5\/6/);
+		assert.match(result.stdout, /Selected:\s+6\/6/);
 		assert.deepEqual(readFileSync(callsPath, "utf8").trim().split(/\r?\n/), [
 			"install git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8",
 			"install npm:pi-subagents",
 			"install npm:pi-better-sandbox",
 			"install npm:pi-verdict",
 			"install npm:pi-ask-user",
+			"install npm:pi-web-access",
 		]);
 		const after = JSON.parse(readFileSync(settingsFile, "utf8"));
 		assert.deepEqual(after.packages, packages);
@@ -255,13 +256,13 @@ for (const local of [false, true]) {
 			timeout: 15_000,
 		});
 		assert.equal(result.error, undefined);
-		assert.match(result.stdout, /Selected:          5\/6\n/);
+		assert.match(result.stdout, /Selected:          6\/6\n/);
 		assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 		assert.equal(result.signal, null);
 		assert.equal(result.stderr, "");
 		const sources = [
 			"git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8",
-			"npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user",
+			"npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user", "npm:pi-web-access",
 		];
 		const prefix = local ? ["install", "-l", "--approve"] : ["install"];
 		const calls = readFileSync(callsPath, "utf8").trim().split("\n").map(line => JSON.parse(line));
@@ -286,9 +287,9 @@ for (const local of [false, true]) {
 		const target = local ? "project (.pi/settings.json)" : `global (${settingsFile})`;
 		assert.equal(result.stdout, [
 			`Target:            ${target}`,
-			"Selected:          5/6",
+			"Selected:          6/6",
 			"Already installed: 0",
-			"Will install:      5",
+			"Will install:      6",
 			"Pi credentials:    none detected",
 			...sources.flatMap(source => ["", `→ pi install ${source}`]),
 			"",
@@ -298,10 +299,11 @@ for (const local of [false, true]) {
 			"  sandbox              Disabled until explicitly configured; registration is not containment.",
 			"  verdict              Permission gate with fail-closed classifier errors; configured exemptions and manual shell escapes are not classified.",
 			"  pi-ask-user          Interactive user questions for agent workflows; not hard approval.",
+			"  web-access           Built-in web search and URL fetching.",
 			"",
 			"Remove pi packages with `pi remove <source>`.",
 			"",
-			"Installed 5 package(s) — next steps:",
+			"Installed 6 package(s) — next steps:",
 			"Pi credentials: none detected.",
 			"",
 			"Run `pi`, then type `/login` inside Pi to sign in with a",
@@ -313,23 +315,25 @@ for (const local of [false, true]) {
 	});
 }
 
-test("optional selection installs every non-core package", (t) => {
+test("optional selection is empty without package calls or settings changes", (t) => {
 	const { root, home, workspace, bin } = createWorkspace(t);
 	const agentDir = join(home, ".pi", "agent");
 	const callsPath = join(root, "pi-calls.log");
 	writeSettings(agentDir, []);
 	writeFakePi(bin);
 
+	writeFileSync(callsPath, "");
+	const before = readFileSync(join(agentDir, "settings.json"), "utf8");
 	const result = runCli(["install", "--yes", "--only", "optional"], { cwd: workspace, home, agentDir, bin, callsPath });
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
-	assert.match(result.stdout, /Selected:\s+1\/6/);
-	assert.deepEqual(readFileSync(callsPath, "utf8").trim().split(/\r?\n/), [
-		"install npm:pi-web-access",
-	]);
+	assert.equal(result.stderr, "");
+	assert.equal(result.stdout, "Nothing selected — nothing to install.\n");
+	assert.equal(readFileSync(callsPath, "utf8"), "");
+	assert.equal(readFileSync(join(agentDir, "settings.json"), "utf8"), before);
 });
 
-test("the optional research package remains individually installable", (t) => {
+test("web access remains individually installable", (t) => {
 	const { root, home, workspace, bin } = createWorkspace(t);
 	const agentDir = join(home, ".pi", "agent");
 	const callsPath = join(root, "pi-calls.log");
@@ -405,6 +409,6 @@ test("--local settings remain independent of PI_CODING_AGENT_DIR", (t) => {
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.ok(result.stdout.includes(`Settings file: ${join(workspace, ".pi", "settings.json")}`));
-	assert.match(result.stdout, /✓ \[optional\] web-access/);
+	assert.match(result.stdout, /✓ \[core\] web-access/);
 	assert.doesNotMatch(result.stdout, /✓ \[core\] subagents/);
 });

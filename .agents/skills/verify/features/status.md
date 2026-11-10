@@ -1,6 +1,6 @@
 # Catalog status
 
-Status reads registrations, not loaded packages. Run `status` with the private environment and evidence capture in the verify skill. An empty profile reports 0/6, core 0/5 and optional 0/1.
+Status reads registrations, not loaded packages. Run `status` with the private environment and evidence capture in the verify skill. An empty profile reports 0/6, core 0/6 and optional 0/0.
 
 For an existing-settings check, write only disposable fixture settings:
 
