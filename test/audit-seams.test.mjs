@@ -1,71 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { delimiter, dirname, join, resolve } from "node:path";
-import { spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 
 import { PACKAGES, writeSubagentOverrides } from "../bin/lazypi.mjs";
+import { createCliSandbox } from "./helpers/cli-spawn.mjs";
 
-const CLI_PATH = resolve("bin/lazypi.mjs");
-const AUTH_ENV_VARS = [
-	"ANTHROPIC_API_KEY",
-	"OPENAI_API_KEY",
-	"GOOGLE_API_KEY",
-	"GEMINI_API_KEY",
-	"OPENROUTER_API_KEY",
-	"TOGETHER_API_KEY",
-	"GROQ_API_KEY",
-	"MISTRAL_API_KEY",
-];
 const SUBAGENT_BUILTIN_MODELS = ["context-builder", "planner", "researcher", "reviewer", "scout", "worker"];
-
-function createWorkspace(t) {
-	const root = mkdtempSync(join(tmpdir(), "lazypi-audit-seams-"));
-	t.after(() => rmSync(root, { recursive: true, force: true }));
-	const home = join(root, "home");
-	const workspace = join(root, "workspace");
-	const bin = join(root, "bin");
-	mkdirSync(home, { recursive: true });
-	mkdirSync(workspace, { recursive: true });
-	mkdirSync(bin, { recursive: true });
-	return { root, home, workspace, bin };
-}
-
-function writeFakePi(bin) {
-	if (process.platform === "win32") {
-		writeFileSync(join(bin, "pi.cmd"), "@echo off\r\nif \"%1\"==\"--version\" echo pi test\r\nif defined PI_TEST_CALLS echo %*>>\"%PI_TEST_CALLS%\"\r\nexit /b 0\r\n");
-		return;
-	}
-	const piPath = join(bin, "pi");
-	writeFileSync(piPath, "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'pi test'; fi\nif [ -n \"$PI_TEST_CALLS\" ]; then printf '%s\\n' \"$*\" >> \"$PI_TEST_CALLS\"; fi\nexit 0\n");
-	chmodSync(piPath, 0o755);
-}
-
-function runCli(args, { cwd, home, agentDir, bin, callsPath } = {}) {
-	const env = {
-		...process.env,
-		HOME: home,
-		USERPROFILE: home,
-		PI_CODING_AGENT_DIR: agentDir,
-	};
-	if (bin) env.PATH = [bin, process.env.PATH].filter(Boolean).join(delimiter);
-	if (callsPath) env.PI_TEST_CALLS = callsPath;
-	for (const key of AUTH_ENV_VARS) delete env[key];
-	const result = spawnSync(process.execPath, [CLI_PATH, ...args], {
-		cwd,
-		env,
-		encoding: "utf8",
-		timeout: 60_000,
-	});
-	if (result.error) throw result.error;
-	return result;
-}
-
-function readCalls(callsPath) {
-	if (!existsSync(callsPath)) return [];
-	return readFileSync(callsPath, "utf8").trim().split(/\r?\n/).filter(Boolean);
-}
 
 function emptyOverrides() {
 	const agentOverrides = {};
@@ -76,7 +17,7 @@ function emptyOverrides() {
 }
 
 test("missing or empty --only/--except and both flags print help and exit 2", (t) => {
-	const { home, workspace } = createWorkspace(t);
+	const sandbox = createCliSandbox(t);
 	const cases = [
 		["--only"],
 		["--except"],
@@ -85,7 +26,7 @@ test("missing or empty --only/--except and both flags print help and exit 2", (t
 		["--only", "core", "--except", "fff"],
 	];
 	for (const args of cases) {
-		const result = runCli(args, { cwd: workspace, home });
+		const result = sandbox.run(args);
 		assert.equal(result.status, 2, args.join(" "));
 		const output = `${result.stdout}\n${result.stderr}`;
 		assert.match(output, /Usage:/, args.join(" "));
@@ -93,41 +34,26 @@ test("missing or empty --only/--except and both flags print help and exit 2", (t
 });
 
 test("valid --only core does not exit 2 from selector usage", (t) => {
-	const { root, home, workspace, bin } = createWorkspace(t);
-	writeFakePi(bin);
-	const result = runCli(["--yes", "--only", "core"], {
-		cwd: workspace,
-		home,
-		agentDir: join(home, ".pi", "agent"),
-		bin,
-		callsPath: join(root, "pi-calls.log"),
-	});
+	const sandbox = createCliSandbox(t);
+	const result = sandbox.run(["--yes", "--only", "core"]);
 	assert.notEqual(result.status, 2, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
+	assert.deepEqual(
+		sandbox.external().map((record) => record.argv),
+		PACKAGES.filter((pkg) => pkg.category === "core").map((pkg) => ["install", pkg.installSource ?? pkg.source]),
+	);
 });
 
-test("install with no pi on a non-TTY fails fast with exit 127 instead of prompting", (t) => {
-	if (process.platform === "win32") t.skip("PATH masking differs on Windows");
-	const { home, workspace } = createWorkspace(t);
-	const minimalPath = ["/usr/bin", "/bin"].join(delimiter);
-	const env = {
-		...process.env,
-		HOME: home,
-		USERPROFILE: home,
-		PATH: minimalPath,
-	};
-	for (const key of AUTH_ENV_VARS) delete env[key];
-	const result = spawnSync(process.execPath, [CLI_PATH, "--local"], {
-		cwd: workspace,
-		env,
-		encoding: "utf8",
-		timeout: 15_000,
-	});
-	if (result.error) throw result.error;
+test("install with no pi on a non-TTY fails fast with exit 127 instead of prompting", { skip: process.platform === "win32" ? "PATH masking differs on Windows" : false }, (t) => {
+	const sandbox = createCliSandbox(t);
+	sandbox.removeStub("pi");
+	const result = sandbox.run(["--local"]);
+	assert.equal(result.error, undefined);
 	const output = `${result.stdout}\n${result.stderr}`;
 	assert.equal(result.status, 127, output);
 	assert.match(output, /Install Pi first/);
 	assert.doesNotMatch(output, /Yes \/ No|Install Pi now with/);
 	assert.match(output, /Could not find the `pi` command/);
+	assert.deepEqual(sandbox.external(), [], "a missing pi must not fall back to a real installer");
 });
 
 const CORRUPT_COMMANDS = [
@@ -141,88 +67,70 @@ const CORRUPT_COMMANDS = [
 
 for (const args of CORRUPT_COMMANDS) {
 	test(`corrupt settings.json fails closed for ${args.join(" ")}`, (t) => {
-		const { root, home, workspace, bin } = createWorkspace(t);
-		const agentDir = join(home, ".pi", "agent");
-		const callsPath = join(root, "pi-calls.log");
-		writeFakePi(bin);
-		mkdirSync(agentDir, { recursive: true });
-		writeFileSync(join(agentDir, "settings.json"), "{ not json\n");
+		const sandbox = createCliSandbox(t);
+		mkdirSync(sandbox.agent, { recursive: true });
+		writeFileSync(sandbox.settingsPath(), "{ not json\n");
 
-		const result = runCli(args, { cwd: workspace, home, agentDir, bin, callsPath });
+		const result = sandbox.run(args);
 		assert.equal(result.status, 2, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
-		assert.deepEqual(readCalls(callsPath), []);
+		assert.deepEqual(sandbox.external(), []);
 	});
 }
 
 test("install selectors on other commands fail before execution or settings changes", (t) => {
-	const { root, home, workspace, bin } = createWorkspace(t);
-	const agentDir = join(home, ".pi", "agent");
-	const settingsFile = join(agentDir, "settings.json");
-	const callsPath = join(root, "pi-calls.log");
-	writeFakePi(bin);
-	mkdirSync(agentDir, { recursive: true });
+	const sandbox = createCliSandbox(t);
+	const settings = sandbox.settingsPath();
+	mkdirSync(sandbox.agent, { recursive: true });
 	const before = JSON.stringify({ packages: ["npm:pi-subagents"], keep: true }) + "\n";
-	writeFileSync(settingsFile, before);
+	writeFileSync(settings, before);
 	for (const command of ["update", "remove", "status", "doctor"]) {
 		for (const selectors of [["--only=fff"], ["--except=fff"], ["--only=fff", "--except=fff"]]) {
 			const args = command === "remove" ? [command, "subagents", ...selectors] : [command, ...selectors];
-			const result = runCli(args, { cwd: workspace, home, agentDir, bin, callsPath });
+			const result = sandbox.run(args);
 			assert.equal(result.status, 2, `${args.join(" ")}\n${result.stdout}\n${result.stderr}`);
 			assert.match(result.stderr, /--only and --except are only supported by install/);
-			assert.deepEqual(readCalls(callsPath), []);
-			assert.equal(readFileSync(settingsFile, "utf8"), before);
+			assert.deepEqual(sandbox.external(), []);
+			assert.equal(readFileSync(settings, "utf8"), before);
 		}
 	}
 });
 
 test("version cannot bypass non-install selector rejection", (t) => {
-	const { root, home, workspace, bin } = createWorkspace(t);
-	const agentDir = join(home, ".pi", "agent");
-	const settingsFile = join(agentDir, "settings.json");
-	const callsPath = join(root, "calls.log");
-	writeFakePi(bin);
-	mkdirSync(agentDir, { recursive: true });
+	const sandbox = createCliSandbox(t);
+	const settings = sandbox.settingsPath();
+	mkdirSync(sandbox.agent, { recursive: true });
 	const before = '{"packages":[],"keep":true}\n';
-	writeFileSync(settingsFile, before);
+	writeFileSync(settings, before);
 	for (const command of ["update", "remove", "status", "doctor"]) {
 		for (const selector of ["--only=fff", "--except=fff"]) {
 			for (const version of ["--version", "-V"]) {
-				const result = runCli([command, selector, version], { cwd: workspace, home, agentDir, bin, callsPath });
+				const result = sandbox.run([command, selector, version]);
 				assert.equal(result.status, 2);
 				assert.equal(result.stderr, "--only and --except are only supported by install\n");
 				assert.match(result.stdout, /Usage:/);
-				assert.deepEqual(readCalls(callsPath), []);
-				assert.equal(readFileSync(settingsFile, "utf8"), before);
+				assert.deepEqual(sandbox.external(), []);
+				assert.equal(readFileSync(settings, "utf8"), before);
 			}
 		}
 	}
 });
 
 test("empty unattended selection does not install Pi or write settings", { skip: process.platform === "win32" && "isolated Unix PATH probe" }, (t) => {
-	const { root, home, workspace, bin } = createWorkspace(t);
-	const agentDir = join(home, ".pi", "agent");
-	const npmPath = join(bin, "npm");
-	const callsPath = join(root, "npm-calls.log");
-	writeFileSync(npmPath, `#!/bin/sh\nprintf '%s\\n' "$*" >> '${callsPath}'\nexit 99\n`);
-	chmodSync(npmPath, 0o755);
-	const result = spawnSync(process.execPath, [CLI_PATH, "install", "--yes", "--except", "core,optional"], {
-		cwd: workspace,
-		env: { ...process.env, HOME: home, USERPROFILE: home, PI_CODING_AGENT_DIR: agentDir, PATH: [bin, "/usr/bin", "/bin"].join(delimiter) },
-		encoding: "utf8",
-		timeout: 15_000,
-	});
+	const sandbox = createCliSandbox(t);
+	const agentDir = sandbox.agent;
+	const result = sandbox.run(["install", "--yes", "--except", "core,optional"]);
 	assert.equal(result.error, undefined);
 	assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
 	assert.match(result.stdout, /Nothing selected/);
-	assert.equal(existsSync(callsPath), false);
-	assert.equal(existsSync(join(agentDir, "settings.json")), false);
+	assert.deepEqual(sandbox.external(), [], "an empty selection must spawn nothing");
+	assert.equal(existsSync(sandbox.settingsPath()), false);
 });
 
 test("writeSubagentOverrides skips write when empty models exist and keeps extra keys", (t) => {
-	const { home } = createWorkspace(t);
-	const agentDir = join(home, ".pi", "agent");
+	const sandbox = createCliSandbox(t);
+	const agentDir = sandbox.agent;
 	mkdirSync(agentDir, { recursive: true });
-	const settingsFile = join(agentDir, "settings.json");
+	const settingsFile = sandbox.settingsPath();
 	const parsed = {
 		packages: PACKAGES.map((pkg) => pkg.source),
 		subagents: { agentOverrides: emptyOverrides() },
@@ -247,10 +155,10 @@ test("writeSubagentOverrides skips write when empty models exist and keeps extra
 });
 
 test("writeSubagentOverrides merges model:\"\" into existing override objects", (t) => {
-	const { home } = createWorkspace(t);
-	const agentDir = join(home, ".pi", "agent");
+	const sandbox = createCliSandbox(t);
+	const agentDir = sandbox.agent;
 	mkdirSync(agentDir, { recursive: true });
-	const settingsFile = join(agentDir, "settings.json");
+	const settingsFile = sandbox.settingsPath();
 	const agentOverrides = emptyOverrides();
 	agentOverrides.planner = { model: "opus", keep: true };
 	writeFileSync(settingsFile, JSON.stringify({ subagents: { agentOverrides } }, null, 2) + "\n");

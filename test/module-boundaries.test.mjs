@@ -1,44 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { delimiter, dirname, join, resolve } from "node:path";
-import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 
 import { PACKAGES, isPackageInstalled } from "../bin/catalog.mjs";
+import { CLI_PATH, createCliSandbox } from "./helpers/cli-spawn.mjs";
 
-const CLI_PATH = resolve("bin/lazypi.mjs");
 const PI_HOST_PATH = resolve("bin/pi-host.mjs");
-
-// Every child below gets its own HOME, agent dir, XDG roots, TMPDIR, and npm
-// cache, plus stub `pi` and `npm` first on PATH, so a probe can never reach the
-// host's real Pi, npm, or settings file.
-function createSandbox(t) {
-	const root = mkdtempSync(join(tmpdir(), "lazypi-module-boundaries-"));
-	t.after(() => rmSync(root, { recursive: true, force: true }));
-	const dirs = { root, bin: join(root, "bin"), home: join(root, "home"), agent: join(root, "agent") };
-	for (const name of ["bin", "home", "agent", "tmp", "config", "cache", "data", "state", "npm-cache"]) {
-		mkdirSync(join(root, name), { recursive: true });
-	}
-	for (const name of ["pi", "npm"]) {
-		const path = join(dirs.bin, name);
-		writeFileSync(path, "#!/bin/sh\nexit 99\n");
-		chmodSync(path, 0o755);
-	}
-	dirs.env = {
-		PATH: [dirs.bin, dirname(process.execPath), "/usr/bin", "/bin"].join(delimiter),
-		HOME: dirs.home,
-		USERPROFILE: dirs.home,
-		PI_CODING_AGENT_DIR: dirs.agent,
-		XDG_CONFIG_HOME: join(root, "config"),
-		XDG_CACHE_HOME: join(root, "cache"),
-		XDG_DATA_HOME: join(root, "data"),
-		XDG_STATE_HOME: join(root, "state"),
-		TMPDIR: join(root, "tmp"),
-		npm_config_cache: join(root, "npm-cache"),
-	};
-	return dirs;
-}
 
 // A module-graph probe: the child registers a resolve hook that records every
 // specifier the target actually imports, then imports the target. A bare
@@ -76,15 +44,13 @@ function probeModuleGraph(sandbox, target) {
 			"",
 		].join("\n"),
 	);
-	const result = spawnSync(process.execPath, [script], {
+	const result = sandbox.spawn(process.execPath, [script], {
 		cwd: sandbox.root,
 		env: {
-			...sandbox.env,
 			LAZYPI_PROBE_LOG: log,
 			LAZYPI_PROBE_HOOK: join(probeRoot, "hook.mjs"),
 			LAZYPI_PROBE_TARGET: target,
 		},
-		encoding: "utf8",
 		timeout: 60_000,
 	});
 	if (result.error) throw result.error;
@@ -93,7 +59,7 @@ function probeModuleGraph(sandbox, target) {
 }
 
 test("bin/pi-host.mjs imports without loading @clack/prompts", (t) => {
-	const sandbox = createSandbox(t);
+	const sandbox = createCliSandbox(t, { prefix: "lazypi-module-boundaries-" });
 	const probe = probeModuleGraph(sandbox, PI_HOST_PATH);
 	assert.equal(probe.status, 0, probe.stderr);
 	assert.equal(probe.stderr, "");
@@ -108,24 +74,19 @@ test("bin/pi-host.mjs imports without loading @clack/prompts", (t) => {
 });
 
 test("the module-graph probe detects @clack/prompts in the executable module", (t) => {
-	const sandbox = createSandbox(t);
+	const sandbox = createCliSandbox(t, { prefix: "lazypi-module-boundaries-" });
 	const probe = probeModuleGraph(sandbox, CLI_PATH);
 	assert.equal(probe.status, 0, probe.stderr);
 	assert.ok(probe.specifiers.includes("@clack/prompts"), "probe control: the CLI imports clack");
 });
 
 test("bin/pi-host.mjs prints nothing and starts no entrypoint work", (t) => {
-	const sandbox = createSandbox(t);
+	const sandbox = createCliSandbox(t, { prefix: "lazypi-module-boundaries-" });
 	const source = readFileSync(PI_HOST_PATH, "utf8");
 	assert.doesNotMatch(source, /\bconsole\./, "bin/pi-host.mjs must not print");
 	assert.doesNotMatch(source, /process\.(stdout|stderr)/, "bin/pi-host.mjs must not write to a stream");
 
-	const direct = spawnSync(process.execPath, [PI_HOST_PATH], {
-		cwd: sandbox.root,
-		env: sandbox.env,
-		encoding: "utf8",
-		timeout: 60_000,
-	});
+	const direct = sandbox.spawn(process.execPath, [PI_HOST_PATH], { cwd: sandbox.root, timeout: 60_000 });
 	if (direct.error) throw direct.error;
 	assert.equal(direct.status, 0, direct.stderr);
 	assert.equal(direct.stdout, "");
@@ -134,13 +95,8 @@ test("bin/pi-host.mjs prints nothing and starts no entrypoint work", (t) => {
 });
 
 test("the executable module is still the only entrypoint", (t) => {
-	const sandbox = createSandbox(t);
-	const result = spawnSync(process.execPath, [CLI_PATH, "--version"], {
-		cwd: sandbox.root,
-		env: sandbox.env,
-		encoding: "utf8",
-		timeout: 60_000,
-	});
+	const sandbox = createCliSandbox(t, { prefix: "lazypi-module-boundaries-" });
+	const result = sandbox.run(["--version"], { cwd: sandbox.root, timeout: 60_000 });
 	if (result.error) throw result.error;
 	assert.equal(result.status, 0, result.stderr);
 	assert.match(result.stdout, /^@tommy-ca\/lazypi \d+\.\d+\.\d+\n$/);

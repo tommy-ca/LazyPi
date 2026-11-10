@@ -1,12 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { spawnSync } from "node:child_process";
 
 import { PACKAGES } from "../bin/lazypi.mjs";
 import { expectedPackageSources, packageSourcesFromSettings } from "../scripts/assert-installed-packages.mjs";
+import { createCliSandbox } from "./helpers/cli-spawn.mjs";
+
+const ASSERT_SCRIPT = resolve("scripts/assert-installed-packages.mjs");
+
+// The assertion script spawns nothing itself, so it runs with the same isolated
+// environment every other child gets.
+function runAssertion(sandbox, args) {
+	return sandbox.spawn(process.execPath, [ASSERT_SCRIPT, ...args]);
+}
 
 test("expectedPackageSources matches the full catalog", () => {
 	const expected = expectedPackageSources();
@@ -25,10 +32,10 @@ test("expectedPackageSources supports excluded package ids", () => {
 	assert.equal(expected.length, PACKAGES.length - 2);
 });
 
-test("clean-install CLI assertion requires exact fresh sources rather than a preserved profile", () => {
-	const root = mkdtempSync(join(tmpdir(), "fresh-source-assertion-"));
-	for (const name of ["home", "agent", "work", "bin"]) mkdirSync(join(root, name));
-	const settings = join(root, "agent", "settings.json");
+test("clean-install CLI assertion requires exact fresh sources rather than a preserved profile", (t) => {
+	const sandbox = createCliSandbox(t, { prefix: "fresh-source-assertion-" });
+	mkdirSync(sandbox.agent, { recursive: true });
+	const settings = sandbox.settingsPath();
 	const fresh = [
 		"git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8",
 		"npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user", "npm:pi-web-access",
@@ -40,10 +47,7 @@ test("clean-install CLI assertion requires exact fresh sources rather than a pre
 	]) {
 		const before = JSON.stringify({ packages }) + "\n";
 		writeFileSync(settings, before);
-		const r = spawnSync(process.execPath, [resolve("scripts/assert-installed-packages.mjs"), "--settings", settings], {
-			cwd: join(root, "work"), encoding: "utf8",
-			env: { PATH: join(root, "bin"), HOME: join(root, "home"), USERPROFILE: join(root, "home"), PI_CODING_AGENT_DIR: join(root, "agent"), TMPDIR: root },
-		});
+		const r = runAssertion(sandbox, ["--settings", settings]);
 		assert.equal(r.error, undefined);
 		assert.equal(r.status, expectedExit);
 		assert.equal(r.stdout, expectedExit === 0 ? `Verified 6 expected package source(s) in ${settings}.\n` : "");
@@ -58,19 +62,11 @@ const allFresh = [
 	"npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user", "npm:pi-web-access",
 ];
 
-function runScript(root, args) {
-	return spawnSync(process.execPath, [resolve("scripts/assert-installed-packages.mjs"), ...args], {
-		cwd: join(root, "work"), encoding: "utf8",
-		env: { PATH: process.env.PATH, HOME: join(root, "home"), USERPROFILE: join(root, "home"), PI_CODING_AGENT_DIR: join(root, "agent"), TMPDIR: root },
-	});
-}
-
 function fullProfile(t) {
-	const root = mkdtempSync(join(tmpdir(), "tier-assertion-"));
-	t.after(() => rmSync(root, { recursive: true, force: true }));
-	for (const name of ["home", "agent", "work"]) mkdirSync(join(root, name));
-	writeFileSync(join(root, "agent", "settings.json"), JSON.stringify({ packages: allFresh }) + "\n");
-	return root;
+	const sandbox = createCliSandbox(t, { prefix: "tier-assertion-" });
+	mkdirSync(sandbox.agent, { recursive: true });
+	writeFileSync(sandbox.settingsPath(), JSON.stringify({ packages: allFresh }) + "\n");
+	return sandbox;
 }
 
 test("expectedPackageSources derives its tier from each package category", () => {
@@ -89,22 +85,22 @@ test("expectedPackageSources rejects an unknown tier and a category name in exce
 });
 
 test("tier assertion reports a non-empty optional selection that the id filter cannot see", (t) => {
-	const root = fullProfile(t);
-	const optional = runScript(root, ["--tier", "optional"]);
+	const sandbox = fullProfile(t);
+	const optional = runAssertion(sandbox, ["--tier", "optional"]);
 	assert.equal(optional.status, 1);
 	assert.equal(optional.stdout, "");
 	assert.ok(optional.stderr.includes("Unexpected package sources in settings.json: git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8"));
-	const core = runScript(root, ["--tier", "core"]);
+	const core = runAssertion(sandbox, ["--tier", "core"]);
 	assert.equal(core.status, 0, core.stderr);
-	assert.equal(core.stdout, `Verified 6 expected package source(s) in ${join(root, "agent", "settings.json")}.\n`);
+	assert.equal(core.stdout, `Verified 6 expected package source(s) in ${sandbox.settingsPath()}.\n`);
 	assert.equal(core.stderr, "");
 });
 
 test("a category name passed as a package id fails instead of excluding nothing", (t) => {
-	const root = fullProfile(t);
-	const settings = join(root, "agent", "settings.json");
+	const sandbox = fullProfile(t);
+	const settings = sandbox.settingsPath();
 	const before = readFileSync(settings, "utf8");
-	const r = runScript(root, ["--except", "core"]);
+	const r = runAssertion(sandbox, ["--except", "core"]);
 	assert.equal(r.status, 1);
 	assert.equal(r.stdout, "");
 	assert.ok(r.stderr.includes("--except takes package ids, not categories: core"));
@@ -112,15 +108,15 @@ test("a category name passed as a package id fails instead of excluding nothing"
 });
 
 test("assertion reads the agent dir that PI_CODING_AGENT_DIR selects", (t) => {
-	const root = fullProfile(t);
-	const settings = join(root, "agent", "settings.json");
-	const r = runScript(root, []);
+	const sandbox = fullProfile(t);
+	const settings = sandbox.settingsPath();
+	const r = runAssertion(sandbox, []);
 	assert.equal(r.status, 0, r.stderr);
 	assert.equal(r.stdout, `Verified 6 expected package source(s) in ${settings}.\n`);
 	assert.equal(r.stderr, "");
-	const other = runScript(root, ["--settings", join(root, "missing.json")]);
+	const other = runAssertion(sandbox, ["--settings", join(sandbox.root, "missing.json")]);
 	assert.equal(other.status, 1);
-	assert.ok(other.stderr.includes(`settings.json was not created at ${join(root, "missing.json")}`));
+	assert.ok(other.stderr.includes(`settings.json was not created at ${join(sandbox.root, "missing.json")}`));
 });
 
 test("packageSourcesFromSettings reads string and object package entries", () => {

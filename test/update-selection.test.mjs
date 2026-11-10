@@ -1,75 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { delimiter, join, resolve } from "node:path";
-import { spawnSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
 
-const CLI_PATH = resolve("bin/lazypi.mjs");
-const AUTH_ENV_VARS = [
-	"ANTHROPIC_API_KEY",
-	"OPENAI_API_KEY",
-	"GOOGLE_API_KEY",
-	"GEMINI_API_KEY",
-	"OPENROUTER_API_KEY",
-	"TOGETHER_API_KEY",
-	"GROQ_API_KEY",
-	"MISTRAL_API_KEY",
-];
-
-function createWorkspace(t) {
-	const root = mkdtempSync(join(tmpdir(), "lazypi-update-"));
-	t.after(() => rmSync(root, { recursive: true, force: true }));
-	const home = join(root, "home");
-	const workspace = join(root, "workspace");
-	const bin = join(root, "bin");
-	mkdirSync(join(workspace, ".pi"), { recursive: true });
-	mkdirSync(home, { recursive: true });
-	mkdirSync(bin, { recursive: true });
-	return { root, home, workspace, bin };
-}
-
-function writeFakePi(bin, callsPath) {
-	if (process.platform === "win32") {
-		writeFileSync(join(bin, "pi.cmd"), `@echo off\r\necho %*>>"${callsPath}"\r\nexit /b 0\r\n`);
-		return;
-	}
-	const piPath = join(bin, "pi");
-	writeFileSync(piPath, `#!/bin/sh\nprintf '%s\\n' "$*" >> "${callsPath}"\nexit 0\n`);
-	chmodSync(piPath, 0o755);
-}
-
-function runCli(args, { cwd, home, bin } = {}) {
-	const env = {
-		...process.env,
-		HOME: home,
-		USERPROFILE: home,
-		PI_CODING_AGENT_DIR: join(home, ".pi", "agent"),
-		PATH: [bin, process.env.PATH].filter(Boolean).join(delimiter),
-	};
-	for (const key of AUTH_ENV_VARS) delete env[key];
-	const result = spawnSync(process.execPath, [CLI_PATH, ...args], {
-		cwd,
-		env,
-		encoding: "utf8",
-		timeout: 60_000,
-	});
-	if (result.error) throw result.error;
-	return result;
-}
+import { createCliSandbox } from "./helpers/cli-spawn.mjs";
 
 test("update delegates to pi update without installing the full catalog", (t) => {
-	const { root, home, workspace, bin } = createWorkspace(t);
-	const callsPath = join(root, "pi-calls.log");
-	writeFakePi(bin, callsPath);
-	mkdirSync(join(home, ".pi", "agent"), { recursive: true });
-	writeFileSync(join(home, ".pi", "agent", "settings.json"), JSON.stringify({ packages: ["npm:pi-subagents"] }, null, 2) + "\n");
+	const sandbox = createCliSandbox(t);
+	mkdirSync(sandbox.agent, { recursive: true });
+	writeFileSync(sandbox.settingsPath(), JSON.stringify({ packages: ["npm:pi-subagents"] }, null, 2) + "\n");
 
-	const result = runCli(["update"], { cwd: workspace, home, bin });
+	const result = sandbox.run(["update"]);
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.match(result.stdout, /pi update/);
 
-	const calls = readFileSync(callsPath, "utf8").trim().split(/\r?\n/).filter(Boolean);
+	const calls = sandbox.external().map((record) => record.argv.join(" "));
 	assert.deepEqual(calls, ["update"]);
 	assert.doesNotMatch(calls.join("\n"), /install|npm:pi-mcp-adapter|npm:pi-web-access/);
 });

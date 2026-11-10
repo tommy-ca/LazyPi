@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { resolve, join } from "node:path";
+import { join } from "node:path";
 import { PACKAGES, resolveSelection } from "../bin/lazypi.mjs";
+import { createCliSandbox } from "./helpers/cli-spawn.mjs";
 
 const liveSpec = "openspec/specs/lazypi/installer/spec.md";
 const retirementDelta = "openspec/changes/archive/2026-11-07-strict-minimal-pstack-catalog";
@@ -89,8 +89,8 @@ test("historical retirement delta keeps its removed control-plane requirements",
 	}
 });
 
-test("help states all six core entries, empty optional selection, and registration limits", () => {
-	const r = spawnSync(process.execPath, [resolve("bin/lazypi.mjs"), "--help"], { encoding: "utf8" });
+test("help states all six core entries, empty optional selection, and registration limits", (t) => {
+	const r = createCliSandbox(t).run(["--help"]);
 	assert.equal(r.status, 0);
 	assert.equal(r.stderr, "");
 	assert.match(r.stdout, /core\s+pstack, subagents, sandbox, verdict, pi-ask-user, web-access \(6\)/);
