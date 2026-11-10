@@ -5,7 +5,7 @@ import { resolve, join } from "node:path";
 import { fork, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
-import { privateEnvironment, runOwned, runProof } from "../scripts/native-pstack-proof.mjs";
+import { privateEnvironment, runOwned, runProof, validateSupportGraph } from "../scripts/native-pstack-proof.mjs";
 
 const scratch = resolve(".atl/evidence/strict-minimal-pstack/runtime/native-proof-prep/writer/correction-fixtures");
 mkdirSync(scratch, { recursive: true });
@@ -319,4 +319,26 @@ test("unexpected parent retry is aborted before another fixture attempt", async 
 test("unexpected child retry is cancelled before another fixture attempt", async () => {
 	const r = await observeFixture("child-retry"); assert.equal(r.result.code, 1); assert.equal(r.dispatched, 1);
 	assert.equal(readFileSync(join(r.root, "child-extra-attempt"), "utf8"), "0"); assert.equal(r.negatives.length, 1);
+});
+
+// Support-graph inventory: npm ls exits 1 when peers resolve outside the private
+// agent tree, which is the expected layout. Only genuinely unresolved entries fail.
+const supportPins = { "pi-subagents": "0.86.0", "pi-better-sandbox": "0.14.1", "pi-verdict": "0.16.0", "pi-ask-user": "0.17.2" };
+const pinnedDeps = () => Object.fromEntries(Object.entries(supportPins).map(([name, version]) => [name, { version }]));
+const peerProblem = name => `missing: ${name}, required by pi-ask-user@0.17.2`;
+test("support graph accepts peers provided by the SDK prefix", () => {
+	const graph = { name: "pi-extensions", problems: [peerProblem("@earendil-works/pi-coding-agent@>=0.74.0"), peerProblem("@earendil-works/pi-tui@>=0.74.0"), peerProblem("@sinclair/typebox@*")], dependencies: pinnedDeps() };
+	assert.equal(validateSupportGraph(graph), true);
+});
+test("support graph rejects a missing pinned package", () => {
+	const graph = { name: "pi-extensions", problems: [], dependencies: { "pi-subagents": { version: "0.86.0" } } };
+	assert.throws(() => validateSupportGraph(graph), /support graph/);
+});
+test("support graph rejects an unresolved non-peer dependency", () => {
+	const graph = { name: "pi-extensions", problems: ["missing: proper-lockfile@^4.1.2, required by pi-better-sandbox@0.14.1"], dependencies: pinnedDeps() };
+	assert.throws(() => validateSupportGraph(graph), /support graph/);
+});
+test("support graph rejects a pinned version that changed", () => {
+	const graph = { name: "pi-extensions", problems: [], dependencies: { ...pinnedDeps(), "pi-verdict": { version: "0.16.1" } } };
+	assert.throws(() => validateSupportGraph(graph), /support graph/);
 });

@@ -137,6 +137,26 @@ export async function verifyGlobalIntegrity(graph, cache, record = receipt) {
 	} catch (error) { throw new Error(error.message.startsWith("archive integrity:") ? error.message : `archive integrity: ${error.message}`); }
 }
 function requireFact(ok, reason) { if (!ok) throw new Error(reason); }
+const SDK_PEERS = new Set(["@earendil-works/pi-coding-agent", "@earendil-works/pi-tui", "typebox", "@sinclair/typebox"]);
+// npm ls exits nonzero when peers resolve outside the audited tree, so the support
+// graph is judged by content: every pin present at its exact version, and every
+// reported problem about a peer the SDK provides rather than a real dependency.
+export function validateSupportGraph(graph) {
+	try {
+		const expected = Object.entries(PINS).filter(([name]) => !name.startsWith("@earendil"));
+		requireFact(graph && typeof graph === "object", "support graph: not an object");
+		for (const [name, version] of expected) {
+			const node = graph.dependencies?.[name];
+			requireFact(node && node.version === version, `support graph: ${name} not pinned at ${version}`);
+		}
+		for (const problem of graph.problems ?? []) {
+			const match = /^missing: (@?[^@]+)@/.exec(String(problem));
+			requireFact(match && SDK_PEERS.has(match[1]), `support graph: unresolved dependency ${String(problem)}`);
+		}
+		return true;
+	} catch (error) { throw new Error(error.message.startsWith("support graph:") ? error.message : `support graph: ${error.message}`); }
+}
+
 export function validateDiscovery(d) {
 	requireFact(d?.sha === CANONICAL && d.treeClean === true, "canonical identity");
 	const paths = d.role?.paths;
@@ -202,10 +222,10 @@ async function hosted() {
 	for (const path of ["npm-user.rc", "npm-global.rc", "gitconfig"]) writeFileSync(join(root, path), "", { mode: 0o600 });
 	configureProbeSettings(join(root, "agent"));
 	const owned = new Set();
-	async function command(cmd, args, cwd = join(root, "work"), timeoutMs = 600000) {
+	async function command(cmd, args, cwd = join(root, "work"), timeoutMs = 600000, allowExit = [0]) {
 		receipt("spawn", { cmd, args, cwd, env });
 		const result = await runOwned(cmd, args, { cwd, env, timeoutMs, owned }); receipt("close", result);
-		requireFact(result.code === 0 && !result.signal && !result.timeout && !result.overflow, "subprocess failed"); return result.stdout.trim();
+		requireFact(allowExit.includes(result.code) && !result.signal && !result.timeout && !result.overflow, "subprocess failed"); return result.stdout.trim();
 	}
 	const checkout = await command("git", ["rev-parse", "HEAD"], process.cwd(), 5000);
 	requireFact(checkout === process.env.GITHUB_SHA, "checkout identity mismatch");
@@ -231,7 +251,10 @@ async function hosted() {
 			}
 			const graph = JSON.parse(await install(npm, ["ls", "--global", "--all", "--long", "--json"]));
 			receipt("dependency-graph", graph);
-			receipt("support-graph", JSON.parse(await install(npm, ["ls", "--prefix", join(root, "agent/npm"), "--all", "--json"])));
+			// npm ls reports satisfied out-of-tree peers as problems and exits 1, so the exit
+		// code is not the signal here. validateSupportGraph judges the inventory.
+		const supportGraph = JSON.parse(await install(npm, ["ls", "--prefix", join(root, "agent/npm"), "--all", "--json"], join(root, "work"), Math.max(1, 600000 - (Date.now() - start)), [0, 1]));
+		validateSupportGraph(supportGraph); receipt("support-graph", supportGraph);
 			for (const file of [join(root, "agent/npm/package-lock.json"), join(sdkRoot, "package.json")]) receipt("installed-file", { path: file, contents: readFileSync(file, "utf8") });
 			// npm documents its opaque cache as cacache; use npm's own bundled API,
 			// never reverse-engineer content paths, fetch missing entries, or install a helper.
