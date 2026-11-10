@@ -272,10 +272,10 @@ writeFileSync(stem+'_meta.json',JSON.stringify(meta));if(mode==='duplicate'){con
 writeFileSync(stem+'.jsonl',[{type:'tool_execution_start',toolName:'read',toolCallId:'read1',args:{path:join(root,'work/canary.txt')}},{type:'tool_execution_end',toolName:'read',toolCallId:'read1',isError:false,result:{content:[{type:'text',text:'PRIVATE-CANARY'}]}},{type:'agent_settled',aborted:false}].map(JSON.stringify).join('\\n')+'\\n');
 writeFileSync(join(root,'agent/sessions/child.jsonl'),JSON.stringify({type:'session',id:'child',parentSession:join(root,'agent/sessions/parent.jsonl')})+'\\n');
 const finish=()=>{for(const fn of bus.get('response')??[])fn({...v,runId:'run',status:'completed',agent:'how-explorer',exitCode:0,model:'lazypi-native-proof/canary',launchContractDigest:'${"c".repeat(64)}'});};
-if(mode!=='valid'){finish();}else{(async()=>{const canary=readFileSync(join(root,'work/canary.txt'),'utf8');const send=b=>fetch(baseUrl+'/chat/completions',{method:'POST',body:JSON.stringify(b)}).then(r=>r.text());
+(async()=>{const canary=readFileSync(join(root,'work/canary.txt'),'utf8');const send=b=>fetch(baseUrl+'/chat/completions',{method:'POST',body:JSON.stringify(b)}).then(r=>r.text());
 await send({model:'canary',stream:true,messages:[{role:'user',content:'child run'}],tools:[{function:{name:'read'}}]});
 await send({model:'canary',stream:true,messages:[{role:'user',content:'child run'},{role:'tool',content:canary}],tools:[{function:{name:'read'}}]});
-finish();})().catch(()=>finish());}
+finish();})().catch(()=>finish());
 }}};this.o.extensionFactories[0](api);}
 getExtensions(){return {errors:[],extensions:['pi-subagents','pi-better-sandbox','pi-verdict','pi-ask-user'].map(n=>({resolvedPath:join(root,'agent/npm/node_modules',n,'bundle/index.js'),sourceInfo:{source:'npm'}}))};}
 getSkills(){return {skills:[{filePath:join(canonical,'skills/how/SKILL.md')}],diagnostics:[]};}getPrompts(){return [];}getAgentsFiles(){return {agentsFiles:[]};}}
@@ -310,7 +310,13 @@ for (const mode of ["valid", "wrong-index", "duplicate", "wrong-run"]) test(`obs
 		const settings = JSON.parse(readFileSync(join(r.root, "settings-consumed.json")));
 		assert.deepEqual(settings.packages, ["unchanged-fixture-source"]); assert.equal(settings.retry.enabled, false); assert.equal(settings.retry.provider.maxRetries, 0);
 		assert.deepEqual(JSON.parse(readFileSync(join(r.root, "child-settings.json"))), { retry: { enabled: false, maxRetries: 3 }, provider: { maxRetries: 0 } });
-	} else { assert.deepEqual(r.result, { code: 1, signal: null }); assert.equal(r.childEvidence, undefined); assert.equal(r.negatives.length, 1); }
+	} else {
+		// The exact reason pins that the mode reached its artifact check. A gate that
+		// rejects earlier for an unrelated reason would otherwise pass this branch.
+		const reasons = { "wrong-index": "missing or duplicate child metadata", duplicate: "missing or duplicate child metadata", "wrong-run": "child evidence" };
+		assert.deepEqual(r.result, { code: 1, signal: null }); assert.equal(r.childEvidence, undefined);
+		assert.deepEqual(r.negatives, [{ reason: reasons[mode] }]);
+	}
 });
 test("private retry settings produce one request on a retryable fixture failure", async () => {
 	const r = await observeFixture("retryable-error"); assert.equal(r.result.code, 1); assert.equal(r.dispatched, 0);
