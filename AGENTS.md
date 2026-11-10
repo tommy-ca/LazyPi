@@ -35,14 +35,18 @@ docs/
     nav.html           — shared site nav; active link detected via page.url
     footer.html        — shared footer
     sidebar.html       — docs sidebar; active link detected via page.url
+  _data/
+    videos.yml         — video catalog driving the videos page
   assets/css/
     site.css           — CSS variables, body, nav, footer (all pages)
     index.css          — landing page styles
     faq.css            — FAQ page styles
+    videos.css         — videos page styles
     (themes page removed — no theme package is cataloged)
   docs.css             — docs sub-page layout (sidebar, content, tables, callouts)
   index.html           — landing page
   faq.html             — FAQ page
+  videos.html          — videos page
   (no themes gallery — curated-themes is dropped)
   docs/                — docs section
     index.html         — docs overview
@@ -177,7 +181,7 @@ Videos are driven by `docs/_data/videos.yml`. Each entry has a `category`, `id` 
       duration: "12:34"        # optional, shown as badge on thumbnail (use H:MM:SS for >1hr)
 ```
 
-The YouTube thumbnail is loaded automatically from `img.youtube.com/vi/{id}/mqdefault.jpg` — no API key needed. Add a video by appending to the right category block in the YAML file. The four categories are `Intro to Pi`, `Full Course Pi`, `Advanced Pi`, and `Slice of Pi`.
+The YouTube thumbnail is loaded automatically from `img.youtube.com/vi/{id}/mqdefault.jpg` — no API key needed. Add a video by appending to the right category block in the YAML file. The five categories are `Intro to Pi`, `Full Course Pi`, `Advanced Pi`, `Slice of Pi`, and `Short Pi`.
 
 ### Catalog updates on the landing page
 
