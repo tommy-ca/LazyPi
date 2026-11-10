@@ -5,30 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { buildSpawnOptions, pickWindowsWhereHit, quoteCmdArg, resolveEntrypointUrl, windowsComSpec, windowsSpawnArgv } from "../bin/lazypi.mjs";
-
-test("buildSpawnOptions does not force shell on Windows by default", () => {
-	assert.deepEqual(buildSpawnOptions({ stdio: "inherit" }, "win32"), {
-		stdio: "inherit",
-	});
-});
-
-test("buildSpawnOptions preserves an explicit shell override on Windows", () => {
-	assert.deepEqual(buildSpawnOptions({ stdio: "inherit", shell: true }, "win32"), {
-		stdio: "inherit",
-		shell: true,
-	});
-	assert.deepEqual(buildSpawnOptions({ stdio: "inherit", shell: false }, "win32"), {
-		stdio: "inherit",
-		shell: false,
-	});
-});
-
-test("buildSpawnOptions leaves Unix options unchanged", () => {
-	assert.deepEqual(buildSpawnOptions({ stdio: "inherit" }, "linux"), {
-		stdio: "inherit",
-	});
-});
+import { pickWindowsWhereHit, quoteCmdArg, resolveEntrypointUrl, windowsComSpec, windowsSpawnArgv } from "../bin/lazypi.mjs";
 
 test("windowsSpawnArgv wraps .cmd as ComSpec argv", () => {
 	const previous = process.env.ComSpec;

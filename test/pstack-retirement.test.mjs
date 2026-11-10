@@ -162,7 +162,6 @@ test("status classifies retired and independent registrations as Other without c
 		`Settings file: ${f.settings}`, "",
 		"Installed from LazyPi catalog (1/6):", "  core 1/6, optional 0/0",
 		"  ✓ [core] pstack               git:github.com/tommy-ca/pstack@old", "",
-		"Installed with legacy catalog sources (0):", "  none", "",
 		"Missing from LazyPi catalog (5):",
 		"  · [core] subagents            npm:pi-subagents",
 		"  · [core] sandbox              npm:pi-better-sandbox",

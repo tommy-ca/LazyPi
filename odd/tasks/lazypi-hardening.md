@@ -73,3 +73,24 @@ warning that the byte oracle pins the two legacy status lines so they survive as
 literal. Candidate 2 grafted: the `installPlan()` pure-string assertion. Candidate
 2 rejected on its own navigation weakness; candidate 3 rejected for growing the
 total 6% and replacing one large module with a 232-line god-module.
+
+L8. T2 landed as 2542745 on `fix/settings-integrity`. Eight rules, thirteen tests,
+and the spec delta the change requires. Gates: `node --test` 193 pass 0 fail (was
+180), `spec:validate` 13 active and 41 archived items 0 failed. A differential run
+over `update`, `update --local`, `remove` by id, `remove` by source, `remove` with
+no target, `status`, `status --local`, `install --local --yes`, `install --yes
+--only subagents`, and `doctor` showed no unrequested change to stdout, stderr,
+exit code, or stored bytes. Read paths still follow a symlinked settings file while
+writes refuse it, so dotfile-managed configs stay readable.
+
+L9. Slice boundaries in the delivery chain. Slice 1 `fix/contract-authority`:
+154190e, 602 authored lines. Slice 2 `fix/settings-integrity`: 2542745, 868 authored
+lines. Cumulative 1522. Both exceed the ~400-line planning heuristic; the chained
+strategy S6 asked for is what absorbs that. Slice 2 grew `bin/lazypi.mjs` from 1047
+to 1180 lines, which makes slice 3 mandatory rather than optional.
+
+L10. Known debt deferred past this program: `hasCmd` and the `which` dependency
+(security S3), `update --local` dropping project scope (S4), `PI_CODING_AGENT_DIR`
+validation (S5), the `parseArgs` outcome enum, the two Windows quoting hypotheses,
+and the 1.2 GB `.atl/evidence` tree written inside the checkout by a test that
+never cleans up.
