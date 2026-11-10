@@ -1,12 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, chmodSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { delimiter, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const PACKED_CLI_SMOKE_COMMAND = "node scripts/packed-cli-smoke.mjs";
 const OPTIONAL_INSTALL = "node bin/lazypi.mjs --yes --only optional";
+// The Linux gate for an empty optional selection. A bare `--only optional` run
+// cannot be that gate: it prints "Nothing selected" and exits 0 whatever the
+// product does, so the step only fails when the command itself breaks.
+const EMPTY_OPTIONAL_GATE = 'node --test --test-name-pattern="^empty optional selection" test/ci-workflows.test.mjs';
 const WINDOWS_COMMANDS = [
 	"npm test",
 	PACKED_CLI_SMOKE_COMMAND,
@@ -37,6 +41,28 @@ function job(workflow, name) {
 	const match = workflow.match(new RegExp(`^  ${name}:\\r?\\n([\\s\\S]*?)(?=^  [a-z][a-z_-]*:|$(?![\\s\\S]))`, "m"));
 	assert.ok(match, `Missing job: ${name}`);
 	return match[1];
+}
+
+// Reads the top-level keys of the `on:` block literally. A workflow that
+// changes trigger shape must fail this reader instead of silently recording no
+// triggers.
+function triggersFromWorkflowText(workflow) {
+	const lines = workflow.split("\n");
+	const start = lines.findIndex((line) => /^on:/.test(line));
+	assert.notEqual(start, -1, "workflow has no on: trigger block");
+	const triggers = [];
+	for (const line of lines.slice(start + 1)) {
+		if (line.trim() === "") continue;
+		if (!/^\s/.test(line)) break;
+		const match = line.match(/^ {2}([a-z_]+):\s*$/);
+		if (match) triggers.push(match[1]);
+	}
+	assert.ok(triggers.length > 0, "could not read any trigger from the on: block");
+	return triggers;
+}
+
+function workflowTriggers(path) {
+	return triggersFromWorkflowText(readWorkflow(path));
 }
 
 function enabled(block, github) {
@@ -74,10 +100,85 @@ test("linux CI executes gates and packed CLI checks in order", () => {
 		"npm run spec:validate",
 		PACKED_CLI_SMOKE_COMMAND,
 		"node bin/lazypi.mjs --yes",
-		OPTIONAL_INSTALL,
+		EMPTY_OPTIONAL_GATE,
 		"node scripts/assert-installed-packages.mjs --check-status",
 		"node scripts/e2e-install.mjs",
 	]);
+});
+
+test("linux CI asserts the empty optional selection contract instead of a no-op install", () => {
+	const ordinary = job(readWorkflow(".github/workflows/test.yml"), "test");
+	const steps = ordinary.slice(ordinary.indexOf("    steps:"));
+	assertCommandsInOrder(steps, [
+		"node bin/lazypi.mjs --yes",
+		EMPTY_OPTIONAL_GATE,
+		"node scripts/assert-installed-packages.mjs --check-status",
+	]);
+	assert.doesNotMatch(steps, /--yes --only optional/, "a bare empty optional run cannot fail, so it cannot be the gate");
+	assert.match(steps, /- name: Assert empty optional selection changes nothing/);
+});
+
+// Hermetic proof of the contract the Linux gate asserts: the empty optional
+// selection exits 0, touches no settings byte, and reaches no package command.
+// Its name is the pattern the workflow step selects, so the gate and this proof
+// cannot drift apart.
+test("empty optional selection changes nothing and runs no pi install", (t) => {
+	const root = mkdtempSync(join(tmpdir(), "lazypi-empty-optional-"));
+	t.after(() => rmSync(root, { recursive: true, force: true }));
+	for (const name of ["home", "agent", "work", "bin", "tmp"]) mkdirSync(join(root, name));
+	const settings = join(root, "agent", "settings.json");
+	const original = JSON.stringify({ packages: ["npm:pi-subagents"], keep: true }) + "\n";
+	writeFileSync(settings, original);
+	writeFileSync(`${settings}.lazypi.fixture.bak`, "existing backup\n");
+	const calls = join(root, "package-calls.log");
+	writeFileSync(calls, "");
+	// Stub executables, not a filtered environment: an empty selection that grew
+	// a spawn would reach the stub and leave a line in the call log.
+	for (const name of ["pi", "npm"]) {
+		if (process.platform === "win32") {
+			writeFileSync(join(root, "bin", `${name}.cmd`), `@echo off\r\necho ${name} %*>>"${calls}"\r\nexit /b 0\r\n`);
+			continue;
+		}
+		const path = join(root, "bin", name);
+		writeFileSync(path, `#!/bin/sh\nprintf '%s %s\\n' ${name} "$*" >> "${calls}"\nexit 0\n`);
+		chmodSync(path, 0o755);
+	}
+	const result = spawnSync(process.execPath, [resolve("bin/lazypi.mjs"), "--yes", "--only", "optional"], {
+		cwd: join(root, "work"),
+		encoding: "utf8",
+		timeout: 30_000,
+		env: {
+			PATH: [join(root, "bin"), ...(process.platform === "win32" ? [] : ["/usr/bin", "/bin"])].join(delimiter),
+			HOME: join(root, "home"),
+			USERPROFILE: join(root, "home"),
+			PI_CODING_AGENT_DIR: join(root, "agent"),
+			TMPDIR: join(root, "tmp"),
+		},
+	});
+	assert.equal(result.error, undefined);
+	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
+	assert.equal(result.stdout, "Nothing selected — nothing to install.\n");
+	assert.equal(result.stderr, "");
+	assert.equal(readFileSync(calls, "utf8"), "", "an empty selection must not run pi or npm");
+	assert.equal(readFileSync(settings, "utf8"), original);
+	assert.equal(readFileSync(`${settings}.lazypi.fixture.bak`, "utf8"), "existing backup\n");
+});
+
+test("windows smoke records that its dispatch-only trigger cannot gate a pull request", () => {
+	// A recorded gap, not a satisfied gate: the installer spec makes a Windows
+	// obligation normative, but this workflow runs only on manual dispatch, so a
+	// pull request can never be blocked by it. Moving the trigger is a cost
+	// decision for the maintainer, so the trigger is asserted rather than changed.
+	assert.deepEqual(workflowTriggers(".github/workflows/windows-smoke.yml"), ["workflow_dispatch"]);
+	assert.ok(workflowTriggers(".github/workflows/test.yml").includes("pull_request"));
+});
+
+test("trigger recording fails when a pull request trigger is added to the dispatch-only workflow", () => {
+	const workflow = readWorkflow(".github/workflows/windows-smoke.yml");
+	const mutated = workflow.replace("on:\n  workflow_dispatch:\n", "on:\n  pull_request:\n  workflow_dispatch:\n");
+	assert.notEqual(mutated, workflow, "mutation must change the workflow fixture");
+	assert.deepEqual(triggersFromWorkflowText(mutated), ["pull_request", "workflow_dispatch"]);
+	assert.throws(() => triggersFromWorkflowText("name: no-triggers\njobs:\n  x:\n"));
 });
 
 test("windows CI executes optional installation before the full-catalog assertion", () => {

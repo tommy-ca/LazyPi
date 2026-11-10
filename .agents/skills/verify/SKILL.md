@@ -30,9 +30,34 @@ This readiness check succeeds only when the recorded exit status is zero and `st
 
 ## Drive
 
-Use the feature map in `features/README.md`. Run commands with the same `env -i`, isolated directories, Node path, and working directory as the readiness check. Create a new directory under `$evidence` for every invocation. Record the command, stdout, stderr, exit status, and relevant scratch state separately, including on failure. Assert the visible result and side effects, not just successful exit. A fake Pi proves only LazyPi's orchestration, not actual Pi or extension functionality.
+Use the feature map in `features/README.md`, which also states the split between these manual drives and the automated suite. Run commands with the same `env -i`, isolated directories, Node path, and working directory as the readiness check. Create a new directory under `$evidence` for every invocation. Record the command, stdout, stderr, exit status, and relevant scratch state separately, including on failure. Assert the visible result and side effects, not just successful exit. A fake Pi proves only LazyPi's orchestration, not actual Pi or extension functionality.
 
-Do not run install, update, remove, or Pi extensions under this recipe, even for an expected no-op. A regression could invoke real executables. Real package installation or execution requires separately authorized destinations, disposable state, and effective OS-level isolation. Do not claim extension coverage from package registration or `status` output. `scripts/e2e-install.mjs` is a live network driver, not an offline check. It creates private HOME, Pi, XDG, temporary, and npm state and passes an allowlisted environment to every command. This is not OS containment. Do not run it without separately authorized effective OS isolation and disposable installation destinations. See [packed verification checks](features/install-orchestration.md#offline-packed-verification) for the stub-only command, state setup, evidence, and limits.
+## Stub-first commands
+
+`install`, `status`, `update`, `doctor`, and `remove` may be driven, including with `--local`, only when stub `pi` and stub `npm` executables are the first `PATH` entries. Redirecting `HOME`, `USERPROFILE`, `PI_CODING_AGENT_DIR`, the XDG directories, `TMPDIR`, and the npm config and cache is necessary and not sufficient: environment redirection alone does not stop a real `npm install -g`. The stub is what keeps a spawn from reaching a real tool.
+
+```sh
+mkdir -p "$scratch/bin"
+printf '#!/bin/sh\ncase "$1" in --version) echo 0.5.0-fixture;; esac\nprintf "pi %%s\\n" "$*" >> "%s"\nexit 0\n' "$scratch/calls" > "$scratch/bin/pi"
+printf '#!/bin/sh\nprintf "npm %%s\\n" "$*" >> "%s"\nexit 0\n' "$scratch/calls" > "$scratch/bin/npm"
+chmod 755 "$scratch/bin/pi" "$scratch/bin/npm"
+: > "$scratch/calls"
+```
+
+Every drive then uses `PATH="$scratch/bin:/usr/bin:/bin"` plus the isolated environment. Assert the invocation log, not only the printed output: an empty log proves a command spawned nothing, and its exact lines pin the argv. A stub that exits 0 also proves nothing about Pi's own behavior.
+
+Extension execution is still out of scope. Real package installation or
+execution requires separately authorized destinations, disposable state, and
+effective OS-level isolation, which a stub-first drive does not provide. Do not
+run Pi extensions, and do not run `scripts/e2e-install.mjs`: it is a live network
+driver, not an offline check. It creates private HOME, Pi, XDG, temporary, and
+npm state and passes an allowlisted environment to every command. This is not OS
+containment. Do not run it without separately authorized effective OS isolation
+and disposable installation destinations. See
+[packed verification checks](features/install-orchestration.md#offline-packed-verification)
+for the stub-only command, state setup, evidence, and limits.
+
+Do not claim extension coverage from package registration or `status` output.
 
 ## Evidence and cleanup
 
