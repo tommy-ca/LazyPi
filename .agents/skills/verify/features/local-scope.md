@@ -9,7 +9,7 @@ stay install-only and are rejected by the other four in both scopes.
 
 Use the stub-first recipe in [the verify skill](../SKILL.md): private `HOME`,
 `USERPROFILE`, `PI_CODING_AGENT_DIR`, XDG directories, `TMPDIR`, and npm
-config/cache, with stub `pi` and stub `npm` first on `PATH`. The stub `pi` logs
+config/cache, with stub `pi`, stub `npm`, and stub `which` as the only `PATH` entry. The stub `pi` logs
 its argv outside the checkout. A project settings file lives under the drive's
 own working directory, so create a fresh work directory per drive and write only
 disposable fixtures.
@@ -17,7 +17,7 @@ disposable fixtures.
 ## Drive
 
 ```sh
-env -i PATH="$probe/bin:/usr/bin:/bin" HOME="$probe/home" USERPROFILE="$probe/home" \
+env -i PATH="$probe/bin" HOME="$probe/home" USERPROFILE="$probe/home" \
   PI_CODING_AGENT_DIR="$probe/agent" TMPDIR="$probe/tmp" \
   XDG_CONFIG_HOME="$probe/config" XDG_CACHE_HOME="$probe/cache" \
   XDG_DATA_HOME="$probe/data" XDG_STATE_HOME="$probe/state" \
