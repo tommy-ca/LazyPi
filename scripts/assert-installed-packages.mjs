@@ -20,7 +20,7 @@ export function expectedPackageSources({ except = [] } = {}) {
 	const excluded = new Set(except);
 	return PACKAGES
 		.filter((pkg) => !excluded.has(pkg.id))
-		.map((pkg) => pkg.source);
+		.map((pkg) => pkg.installSource ?? pkg.source);
 }
 
 function parseArgs(args) {

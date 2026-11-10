@@ -1,68 +1,31 @@
 ---
 layout: docs
 title: "Catalog philosophy — LazyPi Docs"
-description: "Why LazyPi defaults to 6 core packages, keeps 12 optional, and leaves Dropped packages outside the catalog."
+description: "Six default core registrations, no optional packages, and explicit retirement limits."
 ---
 <h1>Catalog philosophy</h1>
-<p class="page-desc">Why the default install is 6, why 12 stay optional, and what it takes to join the catalog.</p>
-
-<h2>The default is 6</h2>
-<p>
-  <code>--yes</code> installs the 6 core packages: subagents, ask-user, skillful, goal, web access, and dynamic workflows. This autonomy-first control plane keeps structured decisions, skill visibility, research, and long-running work available by default.
-</p>
-
-<h2>Twelve are optional</h2>
-<p>
-  On a TTY, Install everything installs all 18. The 12 optional packages remain managed by LazyPi and provide additional interaction, review, search, and infrastructure features.
-</p>
-<ul>
-  <li><code>mention-skill</code>, <code>btw</code>, and <code>context-usage</code> add skill selection, side chat, and context detail.</li>
-  <li><code>simplify</code>, <code>fff</code>, and <code>ponytail</code> add review, indexed search, and discipline tools.</li>
-  <li><code>lsp</code> is targeted diagnostics. Useful, not a control-plane primitive.</li>
-  <li><code>interactive-shell</code> is TUI chrome. Chrome is not the control plane.</li>
-  <li><code>autoresearch</code> is experiment loops. Convenience, not core.</li>
-  <li><code>verdict</code> is a permission gate. Security layer, not default.</li>
-  <li><code>todos</code> is a structured tracker. Core forbids checkbox todos as the default posture.</li>
-  <li><code>memory</code> manages markdown memory. It is optional infrastructure.</li>
-</ul>
-<p>
-  Pick them with <code>--only optional</code>, the picker, or TTY Install everything.
-</p>
-
-<h2>Membership bar</h2>
-<p>
-  A package joins the catalog only when all of these hold:
-</p>
-<ul>
-  <li>It is a daily driver. Installed and used in real sessions before anyone proposes it.</li>
-  <li>It is maintained. Recent releases on its primary channel.</li>
-  <li>It is control plane or discipline. Not meal-prep, chrome, or one-shot convenience.</li>
-  <li>Native or install-script machinery has a demonstrated runtime path.</li>
-  <li>It is not on the Dropped list.</li>
-  <li>A change spec carries the audit trail before the catalog grows.</li>
-</ul>
-<p>
-  Optional packages may provide useful convenience or infrastructure without joining the default control plane.
-</p>
-
+<p class="page-desc">An unpublished registration candidate, not certified native orchestration.</p>
+<h2>Six core registrations</h2>
+<p>The flat candidate order is PStack, Subagents, Sandbox, Verdict, Ask User, then Web Access. All six are core, including Web Access for default research tooling. <code>--yes</code> and TTY Install everything select six, and the picker preselects all six. No optional packages remain. The <code>optional</code> selector stays valid for compatibility. <code>--only optional</code> skips setup and changes nothing; <code>--except optional</code> selects all six.</p>
+<p>The canonical <a href="https://github.com/tommy-ca/pstack/blob/f1571b8431034dcd195f4ea055ccf1c84fc14fc8/references/pi-essential-extensions.json">reference manifest</a> is static-only and does not enforce switches. Accepted local support policy is stricter than upstream's capability minimum. Sandbox remains disabled until explicitly configured. Ask User is not hard approval.</p>
+<p>PStack is registered as a canonical Git checkout reference, not copied resources or an owned bundle. Registration cannot prove native loading, role binding, model/tool semantics, child authorization, or recovery. The independent <code>npm:@zenspc/pi-pstack</code> distribution is not an alias.</p>
+<h2>Retired curation, not installed state</h2>
+<table>
+<thead><tr><th>Retired IDs</th><th>Classification and deliberate loss</th></tr></thead>
+<tbody>
+<tr><td>pi-skillful, mention-skill</td><td>Skill discovery/hiding and mention expansion leave curation. No equivalent replacement is proven.</td></tr>
+<tr><td>goal, btw, context-usage</td><td>Objective stopping, side chat, and context telemetry are independent capabilities deliberately retired.</td></tr>
+<tr><td>simplify, ponytail</td><td>Simplification and discipline review, including debt hooks, leave curation. Workflow overlap is not equivalence.</td></tr>
+<tr><td>fff, lsp, interactive-shell</td><td>Indexed search, language-server tooling, and interactive overlays leave curation.</td></tr>
+<tr><td>autoresearch, todos, memory</td><td>Experiment loops, persistent tracking, and markdown memory leave curation.</td></tr>
+<tr><td>dynamic-workflows</td><td>Declared upstream source conflict. This is not evidence of a loaded tool collision or equivalent fan-out behavior.</td></tr>
+</tbody>
+</table>
+<p>There is no compatibility tier. Retired IDs reject in <code>--only</code> and <code>--except</code> before bootstrap or package commands. Existing strings, objects, pins, metadata, order, scope, and unrelated settings remain. Registrations show as Other, not migrated or uninstalled.</p>
+<p>Subtraction does not disable active packages or prevent updates. <code>update</code> remains broad <code>pi update</code>. Retired IDs no longer resolve catalog or legacy sources for removal. Unknown targets still pass unchanged to Pi. Use exact installed sources, for example <code>remove npm:pi-btw@0.1.0</code>, not <code>remove btw</code>. No automatic conflict exclusion or uninstall occurs.</p>
+<h2>Membership and promotion</h2>
+<p>The membership bar remains control plane or discipline, not meal-prep or chrome. Promotion requires maintained packages exercised in real operator sessions, demonstrated native/install-script runtime paths, an audited change spec, and operator ratification. This offline unpublished draft does not satisfy those promotion gates.</p>
+<p>Untrusted or unattended work requires a container or VM. A private HOME and registered sandbox package are not OS containment. Native integration, headless denial, independent child gates, exit/recovery, and readiness remain unverified.</p>
 <h2>Dropped packages</h2>
-<p>
-  Dropped ids are outside the catalog. <code>pi install</code> still works. LazyPi does not manage them. Status reports them as other Pi packages when they are present.
-</p>
-<p>
-  The closed list is compound, powerbar, extension-settings, plannotator, slopchop, usage, raw-paste, plan, add-dir, claude-cli, prompt-templates, hackerman, terminal-theme, skill-args, mcp, ralph-wiggum, and curated-themes.
-</p>
-<p>
-  Skill arguments, MCP adapters, ralph-wiggum loops, and themes are in that list. They are not LazyPi extras. They are packages this installer will not grow into.
-</p>
-
-<nav class="prev-next">
-  <a href="/docs/" class="prev-next-link">
-    <span class="prev-next-label">Previous</span>
-    ← Overview
-  </a>
-  <a href="/docs/first-steps.html" class="prev-next-link next">
-    <span class="prev-next-label">Next</span>
-    First Steps →
-  </a>
-</nav>
+<p>Previously Dropped packages remain outside the catalog: compound, powerbar, extension-settings, plannotator, slopchop, usage, raw-paste, plan, add-dir, claude-cli, prompt-templates, hackerman, terminal-theme, skill-args, mcp, ralph-wiggum, and curated-themes. <code>pi install</code> still works for unmanaged sources. LazyPi does not curate them.</p>
+<nav class="prev-next"><a href="/docs/" class="prev-next-link">Overview</a><a href="/docs/first-steps.html" class="prev-next-link next">First steps</a></nav>

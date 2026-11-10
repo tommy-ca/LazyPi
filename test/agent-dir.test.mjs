@@ -106,7 +106,7 @@ test("status reads settings from PI_CODING_AGENT_DIR", (t) => {
 	assert.doesNotMatch(result.stdout, /✓ \[core\] mcp/);
 });
 
-test("status preserves and classifies existing pinned, legacy, and external registrations", (t) => {
+test("status preserves and classifies pinned retired and external registrations", (t) => {
 	const { home, workspace } = createWorkspace(t);
 	const agentDir = join(home, ".pi", "agent");
 	const settingsFile = join(agentDir, "settings.json");
@@ -116,15 +116,15 @@ test("status preserves and classifies existing pinned, legacy, and external regi
 	const result = runCli(["status"], { cwd: workspace, home, agentDir });
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
-	assert.match(result.stdout, /✓ \[(?:core|optional)\] btw\s+npm:@narumitw\/pi-btw@0\.63\.4/);
-	assert.match(result.stdout, /! \[optional\] memory\s+npm:pi-memory-md@0\.1\.38/);
-	assert.match(result.stdout, /Other Pi packages outside the LazyPi catalog \(1\):/);
+	assert.match(result.stdout, /Other Pi packages outside the LazyPi catalog \(3\):/);
+	assert.match(result.stdout, /npm:@narumitw\/pi-btw@0\.63\.4/);
+	assert.match(result.stdout, /npm:pi-memory-md@0\.1\.38/);
 	assert.match(result.stdout, /npm:external-example/);
 	assert.equal(readFileSync(settingsFile, "utf8"), before);
 });
 
 for (const [name, selection] of [["default", []], ["explicit core", ["--only", "core"]]]) {
-	test(`${name} install selects the autonomy core and preserves unselected registrations`, (t) => {
+	test(`${name} install selects the candidate core and preserves unselected registrations`, (t) => {
 		const { root, home, workspace, bin } = createWorkspace(t);
 		const agentDir = join(home, ".pi", "agent");
 		const settingsFile = join(agentDir, "settings.json");
@@ -136,14 +136,14 @@ for (const [name, selection] of [["default", []], ["explicit core", ["--only", "
 		const result = runCli(["install", "--yes", ...selection], { cwd: workspace, home, agentDir, bin, callsPath });
 
 		assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
-		assert.match(result.stdout, /Selected:\s+6\/18/);
+		assert.match(result.stdout, /Selected:\s+6\/6/);
 		assert.deepEqual(readFileSync(callsPath, "utf8").trim().split(/\r?\n/), [
+			"install git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8",
 			"install npm:pi-subagents",
+			"install npm:pi-better-sandbox",
+			"install npm:pi-verdict",
 			"install npm:pi-ask-user",
-			"install npm:pi-skillful",
-			"install npm:@narumitw/pi-goal",
 			"install npm:pi-web-access",
-			"install npm:@quintinshaw/pi-dynamic-workflows",
 		]);
 		const after = JSON.parse(readFileSync(settingsFile, "utf8"));
 		assert.deepEqual(after.packages, packages);
@@ -158,7 +158,7 @@ const args = process.argv.slice(2);
 appendFileSync(process.env.PI_TEST_CALLS, JSON.stringify(args) + "\\n");
 const prefix = ${JSON.stringify(local ? ["install", "-l", "--approve"] : ["install"])};
 if (args.length !== prefix.length + 1 || !prefix.every((arg, i) => args[i] === arg)
-	|| !args.at(-1).startsWith("npm:")) {
+	|| !/^(npm:|git:)/.test(args.at(-1))) {
 	console.error("Unexpected fake Pi command: " + JSON.stringify(args));
 	process.exit(97);
 }
@@ -256,17 +256,13 @@ for (const local of [false, true]) {
 			timeout: 15_000,
 		});
 		assert.equal(result.error, undefined);
-		assert.match(result.stdout, /Selected:          6\/18\n/);
+		assert.match(result.stdout, /Selected:          6\/6\n/);
 		assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 		assert.equal(result.signal, null);
 		assert.equal(result.stderr, "");
 		const sources = [
-			"npm:pi-subagents",
-			"npm:pi-ask-user",
-			"npm:pi-skillful",
-			"npm:@narumitw/pi-goal",
-			"npm:pi-web-access",
-			"npm:@quintinshaw/pi-dynamic-workflows",
+			"git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8",
+			"npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user", "npm:pi-web-access",
 		];
 		const prefix = local ? ["install", "-l", "--approve"] : ["install"];
 		const calls = readFileSync(callsPath, "utf8").trim().split("\n").map(line => JSON.parse(line));
@@ -291,19 +287,19 @@ for (const local of [false, true]) {
 		const target = local ? "project (.pi/settings.json)" : `global (${settingsFile})`;
 		assert.equal(result.stdout, [
 			`Target:            ${target}`,
-			"Selected:          6/18",
+			"Selected:          6/6",
 			"Already installed: 0",
 			"Will install:      6",
 			"Pi credentials:    none detected",
 			...sources.flatMap(source => ["", `→ pi install ${source}`]),
 			"",
 			"What you've got:",
+			"  pstack               Canonical checkout registration only; native role binding and loading remain unverified.",
 			"  subagents            Run isolated sub-agents for parallel work.",
-			"  pi-ask-user          Interactive user questions for agent workflows.",
-			"  pi-skillful          Discover skills above the git root, hide unused skills, and expand /skill:name inline.",
-			"  goal                 Stop on done, blocked, or external wait for long tasks.",
+			"  sandbox              Disabled until explicitly configured; registration is not containment.",
+			"  verdict              Permission gate with fail-closed classifier errors; configured exemptions and manual shell escapes are not classified.",
+			"  pi-ask-user          Interactive user questions for agent workflows; not hard approval.",
 			"  web-access           Built-in web search and URL fetching.",
-			"  dynamic-workflows    Fan work out across subagents: /workflows TUI, deep-research, resume, token accounting.",
 			"",
 			"Remove pi packages with `pi remove <source>`.",
 			"",
@@ -319,45 +315,36 @@ for (const local of [false, true]) {
 	});
 }
 
-test("optional selection installs every non-core package", (t) => {
+test("optional selection is empty without package calls or settings changes", (t) => {
 	const { root, home, workspace, bin } = createWorkspace(t);
 	const agentDir = join(home, ".pi", "agent");
 	const callsPath = join(root, "pi-calls.log");
 	writeSettings(agentDir, []);
 	writeFakePi(bin);
 
+	writeFileSync(callsPath, "");
+	const before = readFileSync(join(agentDir, "settings.json"), "utf8");
 	const result = runCli(["install", "--yes", "--only", "optional"], { cwd: workspace, home, agentDir, bin, callsPath });
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
-	assert.match(result.stdout, /Selected:\s+12\/18/);
-	assert.deepEqual(readFileSync(callsPath, "utf8").trim().split(/\r?\n/), [
-		"install npm:@zigai/pi-mention-skill",
-		"install npm:@narumitw/pi-btw",
-		"install npm:pi-context-usage",
-		"install npm:pi-simplify",
-		"install npm:@ff-labs/pi-fff",
-		"install npm:@dietrichgebert/ponytail",
-		"install npm:@narumitw/pi-lsp",
-		"install npm:pi-interactive-shell",
-		"install npm:pi-autoresearch",
-		"install npm:@juicesharp/rpiv-todo",
-		"install npm:@henryqw/pi-memory",
-		"install npm:pi-verdict",
-	]);
+	assert.equal(result.stderr, "");
+	assert.equal(result.stdout, "Nothing selected — nothing to install.\n");
+	assert.equal(readFileSync(callsPath, "utf8"), "");
+	assert.equal(readFileSync(join(agentDir, "settings.json"), "utf8"), before);
 });
 
-test("a demoted package remains individually installable", (t) => {
+test("web access remains individually installable", (t) => {
 	const { root, home, workspace, bin } = createWorkspace(t);
 	const agentDir = join(home, ".pi", "agent");
 	const callsPath = join(root, "pi-calls.log");
 	writeSettings(agentDir, []);
 	writeFakePi(bin);
 
-	const result = runCli(["install", "--yes", "--only", "fff"], { cwd: workspace, home, agentDir, bin, callsPath });
+	const result = runCli(["install", "--yes", "--only", "web-access"], { cwd: workspace, home, agentDir, bin, callsPath });
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
-	assert.match(result.stdout, /Selected:\s+1\/18/);
-	assert.equal(readFileSync(callsPath, "utf8").trim(), "install npm:@ff-labs/pi-fff");
+	assert.match(result.stdout, /Selected:\s+1\/6/);
+	assert.equal(readFileSync(callsPath, "utf8").trim(), "install npm:pi-web-access");
 });
 
 test("status displays the installed source pin, not only the id column", (t) => {
@@ -416,12 +403,12 @@ test("--local settings remain independent of PI_CODING_AGENT_DIR", (t) => {
 	const { home, workspace } = createWorkspace(t);
 	const customAgentDir = join(home, ".pi", "lazy");
 	writeSettings(customAgentDir, ["npm:pi-subagents"]);
-	writeSettings(join(workspace, ".pi"), ["npm:@ff-labs/pi-fff"]);
+	writeSettings(join(workspace, ".pi"), ["npm:pi-web-access"]);
 
 	const result = runCli(["status", "--local"], { cwd: workspace, home, agentDir: customAgentDir });
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.ok(result.stdout.includes(`Settings file: ${join(workspace, ".pi", "settings.json")}`));
-	assert.match(result.stdout, /✓ \[optional\] fff/);
+	assert.match(result.stdout, /✓ \[core\] web-access/);
 	assert.doesNotMatch(result.stdout, /✓ \[core\] subagents/);
 });

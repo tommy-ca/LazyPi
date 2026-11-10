@@ -4,14 +4,14 @@ title: "Installation — LazyPi Docs"
 description: "How to install LazyPi and get your Pi coding agent set up."
 ---
 <h1>Installation</h1>
-    <p class="page-desc">Get LazyPi running in under a minute.</p>
+    <p class="page-desc">Unpublished registration candidate. Installation is not native readiness.</p>
 
     <h2>Prerequisites</h2>
     <ul>
       <li>Node.js 20 or later for the LazyPi CLI</li>
       <li>npm (bundled with Node.js)</li>
     </ul>
-    <p>Pi and individual extensions can require a newer runtime. For example, the current pi-skillful and pi-web-access packages declare Node.js 22.19 or later. Check the requirements for the versions you install and the runtime used to launch Pi.</p>
+    <p>Pi and individual extensions can require a newer runtime. For example, pi-web-access releases declare Node.js 22.19 or later. Check the requirements for the versions you install and the runtime used to launch Pi.</p>
     <p>You do not need to install LazyPi globally. <code>npx</code> downloads and runs it on demand.</p>
 
     <h2>Run it</h2>
@@ -20,20 +20,26 @@ description: "How to install LazyPi and get your Pi coding agent set up."
       That's the entire install command. LazyPi will:
     </p>
     <ol>
-      <li>Check whether Pi is installed on your system</li>
-      <li>Install Pi if it's missing</li>
       <li>Show an interactive picker: <strong>Install everything</strong> or select individual packages</li>
-      <li>Install your selection and confirm what's ready</li>
+      <li>Check whether Pi is installed after you confirm a nonempty selection</li>
+      <li>Offer to install Pi if it's missing</li>
+      <li>Register your selection without certifying native loading or readiness</li>
     </ol>
 
     <h2>Install everything vs. interactive picker</h2>
     <p>
-      Choosing <strong>Install everything</strong> on a TTY installs the full 18-package catalog (6 core plus the optional tier). <code>--yes</code> with no other flags installs the 6 harness-core packages only; add the optional tier with <code>--only optional</code> or the picker.
+      Choosing <strong>Install everything</strong> on a TTY installs all 6 core registrations, including Web Access. <code>--yes</code> with no other flags and <code>--only core</code> select the same six. The picker preselects all six. The optional category is empty. <code>--only optional</code> selects nothing and skips Pi setup without changing settings; <code>--except optional</code> selects all six.
     </p>
     <p>
       The interactive picker lets you browse the catalog and select only what you want. Use arrow keys to navigate, space to toggle, and enter to confirm.
     </p>
 
+    <p>LazyPi completes package selection before Pi setup. Cancelling either selection prompt or confirming an empty picker installs nothing and leaves settings, model overrides, and backups unchanged. An empty <code>--except</code> result also skips Pi setup. Invalid settings still stop installation before setup.</p>
+
+    <h2>Registration limits</h2>
+    <p>Fresh PStack installs use <code>git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8</code>. Existing canonical pins stay installed without upgrade or duplication. Support packages retain ordinary npm semantics. <code>npm:@zenspc/pi-pstack</code> is not an alias.</p>
+    <p>Sandbox is disabled until explicitly configured. Ask User is not hard approval. Registration does not prove loading, canonical role binding, tool restrictions, child authorization, or recovery. Untrusted or unattended work requires a container or VM. Offline checks do not satisfy operator promotion.</p>
+    <p>Retired IDs reject in <code>--only</code> and <code>--except</code>. Curation retirement does not remove, disable, or freeze installed packages. Exact sources remain Other, and broad updates still apply. Use exact installed sources for removal because retired IDs no longer resolve catalog or legacy mappings.</p>
     <h2>Idempotency</h2>
     <p>
       LazyPi skips installed packages. Selecting subagents also sets <code>model: ""</code> for <code>context-builder</code>, <code>planner</code>, <code>researcher</code>, <code>reviewer</code>, <code>scout</code>, and <code>worker</code>, even when the package is already installed. They inherit the session model when no higher-precedence model override applies. Other override keys remain unchanged. A re-run is a no-op when the selected packages and these overrides are already present.

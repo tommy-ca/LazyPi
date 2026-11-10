@@ -10,30 +10,34 @@ self-deriving CI contract.
 
 ### Requirement: Catalog Model
 
-The catalog SHALL be the exported `PACKAGES` array in `bin/lazypi.mjs`; every
-entry SHALL carry `id`, `category`, `source`, `description`, and `hint`, and
-MAY carry `legacySources`.
+The unpublished candidate catalog SHALL be the exported `PACKAGES` array in
+`bin/lazypi.mjs`. Entries SHALL carry `id`, `category`, `source`, `description`,
+and `hint`, MAY carry `legacySources`, and MAY carry a separate `installSource`
+for a fresh install argument. Identity matching SHALL continue to use `source`.
 
 #### Scenario: Lean catalog shape
 
-- **WHEN** the catalog is loaded
-- **THEN** it SHALL contain exactly 18 entries: 6 core and 12 optional
-- **AND** the categories SHALL be `core` and `optional`
-- **AND** core SHALL contain subagents, pi-ask-user, pi-skillful, goal,
-  web-access, and dynamic-workflows
-- **AND** optional SHALL contain mention-skill, btw, context-usage, simplify,
-  fff, ponytail, lsp, interactive-shell, autoresearch, todos, memory, and verdict
+- **WHEN** the candidate catalog is loaded
+- **THEN** it SHALL contain exactly 6 entries in this order: pstack, subagents,
+  sandbox, verdict, pi-ask-user, web-access
+- **AND** all six SHALL be `core` registrations, including web-access by default
+- **AND** there SHALL be no optional catalog entries
 
 #### Scenario: Optional catalog tier
 
 - **WHEN** install selection is computed without `--only` or `--except`
-- **THEN** the selection SHALL be the 6 core entries only
-- **AND** optional entries SHALL be selected only via `--only optional` (or
-  matching package ids), `--except`, the interactive picker, or the
-  interactive everything flow
-- **AND** status and remove SHALL cover optional entries like core ones
-- **AND** `--except` SHALL subtract from the full catalog (17 ids for
-  `--except todos`)
+- **THEN** the selection SHALL be all 6 core entries, including web-access
+- **AND** the picker SHALL preselect all six in catalog order
+- **AND** `core` and `optional` SHALL remain valid category selectors
+- **AND** `--only optional` and `--except core` SHALL select nothing, report
+  "Nothing selected — nothing to install.", and exit 0 before bootstrap
+- **AND** empty selections SHALL leave settings, backups, and counters unchanged
+- **AND** `--only core`, `--only core,optional`, and `--except optional` SHALL
+  select all six
+- **AND** `--only web-access` SHALL still select Web Access alone
+- **AND** `--except` SHALL subtract from all 6 entries, selecting 5 for
+  `--except web-access`
+- **AND** status SHALL report core counts out of 6 and optional counts out of 0
 
 #### Scenario: Catalog membership
 
@@ -51,12 +55,6 @@ MAY carry `legacySources`.
 - **AND** its promotion SHALL be ratified through a change spec carrying an
   audit trail before the catalog grows
 
-#### Scenario: Side chat best alternative
-
-- **WHEN** the catalog defines `btw`
-- **THEN** its `source` SHALL be `npm:@narumitw/pi-btw`
-- **AND** the replaced `npm:pi-btw` SHALL remain in `legacySources`
-
 #### Scenario: Dropped packages
 
 - **WHEN** a package was deliberately removed
@@ -68,49 +66,6 @@ MAY carry `legacySources`.
 - **AND** the CLI help SHALL NOT advertise Dropped packages as
   installable extras; at most it SHALL note that `pi install` still works
   for them
-
-#### Scenario: Optional sources
-
-- **WHEN** the catalog defines `lsp`
-- **THEN** its `source` SHALL be `npm:@narumitw/pi-lsp`
-- **AND** `interactive-shell` SHALL resolve to `npm:pi-interactive-shell`
-- **AND** `autoresearch` SHALL resolve to `npm:pi-autoresearch`
-- **AND** the git source `git:github.com/davebcn87/pi-autoresearch` SHALL
-  remain in `legacySources`
-- **AND** `todos` SHALL resolve to `npm:@juicesharp/rpiv-todo`
-- **AND** `npm:pi-manage-todo-list` and
-  `git:github.com/tintinweb/pi-manage-todo-list` SHALL remain in `legacySources`
-- **AND** `memory` SHALL resolve to `npm:@henryqw/pi-memory`
-- **AND** `npm:pi-memory-md` and `git:github.com/VandeeFeng/pi-memory-md`
-  SHALL remain in `legacySources`
-
-#### Scenario: Essential control plane sources
-
-- **WHEN** the catalog defines skill visibility and skill mention
-- **THEN** `pi-skillful` SHALL resolve to `npm:pi-skillful`
-- **AND** `mention-skill` SHALL resolve to `npm:@zigai/pi-mention-skill`
-- **AND** the catalog SHALL ship exactly one mention implementation
-
-#### Scenario: Skill arguments source
-
-- **WHEN** `skill-args` is considered for catalog promotion
-- **THEN** the canonical source SHALL be `npm:@juicesharp/rpiv-args`
-
-#### Scenario: Search substrate source
-
-- **WHEN** the catalog defines `fff`
-- **THEN** its `source` SHALL be `npm:@ff-labs/pi-fff`
-- **AND** its default mode SHALL be additive (`tools-and-ui`)
-
-#### Scenario: Workflow engine source
-
-- **WHEN** the catalog defines `dynamic-workflows`
-- **THEN** its `source` SHALL be `npm:@quintinshaw/pi-dynamic-workflows`
-
-#### Scenario: Discipline review source
-
-- **WHEN** the catalog defines `ponytail`
-- **THEN** its `source` SHALL be `npm:@dietrichgebert/ponytail`
 
 ### Requirement: Idempotent Install
 
@@ -182,8 +137,8 @@ The CLI SHALL provide `install` (default), `status`, `update`, `doctor`, and
 
 - **WHEN** `--only core` or `--except <id>` is passed
 - **THEN** only matching categories or package ids are selected
-- **AND** `--except` SHALL subtract from the full catalog (17 ids for
-  `--except todos`)
+- **AND** `--except` SHALL subtract from the full catalog (5 ids for
+  `--except web-access`)
 
 #### Scenario: Empty selector
 
@@ -297,9 +252,12 @@ Model so a missed spec delta cannot stay green.
 
 - **WHEN** `scripts/assert-installed-packages.mjs --check-status` runs after
   a full catalog install
-- **THEN** the install SHALL have been `lazypi --yes` followed by
-  `lazypi --yes --only optional` (core then optional)
-- **AND** it SHALL find every non-excluded `PACKAGES` source in settings.json
+- **THEN** `lazypi --yes` SHALL install all 6 core registrations
+- **AND** a subsequent `lazypi --yes --only optional` SHALL be a harmless empty
+  selection for existing workflow compatibility
+- **AND** it SHALL require exact equality to non-excluded fresh install sources
+  (`installSource` when present, otherwise `source`), rejecting unexpected sources
+- **AND** this clean-install assertion SHALL NOT be used as preserved-profile proof
 - **AND** the `status` header SHALL report the expected count over
   `PACKAGES.length`
 
@@ -308,8 +266,11 @@ Model so a missed spec delta cannot stay green.
 - **WHEN** CI runs the packed-CLI e2e harness
 - **THEN** `scripts/e2e-install.mjs` SHALL drive the packed artifact against a
   real `pi` in a sandboxed agent dir
-- **AND** it SHALL assert fresh install, idempotency, legacy migration,
-  removal, status, and doctor
+- **AND** it SHALL assert exact fresh install, idempotency, six builtin model
+  overrides, older canonical registration preservation, retained-ID and exact
+  unmanaged-source removal, status, and doctor
+- **AND** BTW migration stages SHALL NOT remain after catalog retirement
+- **AND** offline stub checks SHALL NOT certify actual archives or native behavior
 
 #### Scenario: Derived e2e counts
 
@@ -321,11 +282,10 @@ Model so a missed spec delta cannot stay green.
 
 - **WHEN** `npm test` runs
 - **THEN** a test SHALL fail if `PACKAGES` ids, categories, or current
-  sources diverge from the Lean catalog shape and Optional sources
-  scenarios
+  sources diverge from the Lean catalog shape scenario
 - **AND** a test SHALL fail if a Dropped packages id appears in `PACKAGES`
-- **AND** a test SHALL fail if the Windows smoke workflow asserts the full
-  catalog without installing the optional tier
+- **AND** the existing Windows smoke workflow MAY retain its empty optional
+  install step before asserting the full catalog
 - **AND** CI SHALL run `npm run spec:validate` alongside `npm test`
 
 ### Requirement: Release Flow
@@ -383,78 +343,42 @@ be gated on the spec and test suites before publishing.
 
 ### Requirement: Catalog documentation
 
-`README.md` SHALL list each `PACKAGES` id in `PACKAGES` order with its
-category and a rationale.
-
-`README.md` SHALL state that `--yes` installs 6 packages.
-
-`README.md` SHALL state that the TTY Install everything path installs 18
-packages.
-
-The TTY everything option label SHALL be Install everything.
-
-Catalog documentation SHALL NOT call that option recommended.
-
-`docs/docs/installation.html` SHALL NOT contain `(recommended)`.
-
-`docs/index.html` SHALL NOT contain `(recommended)`.
-
-`docs/docs/philosophy.html` SHALL explain why the default install is the
-6 core packages.
-
-`docs/docs/philosophy.html` SHALL explain why twelve packages are optional.
-
-`docs/docs/philosophy.html` SHALL name the membership bar as control
-plane or discipline, not meal-prep or chrome.
-
-`docs/docs/philosophy.html` SHALL name Dropped packages as outside the
-catalog.
-
-`docs/docs/philosophy.html` SHALL state that `pi install` still works for
-Dropped packages.
-
-`docs/docs/philosophy.html` SHALL state that LazyPi does not manage
-Dropped packages.
-
-`docs/docs/index.html` SHALL point at the philosophy page.
-
-`docs/docs/index.html` SHALL NOT feature Dropped ids as optional extras.
+Catalog documentation SHALL describe membership, selection counts, and
+unmanaged packages accurately, without recommending the everything selection.
 
 #### Scenario: README catalog table
 
 - **WHEN** `README.md` is read
 - **THEN** it SHALL list each `PACKAGES` id in `PACKAGES` order
-- **AND** each listed id SHALL have category `core` or `optional`
-- **AND** each listed id SHALL have a rationale
+- **AND** each listed id SHALL have category `core` or `optional` and a rationale
 
 #### Scenario: Default versus everything counts
 
-- **WHEN** `README.md` describes install counts
-- **THEN** it SHALL state that `--yes` installs 6 packages
-- **AND** it SHALL state that TTY Install everything installs 18 packages
+- **WHEN** README describes install counts
+- **THEN** it SHALL describe all 6 registrations as default core
+- **AND** it SHALL explain that Web Access is selected by default
+- **AND** the empty optional selector SHALL remain documented
 
 #### Scenario: Philosophy page
 
 - **WHEN** `docs/docs/philosophy.html` is read
-- **THEN** it SHALL explain why 6 is the default install
-- **AND** it SHALL explain why 12 packages are optional
-- **AND** it SHALL name the membership bar as control plane or
-  discipline, not meal-prep or chrome
-- **AND** it SHALL name Dropped packages as outside the catalog
-- **AND** it SHALL state that `pi install` still works for those packages
-- **AND** it SHALL state that LazyPi does not manage them
+- **THEN** it SHALL explain the six default core registrations and empty optional category
+- **AND** it SHALL retain the membership bar as control plane or discipline,
+  not meal-prep or chrome, and require real-session/operator promotion evidence
+- **AND** it SHALL describe Dropped and retired packages as outside curation,
+  while preserving `pi install` for unmanaged sources
 
 #### Scenario: Overview does not merchandise dropped extras
 
-- **WHEN** `docs/docs/index.html` is read
-- **THEN** it SHALL point at `philosophy.html`
-- **AND** it SHALL NOT feature Dropped ids as optional extras
+- **WHEN** the overview describes the catalog
+- **THEN** it SHALL link to catalog philosophy
+- **AND** it SHALL NOT feature Dropped or retired IDs as optional extras
 
 #### Scenario: TTY option label is not recommended
 
-- **WHEN** `docs/docs/installation.html` or `docs/index.html` is read
-- **THEN** the TTY option label SHALL be Install everything
-- **AND** neither page SHALL contain `(recommended)`
+- **WHEN** installation or landing documentation describes the TTY selection
+- **THEN** the label SHALL remain Install everything
+- **AND** neither page SHALL call that option recommended
 
 ### Requirement: Troubleshooting
 
@@ -552,25 +476,121 @@ The active installer specification and public catalog summaries SHALL agree with
 
 #### Scenario: Counts and source migrations
 
-- **WHEN** the active installer specification describes the catalog
-- **THEN** it SHALL specify 18 entries: 6 core and 12 optional
-- **AND** `--except todos` SHALL select 17 entries
-- **AND** `todos` SHALL use `npm:@juicesharp/rpiv-todo` and retain its former npm and git sources as legacy sources
-- **AND** `memory` SHALL use `npm:@henryqw/pi-memory` and retain its former npm and git sources as legacy sources
+- **WHEN** active specifications and summaries describe curation
+- **THEN** they SHALL specify 6 core entries and no optional entries
+- **AND** retired todos and memory IDs SHALL no longer resolve their former
+  catalog or legacy source migrations
+- **AND** the essentials-web-default delta SHALL be the current test
+  association for this category change, without rewriting historical deltas
+- **AND** they SHALL distinguish unpinned identity from fresh audited argument
 
 #### Scenario: Verdict summaries
 
-- **WHEN** the CLI help or documentation summarizes the optional tier
+- **WHEN** the CLI help or documentation summarizes required support
 - **THEN** it SHALL include Verdict
-- **AND** summaries of its fail-closed behavior SHALL distinguish classifier failures from configured exemptions and manual shell escapes
+- **AND** summaries of its fail-closed behavior SHALL distinguish classifier
+  failures from configured exemptions and manual shell escapes
 
 ### Requirement: Permission gate catalog entry
 
-The optional tier SHALL include a permission-gate package.
+The required support set SHALL include a permission-gate registration.
 
 #### Scenario: Verdict package
 
-- **WHEN** the catalog is loaded
-- **THEN** it SHALL contain an entry with id `verdict`, category `optional`, and source `npm:pi-verdict`
-- **AND** the total catalog SHALL be 18 entries: 6 core and 12 optional
-- **AND** the packages index page SHALL list all 18 entries
+- **WHEN** the candidate catalog is loaded
+- **THEN** it SHALL contain id `verdict`, category `core`, source `npm:pi-verdict`
+- **AND** required registration SHALL NOT certify native/headless authorization
+- **AND** the packages index SHALL list all 6 candidate entries
+
+### Requirement: Registration source identities
+
+The candidate SHALL distinguish source identity from the audited fresh install
+argument and preserve existing canonical registrations without changing general
+matching or npm support package semantics.
+
+#### Scenario: Canonical identity and fresh argument
+
+- **WHEN** a fresh canonical PStack registration is installed
+- **THEN** pstack identity SHALL be `git:github.com/tommy-ca/pstack`
+- **AND** its fresh argument SHALL be `git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8`
+- **AND** `npm:@zenspc/pi-pstack` SHALL NOT be an alias
+
+#### Scenario: Required and optional support sources
+
+- **WHEN** the candidate defines subagents, sandbox, verdict, pi-ask-user,
+  and web-access in catalog order
+- **THEN** support sources SHALL be `npm:pi-subagents`, `npm:pi-better-sandbox`,
+  `npm:pi-verdict`, `npm:pi-ask-user`, and `npm:pi-web-access` respectively
+
+#### Scenario: Existing canonical registration
+
+- **WHEN** a canonical identity is already registered, including an older pin
+- **THEN** install SHALL skip it without upgrade or duplication
+- **AND** settings objects, metadata, exact sources, order, and scope SHALL remain
+- **AND** npm support packages SHALL retain existing install/update semantics
+
+### Requirement: Catalog retirement
+
+Retirement SHALL remove selection and legacy-resolution metadata from curation,
+not mutate installed state, narrow broad updates, or change removal passthrough.
+
+#### Scenario: Retired curation and selector rejection
+
+- **WHEN** pi-skillful, mention-skill, goal, btw, context-usage, simplify, fff,
+  dynamic-workflows, ponytail, lsp, interactive-shell, autoresearch, todos, or
+  memory is passed to `--only` or `--except`
+- **THEN** install SHALL reject it before bootstrap or package commands
+- **AND** settings, backups, and command counters SHALL remain unchanged
+- **AND** these entries SHALL NOT exist in another curated tier
+
+#### Scenario: Unmanaged state and removal passthrough
+
+- **WHEN** an installed source leaves curation
+- **THEN** its registration SHALL remain Other, not uninstalled or disabled
+- **AND** strings, objects, pins, metadata, order, scope, unrelated settings, and
+  package data SHALL remain intact
+- **AND** broad `pi update` SHALL remain broad, including unmanaged sources
+- **AND** retirement SHALL NOT freeze updates or auto-exclude declared conflicts
+- **AND** retired IDs SHALL no longer resolve catalog or legacy sources
+- **AND** remove SHALL retain unknown-target passthrough unchanged
+- **AND** operators SHALL use exact installed sources for retired removal
+
+### Requirement: Registration and retirement documentation
+
+Active catalog documentation SHALL describe the unpublished registration
+candidate, not a release, certified native integration, or readiness result.
+
+#### Scenario: Catalog projections
+
+- **WHEN** README, help, landing, FAQ, overview, philosophy, installation,
+  first steps, package index, or sidebar describes curation
+- **THEN** membership and order SHALL match `PACKAGES`
+- **AND** README SHALL list each ID, category, and rationale in catalog order
+- **AND** documentation SHALL describe all 6 registrations as default core
+- **AND** the TTY label SHALL remain Install everything, not recommended
+- **AND** Web Access SHALL be selected by default and optional SHALL remain empty
+- **AND** retired pages MAY remain only as explicitly historical/unmanaged
+- **AND** retired packages SHALL NOT remain in curated navigation or listings
+
+#### Scenario: Honest limits and retirement
+
+- **WHEN** catalog capabilities or security are described
+- **THEN** docs SHALL separate registration from loading, role binding, tool
+  execution, authorization, recovery, and readiness
+- **AND** they SHALL state Sandbox is disabled until explicitly configured and
+  Ask User is not hard approval
+- **AND** they SHALL preserve the container/VM requirement for unattended or
+  untrusted work and real-session/operator promotion requirements
+- **AND** they SHALL explain deliberate losses of skill discovery/hiding,
+  mention expansion, objective stopping, side chat, context telemetry,
+  simplification/discipline review, indexed search, LSP, interactive overlays,
+  experiment/debt hooks, and persistent todos/memory
+- **AND** they SHALL NOT claim equivalent replacements from registration
+- **AND** declared source conflict SHALL NOT be represented as a proven loaded
+  collision or grounds for automatic uninstall/exclusion
+- **AND** retirement SHALL be documented as preserving installed state, not
+  disabling packages, freezing broad updates, or retaining retired ID/legacy
+  removal resolution
+- **AND** docs SHALL explain unchanged raw removal passthrough and exact sources
+- **AND** `pi install` SHALL remain available for unmanaged sources
+- **AND** the overview SHALL link to catalog philosophy

@@ -1,24 +1,25 @@
-# Offline default-install orchestration
+# Offline registration and retirement orchestration
 
-The stateful fake-Pi tests exercise LazyPi's default installation in global and project scope. They run the public CLI with disposable settings and a minimal child environment. The private `PATH` contains only the fixture executables. Unexpected Pi commands and npm fallback fail closed.
+Run only with existing dependencies and private state under a separately approved root. No real Pi, npm install, or extension execution is authorized by this recipe. Private state is not OS containment.
 
-Run from the repository root with existing dependencies:
+From the repository root, use an allowlisted environment with private HOME, USERPROFILE, PI_CODING_AGENT_DIR, XDG directories, TMPDIR, and npm cache/config files. Use distinct user and global npm configuration files. Protect PATH with fake executables so Pi or npm fallback cannot reach real tools. Keep exact command, stdout, stderr, and exit separately, including failures. Tests create disposable fixtures under TMPDIR. Retain evidence for inspection.
+
+## Public CLI coverage
 
 ```sh
-node --test --test-name-pattern="default install preserves state with stateful fake Pi" test/agent-dir.test.mjs
+node --test test/pstack-retirement.test.mjs test/agent-dir.test.mjs test/install-selection-effects.test.mjs test/migration-safety.test.mjs
 ```
 
-Expected result: two passing tests on POSIX. Windows skips these tests because the private executable fixture uses POSIX launchers.
+The fixtures check six default core registrations in order including Web Access, empty optional selection without bootstrap or changes, explicit Web Access selection, the audited fresh canonical argument, preserved older canonical pins without duplication, independent npm PStack identity, retired install-selector rejection, raw removal passthrough and exact-source removal, broad updates, settings scope/order/object metadata, and six builtin model resets. Rejected selectors leave settings, backups, and counters unchanged. Existing interactive cancellation, empty selection, and bootstrap sequencing remain covered.
 
-The tests check:
+The clean-install source assertion is exact equality to fresh install arguments, not general profile preservation. Preserved profiles have separate assertions. Selecting Subagents can change builtin model overrides even when already installed.
 
-- The six core sources and their order, exact Pi arguments, and project `-l --approve` flags.
-- Final registrations containing the original entries followed by the six installed sources, with no removal calls.
-- Preserved pinned current and legacy source objects, their metadata, an external registration, and an existing string registration.
-- Unchanged opposite-scope settings and separate configuration and data bytes.
-- The six intended blank built-in subagent model overrides, preserved override metadata, and an unchanged custom agent model.
-- Successful exit, exact stdout, and empty stderr.
+## Offline packed verification
 
-The fake only appends package registrations. It does not install packages, resolve dependencies, access the network, or execute extensions. These tests do not prove live Pi behavior, authentication, interactive picking, update, removal, or extension functionality. The additional state checks protect existing behavior; the six-versus-twelve default selection distinguishes the catalog change from its baseline.
+```sh
+node --test test/e2e-harness.test.mjs
+```
 
-This command is a dedicated automated fixture, not permission to run installation through the [manual verification driver](../SKILL.md). That driver's install, update, and remove prohibition remains unchanged.
+This invokes `scripts/e2e-install.mjs` only with stub npm, Pi, and packed-bin executables and private PATH. Expected result is ten passes on POSIX; Windows skips POSIX fixtures. It checks private cwd/environment, tarball destination, preflight, failures, cleanup/keep behavior, and stage order. Fresh sources use `installSource` when present, otherwise identity. The builtin-model stage remains. Former BTW migration stages now test older canonical and unmanaged-object preservation, current-ID exact-pin removal, and raw unmanaged removal.
+
+The stubs prove driver orchestration, not actual archive contents or loaded extension behavior. Do not run the live driver here. Actual network/archive/Pi execution requires separate authorization, disposable destinations, and effective OS containment. Native role binding, tool/model semantics, independent child gates, headless denial, exit/recovery, operator promotion, and readiness remain unverified. Sandbox stays disabled until explicitly configured. Ask User is not hard approval.

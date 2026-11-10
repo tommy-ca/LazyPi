@@ -1,17 +1,7 @@
 # Help and version
 
-## Sub-features
+Use the verify skill's isolated environment and independent command/stdout/stderr/exit capture. Run `--help` and `--version` without invoking Pi.
 
-The CLI displays usage, commands, options, and its version.
+Help identifies pstack, subagents, sandbox, verdict, pi-ask-user, and web-access as six default core registrations. The optional category remains valid but empty. `--only optional` skips setup and changes nothing; `--except optional` selects all six. It describes an unpublished registration candidate, preserved canonical pins, disabled-until-configured Sandbox, and Ask User's lack of hard approval. It explains retired selector rejection, Other state, broad updates, and unchanged removal passthrough with exact sources.
 
-## How to get to it (user POV)
-
-Run LazyPi with `--help` or `--version`.
-
-## Driving it with the CLI
-
-Use the isolated environment from the verify skill. Run the CLI with `--help`, capture its output and exit status, and check that it shows the commands relevant to the change. Run `--version` as the readiness check and compare it with the checkout's `package.json`. It does not run `lazypi doctor`.
-
-## Gotchas
-
-Help alone does not prove a command works. These drives do not exercise Pi or any extension.
+Compare version output to checkout package.json. Help/version do not prove installation, actual archives, native loading, or readiness.

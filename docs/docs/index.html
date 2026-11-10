@@ -1,17 +1,17 @@
 ---
 layout: docs
 title: "Overview — LazyPi Docs"
-description: "LazyPi documentation — one command to get a complete Pi coding agent setup."
+description: "Unpublished minimal registration candidate and its limits."
 ---
 <h1>LazyPi</h1>
-    <p class="page-desc">One command to get a complete, curated Pi coding agent setup.</p>
+    <p class="page-desc">Unpublished registration candidate. Native integration and readiness remain unverified.</p>
 
     <h2>What is LazyPi?</h2>
     <p>
       Pi is a minimalist coding agent. That minimalism is intentional — it ships as a blank canvas and lets the community build on top of it. The result is a rich ecosystem of packages: skills, themes, MCP adapters, memory systems, prompt templates, sub-agents, cost trackers, and engineering frameworks.
     </p>
     <p>
-      LazyPi is the fastest path into that ecosystem. Run one command and you get a curated selection of the community's best work, pre-configured and ready to use. No research, no manual installs, no configuration tax.
+      LazyPi curates package registrations. Registration does not establish effective loading, role binding, authorization, tool dispatch, or recovery. Sandbox remains disabled until explicitly configured. Ask User is not hard approval. Untrusted or unattended work requires a container or VM.
     </p>
     <p>
       LazyPi skips packages already installed. Selecting subagents also resets six builtin model overrides to the session-model fallback, even on a re-run. Other override keys are preserved. Before changing an existing settings file, LazyPi creates a timestamped backup. See <a href="/docs/installation.html">Installation</a> for the settings details.
@@ -19,8 +19,8 @@ description: "LazyPi documentation — one command to get a complete Pi coding a
 
     <h2>What it installs</h2>
     <p>
-      LazyPi installs the 6-package harness core by default, plus a 12-package optional tier when you ask for it.
-      <a href="/docs/philosophy.html">Catalog philosophy</a> explains why 6 is default, why 12 are optional, and what it takes to join.
+      The candidate selects all six core registrations by default, including Web Access.
+      <a href="/docs/philosophy.html">Catalog philosophy</a> explains retirement, deliberate capability losses, and the native/operator evidence still required for promotion.
     </p>
 
     <table>
@@ -33,30 +33,28 @@ description: "LazyPi documentation — one command to get a complete Pi coding a
       <tbody>
         <tr>
           <td>Core (harness core)</td>
-          <td>Sub-agents, a structured ask gate, skill visibility, a long-objective gate, web research, and a workflow engine for sub-agent fan-out</td>
+          <td>PStack canonical checkout reference, Subagents, Sandbox, Verdict, Ask User, and Web Access. Canonical pins are preserved, not forced forward.</td>
         </tr>
         <tr>
-          <td>Optional (on request)</td>
-          <td>Skill mentions, side chat, context usage, simplify, FFF search, Ponytail, targeted LSP diagnostics and fixes, interactive shell overlays, autonomous research loops, structured todo tracking, markdown-backed memory, and a permission gate — installed with <code>--only optional</code> or the interactive picker</td>
+          <td>Optional (empty)</td>
+          <td>The selector remains valid. <code>--only optional</code> skips setup and changes nothing; <code>--except optional</code> selects all six.</td>
         </tr>
       </tbody>
     </table>
 
     <h2>Dropped packages</h2>
     <p>
-      Skill arguments, MCP, ralph-wiggum, curated-themes, and the rest of the Dropped list are outside the catalog.
-      <code>pi install</code> still works. LazyPi does not manage them.
-      See <a href="/docs/philosophy.html">Catalog philosophy</a> for the membership bar and the closed list.
+      All other previous catalog entries are retired from curation, not uninstalled or disabled. Installed registrations remain Other with pins, metadata, order, scope, and data preserved. Broad updates still include them. Retired IDs reject in install selectors, but removal still passes unknown targets unchanged to Pi. Use exact installed sources because retired IDs and legacy mappings no longer resolve. <code>pi install</code> still works for unmanaged packages.
     </p>
 
     <h2>Quick start</h2>
     <p>LazyPi runs via <code>npx</code> — no global install required:</p>
     <pre><code>npx @tommy-ca/lazypi</code></pre>
     <p>
-      LazyPi will check if Pi is installed, install it if not, then show you an interactive picker. Choose <strong>Install everything</strong> for the full 18-package catalog, or select individual packages.
+      Choose <strong>Install everything</strong> for the full 6-package catalog, or select individual packages. After selection, LazyPi offers to install Pi if needed. Cancelling selection or selecting no packages skips Pi bootstrap and package installation.
     </p>
     <p>
-      Once installation finishes, continue with <a href="/docs/first-steps.html">First Steps</a> to authenticate Pi and try a few high-value commands.
+      Continue with <a href="/docs/first-steps.html">First steps</a> to distinguish registrations from runtime evidence. Offline checks do not certify native readiness.
     </p>
 
     <h2>Commands</h2>

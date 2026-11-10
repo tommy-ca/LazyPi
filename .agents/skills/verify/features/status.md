@@ -1,25 +1,15 @@
 # Catalog status
 
-## Sub-features
+Status reads registrations, not loaded packages. Run `status` with the private environment and evidence capture in the verify skill. An empty profile reports 0/6, core 0/6 and optional 0/0.
 
-Status reports current, legacy, and non-catalog registrations. Check both empty settings and a synthetic existing-settings fixture.
-
-## How to get to it (user POV)
-
-Run `lazypi status`.
-
-## Driving it with the CLI
-
-With the empty isolated settings from the verify skill, run `status` using the same environment as the readiness check. Capture output and exit status. Compare the displayed installed count with zero and the total with the current catalog. Confirm that the isolated settings remain unchanged.
-
-For an existing-settings check, replace only the scratch settings with:
+For an existing-settings check, write only disposable fixture settings:
 
 ```json
-{"packages":["npm:@narumitw/pi-btw@0.63.4","npm:pi-memory-md@0.1.38","npm:external-example"]}
+{"packages":["git:github.com/tommy-ca/pstack@older-audit","npm:pi-btw@0.1.0",{"source":"npm:@zenspc/pi-pstack@1","metadata":{"fixture":true}}]}
 ```
 
-Save a copy before running `status` again. Check that the output identifies the pinned BTW source, the legacy Memory source, and the external package. Compare the settings file with the saved copy byte for byte. Record output, stderr, exit status, and the comparison in a new evidence directory.
+Save the bytes before invoking status. Expect the canonical pin as installed and the other two registrations as Other, not aliases or legacy migrations. Require exit 0, empty stderr, and unchanged settings/backup bytes. Capture command, stdout, stderr, exit, and comparison separately.
 
-## Gotchas
+Retirement does not uninstall, disable, freeze updates, or delete data. Raw removal passthrough remains unchanged, but retired IDs no longer resolve catalog or legacy sources. Use exact installed sources. Do not run removal or update through the manual driver.
 
-Status reads registrations, not installed package contents. It cannot prove that Pi loads an extension. Do not point it at real settings because it prints registered sources.
+These checks do not prove loading, dispatch, security, recovery, or native readiness.

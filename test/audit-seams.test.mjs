@@ -135,7 +135,7 @@ const CORRUPT_COMMANDS = [
 	["update"],
 	["doctor"],
 	["--yes"],
-	["--yes", "--only", "fff"],
+	["--yes", "--only", "web-access"],
 	["remove", "fff"],
 ];
 

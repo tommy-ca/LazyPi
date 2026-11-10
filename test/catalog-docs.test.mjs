@@ -1,137 +1,56 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { PACKAGES } from "../bin/lazypi.mjs";
+const read = path => readFileSync(path,"utf8");
+const slug = id => id === "pi-ask-user" ? "ask-user" : id;
+const retired = ["pi-skillful", "mention-skill", "goal", "btw", "context-usage", "simplify", "fff", "dynamic-workflows", "ponytail", "lsp", "interactive-shell", "autoresearch", "todos", "memory"];
 
-const README = readFileSync("README.md", "utf8");
-const OVERVIEW = readFileSync("docs/docs/index.html", "utf8");
-const SIDEBAR = readFileSync("docs/_includes/sidebar.html", "utf8");
-const PHILOSOPHY_PATH = "docs/docs/philosophy.html";
-
-function docsSlug(id) {
-	return id === "pi-ask-user" ? "ask-user" : id;
-}
-
-function catalogTableRows(readme) {
-	const section = readme.split("## Catalog")[1];
-	assert.ok(section, "README has a Catalog section");
-	const body = section.split(/^## /m)[0];
-	const rows = [];
-	for (const line of body.split(/\r?\n/)) {
-		const match = line.match(/^\| `?([a-z0-9-]+)`? \| (core|optional) \| (.+) \|$/);
-		if (!match) continue;
-		if (match[1] === "id") continue;
-		rows.push({ id: match[1], category: match[2], rationale: match[3].trim() });
-	}
-	return rows;
-}
-
-function sidebarPackageHrefs(sidebar) {
-	const hrefs = [];
-	for (const match of sidebar.matchAll(/href="(\/docs\/packages\/[^"]+\.html)"/g)) {
-		const href = match[1];
-		if (href.endsWith("/packages/index.html")) continue;
-		hrefs.push(href);
-	}
-	return hrefs;
-}
-
-test("catalog table parsing accepts LF and CRLF line endings", () => {
-	const readme = "## Catalog\n| `fff` | core | Search |\n| `memory` | optional | Remember decisions |\n\n## Commands\n";
-	const expected = [
-		{ id: "fff", category: "core", rationale: "Search" },
-		{ id: "memory", category: "optional", rationale: "Remember decisions" },
-	];
-	assert.deepEqual(catalogTableRows(readme), expected);
-	assert.deepEqual(catalogTableRows(readme.replace(/\n/g, "\r\n")), expected);
-});
-
-test("README lists PACKAGES ids in order with category and rationale", () => {
-	const rows = catalogTableRows(README);
-	assert.deepEqual(
-		rows.map((row) => row.id),
-		PACKAGES.map((pkg) => pkg.id),
-	);
-	for (const [i, pkg] of PACKAGES.entries()) {
-		assert.equal(rows[i].category, pkg.category, pkg.id);
-		assert.ok(rows[i].rationale.length > 0, pkg.id);
+test("README, sidebar, landing, and package index agree with catalog order and tiers", () => {
+	const rows=[...read("README.md").split("## Catalog")[1].split(/^## /m)[0].matchAll(/^\| ([a-z-]+) \| (core|optional) \| (.+) \|$/gm)];
+	assert.deepEqual(rows.map(r=>[r[1],r[2]]),PACKAGES.map(p=>[p.id,p.category]));
+	for(const row of rows) assert.ok(row[3].length>0);
+	const expected=PACKAGES.map(p=>`/docs/packages/${slug(p.id)}.html`);
+	const sidebar=[...read("docs/_includes/sidebar.html").matchAll(/href="(\/docs\/packages\/[^\"]+\.html)"/g)].map(m=>m[1]);
+	assert.deepEqual(sidebar,expected);
+	for(const [file,klass,tag] of [["docs/index.html","catalog-card","catalog-tag"],["docs/docs/packages/index.html","pkg-card","pkg-tag"]]) {
+		const cards=[...read(file).matchAll(new RegExp(`<a class="${klass}" href="([^"]+)"><span class="${tag} (core|optional)">`,"g"))];
+		assert.deepEqual(cards.map(c=>[c[1],c[2]]),PACKAGES.map((p,i)=>[expected[i],p.category]));
 	}
 });
 
-test("documented install counts match the catalog", () => {
-	const core = PACKAGES.filter((pkg) => pkg.category === "core").length;
-	const optional = PACKAGES.filter((pkg) => pkg.category === "optional").length;
-	const installation = readFileSync("docs/docs/installation.html", "utf8");
-	const philosophy = readFileSync(PHILOSOPHY_PATH, "utf8");
-	assert.match(README, new RegExp(`--yes.*${core}`));
-	assert.equal([...README.matchAll(new RegExp(`Install everything installs all ${PACKAGES.length}\\.`, "g"))].length, 2);
-	assert.match(README, new RegExp(`${optional}-package optional tier`));
-	assert.match(README, new RegExp(`Install everything is ${PACKAGES.length}\\.`));
-	assert.match(installation, new RegExp(`full ${PACKAGES.length}-package catalog`));
-	assert.match(philosophy, new RegExp(`keeps ${optional} optional`));
-	assert.match(philosophy, new RegExp(`why ${optional} stay optional`));
-	const landing = readFileSync("docs/index.html", "utf8");
-	const faq = readFileSync("docs/faq.html", "utf8");
-	const packages = readFileSync("docs/docs/packages/index.html", "utf8");
-	assert.match(landing, new RegExp(`<div class="stat-num">${PACKAGES.length}</div>`));
-	assert.match(landing, new RegExp(`TTY Install everything is ${PACKAGES.length}\\.`));
-	assert.match(faq, new RegExp(`full ${PACKAGES.length}-package catalog`));
-	assert.match(faq, new RegExp(`${optional}-package optional tier`));
-	assert.match(OVERVIEW, new RegExp(`full ${PACKAGES.length}-package catalog`));
-	assert.match(OVERVIEW, new RegExp(`why ${optional} are optional`));
-	assert.match(OVERVIEW, /permission gate/);
-	assert.doesNotMatch(README, /per tool call; fail-closed/);
-	const firstSteps = readFileSync("docs/docs/first-steps.html", "utf8");
-	assert.match(firstSteps, new RegExp(`Install everything</strong> is ${PACKAGES.length} packages`));
-	assert.equal([...landing.matchAll(/class="catalog-card"/g)].length, PACKAGES.length);
-	assert.match(packages, new RegExp(`The ${PACKAGES.length} catalog packages: ${core} core plus ${optional} optional`));
-	assert.match(packages, /Side questions without adding them to the main conversation/);
-	assert.match(packages, /Reviews changed code for clarity and consistency<\/div>/);
-	assert.match(landing, /github\.com\/HenryQW\/pi-harness\/tree\/main\/extensions\/pi-memory/);
-	assert.match(landing, /github\.com\/juicesharp\/rpiv-mono/);
-});
-
-test("package pages and catalog cards identify the selected tiers", () => {
-	const packages = readFileSync("docs/docs/packages/index.html", "utf8");
-	const landing = readFileSync("docs/index.html", "utf8");
-	for (const pkg of PACKAGES) {
-		const slug = docsSlug(pkg.id);
-		assert.match(packages, new RegExp(`<a class="pkg-card" href="/docs/packages/${slug}\\.html">\\s*<span class="pkg-tag ${pkg.category}">`), pkg.id);
-	}
-	for (const [id, label] of [["mention-skill", "@zigai/pi-mention-skill"], ["btw", "@narumitw/pi-btw"], ["context-usage", "pi-context-usage"], ["simplify", "pi-simplify"], ["fff", "@ff-labs/pi-fff"], ["ponytail", "ponytail"]]) {
-		const page = readFileSync(`docs/docs/packages/${id}.html`, "utf8");
-		assert.ok(page.includes(`--only ${id}`), id);
-		const card = [...landing.matchAll(/<a class="catalog-card"[\s\S]*?<span class="catalog-tag (core|optional)">[^<]+<\/span>\s*<div class="catalog-name">([^<]+)<\/div>/g)].find((match) => match[2] === label);
-		assert.equal(card?.[1], "optional", id);
+test("active selection docs describe default Web Access and empty optional compatibility", () => {
+	for (const file of ["README.md", "docs/index.html", "docs/faq.html", "docs/docs/index.html", "docs/docs/installation.html", "docs/docs/first-steps.html", "docs/docs/philosophy.html", "docs/docs/packages/web-access.html"]) {
+		const text = read(file);
+		assert.match(text, /Web Access/, file);
+		assert.match(text, /optional[^.]*empty|empty optional|no optional packages remain/i, file);
+		assert.doesNotMatch(text, /five required registrations|5 required|5 core|sole optional|Web Access[^.]*optional/i, file);
 	}
 });
 
-test("philosophy.html exists and names the membership bar", () => {
-	assert.equal(existsSync(PHILOSOPHY_PATH), true);
-	const page = readFileSync(PHILOSOPHY_PATH, "utf8");
-	assert.match(page, /control plane/i);
-	assert.match(page, /discipline/i);
-	assert.match(page, /meal-prep/i);
-	assert.match(page, /chrome/i);
-	assert.match(page, /Dropped/i);
-	assert.match(page, /pi install/);
+test("retired pages are historical and no active page links to them as curated navigation", () => {
+	const active=["docs/index.html","docs/faq.html","docs/docs/index.html","docs/docs/first-steps.html","docs/docs/installation.html","docs/_includes/sidebar.html","docs/docs/packages/index.html",...PACKAGES.map(p=>`docs/docs/packages/${slug(p.id)}.html`)];
+	for(const id of retired) {
+		const page=read(`docs/docs/packages/${id}.html`);
+		assert.match(page,/Historical, unmanaged/);
+		assert.doesNotMatch(page,/--only |migrate automatically|stays fully managed/);
+		for(const file of active) assert.ok(!read(file).includes(`href="/docs/packages/${id}.html"`),`${file}: ${id}`);
+	}
 });
 
-test("overview has no Optional extras heading and points at philosophy", () => {
-	assert.equal(/<h2>\s*Optional extras\s*<\/h2>/i.test(OVERVIEW), false);
-	assert.match(OVERVIEW, /philosophy\.html/);
-});
-
-test("sidebar package hrefs match PACKAGES order with ask-user slug", () => {
-	const expected = PACKAGES.map((pkg) => `/docs/packages/${docsSlug(pkg.id)}.html`);
-	assert.deepEqual(sidebarPackageHrefs(SIDEBAR), expected);
-});
-
-test("installation.html and landing mock do not call Install everything recommended", () => {
-	const installation = readFileSync("docs/docs/installation.html", "utf8");
-	const landing = readFileSync("docs/index.html", "utf8");
-	assert.equal(installation.includes("(recommended)"), false);
-	assert.equal(landing.includes("(recommended)"), false);
-	assert.match(installation, /Install everything/);
-	assert.match(landing, /Install everything/);
+test("active documentation disclaims readiness and preserves retirement and security limits", () => {
+	for(const file of ["README.md","docs/index.html","docs/docs/index.html","docs/docs/philosophy.html","docs/docs/installation.html","docs/docs/first-steps.html","docs/docs/packages/pstack.html","docs/docs/packages/sandbox.html"]) {
+		const text=read(file);
+		assert.match(text,/unpublished/i,file); assert.match(text,/registration/i,file);
+		assert.match(text,/unverified|does not prove|not certify/i,file);
+		assert.match(text,/container or VM/,file);
+		assert.doesNotMatch(text,/full 18-package|12-package optional|everything configured|skills ready/i,file);
+	}
+	const policy=read("docs/docs/philosophy.html");
+	for(const id of retired) assert.ok(policy.includes(id),id);
+	assert.match(policy,/declares a source conflict|Declared upstream source conflict/);
+	assert.match(policy,/not evidence of a loaded tool collision/);
+	assert.match(policy,/real operator sessions/);
+	assert.match(read("docs/docs/removing.html"),/Unknown targets still pass unchanged to Pi/);
+	assert.match(read("docs/docs/updating.html"),/including installed packages outside the catalog/);
 });
