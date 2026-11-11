@@ -177,8 +177,8 @@ E8 Follow-up hardening
 |   +-- new attempt [invalid entrypoint guard; all named checks NOT RUN]
 |   +-- premise challenge and census [reports/census.mjs]
 |   +-- delivered f8a907b, 6fa18a1, de67d34, e69d421 [suite 219/219, Windows NOT RUN]
-+-- T9 POSIX executable lookup correction [pending T8 evidence]
-+-- T10 Truthful update scope and rejection [product decision S8 resolved]
++-- T9 POSIX executable lookup correction [landed c08ace4; Windows NOT RUN]
++-- T10 Truthful update scope and rejection [landed 8f4a6ab; real Pi update unobserved]
 +-- T11 Graph and contract reconciliation [record correction in progress]
 +-- T12 Independently accepted PR slices and bottom-up landing [pending]
 ```
@@ -193,7 +193,7 @@ source excerpts and historical test totals are not runtime proof.
 Evidence is under `/tmp/lazypi-followup-audit/reports`; the canonical task and
 acceptance record is `odd/tasks/lazypi-hardening.md`. The append-only decision trail
 is `decisions.tsv` in that reports directory. The latest baseline report is
-`03-prepared-baseline.md` and `04-premise-and-census.md`. L19-L23 in the feature
+`03-prepared-baseline.md`, `04-premise-and-census.md` and `04-census.txt`. L19-L23 in the feature
 document record the bounded stop, the premise challenge and the delivered
 isolation slices. No pull request exists for those slices yet.
 

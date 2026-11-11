@@ -31,8 +31,8 @@ S8. "Reject update --local explicitly (recommended)". Accepted outcome: reject p
 - T6 [S6] Prior stack landing; inline; merged at a567f9f; delivery happened without completed settings authority and is not retrospectively approved.
 - T7 [S1,S5] Follow-up audit and design; delegated read-only map, swarm, arena and interrogate; pending T8; source/contract audit and arena design returned, runtime audit incomplete and interrogate not run; no complete candidate verdict.
 - T8 [S2,S3] Verification safety and baseline; delegated then parent-verified; delivered in f8a907b, 6fa18a1, de67d34 and e69d421; suite 219 of 219 and spec:validate green in private state; Windows launcher NOT RUN; independent verdict pending the admission gate.
-- T9 [S1,S3] Reproduce and correct executable discovery without external which; delegated under runtime context backstop; pending; pin public CLI behavior, with matching docs and spec delta.
-- T10 [S1,S3,S8] Correct update semantics against Pi's public contract; delegated under runtime context backstop; pending; human chose explicit rejection of --local and extension updating without trust override, see L16.
+- T9 [S1,S3] Executable discovery; delegated then parent-verified; delivered in c08ace4; 7 new behaviour tests, suite 226 of 226, differential clean; Windows resolution NOT RUN.
+- T10 [S1,S3,S8] Update scope; delegated then parent-verified; delivered in 8f4a6ab; suite 232 of 232 and spec:validate green; real Pi update behaviour and Windows NOT RUN.
 - T11 [S4] Reconcile graph, inherited delivery claims and confirmed contract gaps; inline record updates plus delegated substantive changes under context backstop; pending; graph delivery/authority corrections written but uncommitted, contract reconciliation and final evidence remain incomplete.
 - T12 [S3,S6] Independently verify exact PR slices and ship contiguous accepted stack; parent owns Git and delivery; pending; native terminal outcomes remain binding.
 
@@ -202,6 +202,37 @@ the recorded edit tool call, not a concurrent unknown writer. Fresh task listing
 shows no active or uncertain child. Product source is unchanged; only this task
 file and the delivery graph are modified. Structural git diff --check passed.
 No new PR, test pass, native approval or completed feature is claimed.
+
+L25. Update-scope unit delivered. Commit 8f4a6ab. parseArgs now refuses
+`update --local` and `-l` before settings are read or any child starts, with exit
+2 and one message, and `cmdUpdate` prints and spawns one shared
+EXTENSION_UPDATE_ARGV so the header cannot describe a different command than the
+spawn. Parent spot checks: 38 of 38 tests across the five touched files, and the
+help oracle byte-identical to live --help at 2921 characters. Full suite at HEAD
+232 pass 0 fail 0 skipped, spec:validate 18 active-change and 41 archived items 0
+failed. The unit's differential run showed 5 of 7 probes byte-identical and exactly
+the two intended differences. One correction batch was needed because four
+assertions in three out-of-surface files pinned the replaced argv and help bytes;
+the product decision was already the human's, so the parent authorized those
+mechanical updates instead of bouncing the decision back. Windows, real
+`pi update --extensions`, trusted-project detection and pin handling remain
+unobserved. Six stale prose sites remain outside every delegated surface:
+docs/docs/index.html, philosophy.html, removing.html, and three sentences in the
+accumulated installer spec. Six slice reviews are possible and would each spend
+model runs, so review of slice f8a907b is parked pending human confirmation.
+
+L24. Provider stop on the accumulated candidate. T9 landed as c08ace4 after the
+parent spot check reproduced 7 of 7 focused, 226 of 226 suite and spec:validate 17
+active-change plus 41 archived items with 0 failed, and confirmed no product code
+spawns which any more. Review start for the branch tip then returned
+lens_context_budget_exceeded with mutation_outcome none: no review authority was
+created, nothing needs abandoning or repairing, and retrying that exact candidate
+cannot succeed. The provider's stated continuation is to review smaller candidates
+in a chained sequence. Parent recorded the stop and did not retry it. Committed
+slices available for separate review: f8a907b, 6fa18a1, de67d34, e69d421, 38bb837,
+c08ace4. The review reminder's earlier invalid_request is separate: untracked
+files from the in-flight T9 unit needed an explicit scope, and that request
+performed no mutation either.
 
 L23. Isolation slice delivered and parent-verified. Commits f8a907b (helper plus
 13 migrated fixtures), 6fa18a1 (guard), de67d34 (verification skill) and e69d421
