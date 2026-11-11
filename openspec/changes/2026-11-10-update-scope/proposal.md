@@ -57,10 +57,13 @@ make plain `update` request extension-package updates.
   `docs/docs/updating.html`, the two stale sentences in `docs/faq.html`, and
   `.agents/skills/verify/features/update.md`, which now describes the single
   `pi update --extensions` delegation and the `--local` rejection.
-- Still stale prose, outside every surface this change was given:
-  `docs/docs/index.html`, `docs/docs/philosophy.html`, `docs/docs/removing.html`,
-  and two requirement sentences in the accumulated installer spec under
-  Troubleshooting and Catalog retirement. Recorded as follow-ups, not changed.
+- Follow-up landed in the `chore/verification-surface` unit: the three prose
+  sites (`docs/docs/index.html`, `docs/docs/philosophy.html`,
+  `docs/docs/removing.html`) now name `pi update --extensions`, and this change
+  carries MODIFIED Requirements for Troubleshooting and Catalog retirement, so
+  archiving it no longer leaves the live spec asserting both that LazyPi never
+  asks Pi for a harness self-update and that the docs should tell operators to
+  run one.
 - Not observed: what `pi update --extensions` does to real registrations,
   trusted-project detection, or archives. Every assertion here is a stub
   obligation, not Pi behaviour.

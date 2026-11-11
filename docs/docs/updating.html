@@ -21,10 +21,10 @@ description: "How to update your LazyPi packages."
       <li>Runs <code>pi update --extensions</code> for your registered extension packages</li>
     </ol>
     <p>
-      This is not a Pi harness self-update. Bare <code>pi update</code> upgrades
-      Pi itself, so LazyPi never asks for it. The update spans the global scope
-      and projects Pi already trusts, and LazyPi never changes saved project
-      trust or passes <code>--approve</code>.
+      This is not a Pi harness self-update.
+      Bare <code>pi update</code> upgrades Pi itself, so LazyPi never asks for it.
+      The update spans the global scope and projects Pi already trusts, and
+      LazyPi never changes saved project trust or passes <code>--approve</code>.
     </p>
     <p>
       Update remains broad <code>pi update --extensions</code>, including installed packages outside the catalog. Retirement neither disables active packages nor prevents their updates. Existing pins, including older canonical PStack refs, remain pinned. This is not a forced source-version upgrade or a curated-only updater.

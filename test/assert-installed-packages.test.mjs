@@ -9,8 +9,9 @@ import { createCliSandbox } from "./helpers/cli-spawn.mjs";
 
 const ASSERT_SCRIPT = resolve("scripts/assert-installed-packages.mjs");
 
-// The assertion script spawns nothing itself, so it runs with the same isolated
-// environment every other child gets.
+// The assertion script spawns nothing unless --check-status asks it to, and then
+// it runs the CLI through the running Node with the asserted settings file
+// forwarded as PI_CODING_AGENT_DIR, so it stays inside this sandbox.
 function runAssertion(sandbox, args) {
 	return sandbox.spawn(process.execPath, [ASSERT_SCRIPT, ...args]);
 }
@@ -116,7 +117,10 @@ test("assertion reads the agent dir that PI_CODING_AGENT_DIR selects", (t) => {
 	assert.equal(r.stderr, "");
 	const other = runAssertion(sandbox, ["--settings", join(sandbox.root, "missing.json")]);
 	assert.equal(other.status, 1);
-	assert.ok(other.stderr.includes(`settings.json was not created at ${join(sandbox.root, "missing.json")}`));
+	// One clean line and the documented exit 1: a stack trace is not a diagnostic
+	// an operator can act on.
+	assert.equal(other.stdout, "");
+	assert.equal(other.stderr, `settings.json was not created at ${join(sandbox.root, "missing.json")}\n`);
 });
 
 test("packageSourcesFromSettings reads string and object package entries", () => {
@@ -130,4 +134,66 @@ test("packageSourcesFromSettings reads string and object package entries", () =>
 	});
 
 	assert.deepEqual([...sources].sort(), ["npm:pi-ask-user", "npm:pi-mcp-adapter", "npm:pi-subagents"]);
+});
+
+test("--check-status without --settings still asserts the agent profile it reads", (t) => {
+	// The child would read this file anyway; the forwarding must not move it.
+	const sandbox = fullProfile(t);
+	const r = runAssertion(sandbox, ["--check-status"]);
+	assert.equal(r.error, undefined);
+	assert.equal(r.status, 0, r.stderr);
+	assert.equal(r.stdout, `Verified 6 expected package source(s) in ${sandbox.settingsPath()}.\n`);
+	assert.equal(r.stderr, "");
+});
+
+test("--check-status asks the CLI about the file named by --settings, not the ambient profile", (t) => {
+	const sandbox = createCliSandbox(t, { prefix: "status-forwarding-" });
+	mkdirSync(sandbox.agent, { recursive: true });
+	// The ambient profile is a partial one, so a child that read it instead of
+	// the --settings file counts 3 of 6 and the strict header assertion fails.
+	writeFileSync(sandbox.settingsPath(), JSON.stringify({ packages: allFresh.slice(0, 3) }) + "\n");
+	const otherDir = join(sandbox.root, "other");
+	mkdirSync(otherDir, { recursive: true });
+	const other = join(otherDir, "settings.json");
+	writeFileSync(other, JSON.stringify({ packages: allFresh }) + "\n");
+
+	const r = runAssertion(sandbox, ["--settings", other, "--check-status"]);
+	assert.equal(r.error, undefined);
+	assert.equal(r.status, 0, r.stderr);
+	assert.equal(r.stdout, `Verified 6 expected package source(s) in ${other}.\n`);
+	assert.equal(r.stderr, "");
+	assert.equal(readFileSync(other, "utf8"), JSON.stringify({ packages: allFresh }) + "\n");
+});
+
+test("--check-status refuses a settings file it cannot forward to the CLI", (t) => {
+	const sandbox = fullProfile(t);
+	const named = join(sandbox.root, "profile.json");
+	writeFileSync(named, JSON.stringify({ packages: allFresh }) + "\n");
+
+	const r = runAssertion(sandbox, ["--settings", named, "--check-status"]);
+	assert.equal(r.error, undefined);
+	assert.equal(r.status, 1);
+	assert.equal(r.stdout, "");
+	// Comparing the sources in profile.json against the count from
+	// settings.json is the silent wrong-file comparison this refusal replaces.
+	assert.equal(r.stderr, `--check-status needs a settings.json path, got ${named}: the CLI derives its settings file from PI_CODING_AGENT_DIR, so no other filename can be forwarded\n`);
+});
+
+test("--check-status accepts a filename that differs only in case, as a case-insensitive filesystem resolves it", (t) => {
+	const sandbox = createCliSandbox(t, { prefix: "case-insensitive-settings-" });
+	mkdirSync(sandbox.agent, { recursive: true });
+	const dir = join(sandbox.root, "mixed-case");
+	mkdirSync(dir, { recursive: true });
+	const profile = JSON.stringify({ packages: allFresh }) + "\n";
+	// Both names hold the same profile, so a case-insensitive filesystem (where
+	// writing the second name replaces the first) sees exactly one file.
+	const mixed = join(dir, "SETTINGS.JSON");
+	writeFileSync(mixed, profile);
+	writeFileSync(join(dir, "settings.json"), profile);
+
+	const r = runAssertion(sandbox, ["--settings", mixed, "--check-status"]);
+	assert.equal(r.error, undefined);
+	assert.equal(r.status, 0, r.stderr);
+	assert.equal(r.stdout, `Verified 6 expected package source(s) in ${mixed}.\n`);
+	assert.equal(r.stderr, "");
 });

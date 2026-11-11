@@ -52,6 +52,40 @@ test("doctor warns on retired and outsider unpinned git", (t) => {
 	assert.match(output, /acme\/unrelated-tool is an unpinned git head/);
 });
 
+test("doctor exits 1 and names the single problem when pi is missing", (t) => {
+	const sandbox = createCliSandbox(t);
+	writeFileSync(sandbox.settingsPath(), JSON.stringify({ packages: [] }) + "\n");
+	// A detected credential keeps the warning count at zero, so this is the
+	// `1 problem(s) found` branch rather than the problem-plus-warning variant.
+	writeFileSync(sandbox.authPath(), JSON.stringify({ anthropic: { type: "oauth" } }) + "\n");
+	sandbox.removeStub("pi");
+	const result = sandbox.run(["doctor"]);
+	assert.equal(result.status, 1);
+	assert.equal(result.stderr, "");
+	assert.equal(result.stdout, [
+		"",
+		"Environment",
+		`  ✓ Node ${process.versions.node}`,
+		"  ✓ npm is on PATH",
+		"  ✓ git is on PATH",
+		"",
+		"Pi",
+		"  ✗ `pi` is not on PATH — run `npx @tommy-ca/lazypi` to install it",
+		"",
+		"Settings",
+		`  ✓ ${sandbox.settingsPath()} is readable`,
+		"",
+		"Auth",
+		`  ✓ ${sandbox.authPath()} → anthropic`,
+		"",
+		"1 problem(s) found.",
+		"",
+	].join("\n"));
+	// A missing pi must not be spawned, and the problem must not trigger the
+	// global-install escape that once replaced the managed harness.
+	assert.deepEqual(sandbox.external(), []);
+});
+
 test("status prints core and optional installed counts after the catalog header", (t) => {
 	const sandbox = createCliSandbox(t);
 	const result = sandbox.run(["status"]);

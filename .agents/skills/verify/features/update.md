@@ -19,22 +19,25 @@ anything, or writes a file: Pi cannot perform a project-only extension update.
 Use the stub-first recipe in [the verify skill](../SKILL.md): private `HOME`,
 `USERPROFILE`, `PI_CODING_AGENT_DIR`, XDG directories, `TMPDIR`, and npm
 config/cache, with stub `pi` and stub `npm` as the only `PATH` entries. The stub `pi`
-appends its argv to a log outside the checkout and exits 0, so a drive can
-assert the exact delegation instead of observing a real update.
+appends its argv and exit status to `$calls`, which is `$scratch/calls.jsonl`
+outside the checkout, and exits 0, so a drive can assert the exact delegation
+instead of observing a real update.
 
 ## Drive
 
 ```sh
-env -i PATH="$probe/bin" HOME="$probe/home" USERPROFILE="$probe/home" \
-  PI_CODING_AGENT_DIR="$probe/agent" TMPDIR="$probe/tmp" \
-  XDG_CONFIG_HOME="$probe/config" XDG_CACHE_HOME="$probe/cache" \
-  XDG_DATA_HOME="$probe/data" XDG_STATE_HOME="$probe/state" \
-  npm_config_cache="$probe/npm" npm_config_userconfig="$probe/npmrc" \
-  npm_config_globalconfig="$probe/npmrc-global" TERM=dumb NO_COLOR=1 \
-  LAZYPI_PROBE_CALLS="$probe/calls" node bin/lazypi.mjs update
+env -i PATH="$bin" HOME="$scratch/home" USERPROFILE="$scratch/home" \
+  PI_CODING_AGENT_DIR="$scratch/agent" TMPDIR="$scratch/tmp" \
+  XDG_CONFIG_HOME="$scratch/config" XDG_CACHE_HOME="$scratch/cache" \
+  XDG_DATA_HOME="$scratch/data" XDG_STATE_HOME="$scratch/state" \
+  npm_config_cache="$scratch/npm" npm_config_userconfig="$scratch/npmrc" \
+  npm_config_globalconfig="$scratch/npmrc-global" TERM=dumb NO_COLOR=1 \
+  "$node_bin" "$repo/bin/lazypi.mjs" update
 ```
 
-Repeat with `update --local`, and with a corrupt settings file.
+Every variable in that block comes from the verify skill's launch block, and
+`$calls` is the stub log it writes. Repeat with `update --local`, and with a
+corrupt settings file.
 
 ## Assert
 

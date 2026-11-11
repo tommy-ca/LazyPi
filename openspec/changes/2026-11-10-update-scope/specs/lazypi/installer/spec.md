@@ -46,3 +46,56 @@ across the global scope and projects Pi already trusts.
 - **AND** both SHALL state that `update` never self-updates the Pi harness
 - **AND** both SHALL state that project-only update is unsupported because Pi
   cannot perform it
+
+## MODIFIED Requirements
+
+### Requirement: Troubleshooting
+
+The docs SHALL explain how to repair a catalog package whose runtime
+dependency installation is missing or broken, so the operator can recover
+without reinstalling Pi or LazyPi.
+
+#### Scenario: Broken dependency footprint
+
+- **WHEN** a catalog package fails at runtime with a missing dependency —
+  for example pi-subagents and `Cannot find module 'acorn'`
+- **THEN** the FAQ SHALL explain that the installed footprint is
+  incomplete even though the package is present in settings
+- **AND** the updating docs SHALL tell the operator to run
+  `npx @tommy-ca/lazypi update`, which asks Pi for
+  `pi update --extensions`, or to reinstall the package
+- **AND** the docs SHALL mention removing a stale
+  `~/.pi/agent/extensions/<name>` checkout that shadows the package in
+  the npm store
+- **AND** the docs SHALL state that `pi update --extensions` respects existing
+  version pins and does not advance pinned packages
+- **AND** when a failure persists after a footprint repair, the docs SHALL
+  tell the operator to reinstall the package at the catalog's current
+  version (`pi install npm:<pkg>@<version>`)
+
+### Requirement: Catalog retirement
+
+Retirement SHALL remove selection and legacy-resolution metadata from curation,
+not mutate installed state, narrow broad updates, or change removal passthrough.
+
+#### Scenario: Retired curation and selector rejection
+
+- **WHEN** pi-skillful, mention-skill, goal, btw, context-usage, simplify, fff,
+  dynamic-workflows, ponytail, lsp, interactive-shell, autoresearch, todos, or
+  memory is passed to `--only` or `--except`
+- **THEN** install SHALL reject it before bootstrap or package commands
+- **AND** settings, backups, and command counters SHALL remain unchanged
+- **AND** these entries SHALL NOT exist in another curated tier
+
+#### Scenario: Unmanaged state and removal passthrough
+
+- **WHEN** an installed source leaves curation
+- **THEN** its registration SHALL remain Other, not uninstalled or disabled
+- **AND** strings, objects, pins, metadata, order, scope, unrelated settings, and
+  package data SHALL remain intact
+- **AND** broad `pi update --extensions` SHALL remain broad, including unmanaged
+  sources
+- **AND** retirement SHALL NOT freeze updates or auto-exclude declared conflicts
+- **AND** retired IDs SHALL no longer resolve catalog or legacy sources
+- **AND** remove SHALL retain unknown-target passthrough unchanged
+- **AND** operators SHALL use exact installed sources for retired removal

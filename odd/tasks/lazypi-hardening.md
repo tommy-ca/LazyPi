@@ -19,6 +19,8 @@ S6. "new stacked prs, ship the stack then" — deliver as new stacked pull reque
 
 S7. (decision 2026-11-10) `pi` must resolve through the mise-managed harness; the accidental global install is removed.
 
+S9. "build and update verification skills/tools and the feature maps, review and audit with swarm, arena, interrogate" (2026-11-11, after 0.11.0 shipped) — the verify skill, its feature docs, its scripts and the feature map must describe what the shipped CLI and suite actually do, and the audit must use a partitioned swarm, an arena bakeoff and an adversarial interrogate pass.
+
 S8. "Reject update --local explicitly (recommended)". Accepted outcome: reject project-only update before spawning or writing; plain update requests extension packages across global and already-trusted project declarations, without changing project trust. Do not add unsupported `-l` or silently use `--approve`.
 
 ## Tasks
@@ -313,4 +315,58 @@ review-8a1de3d2981a5139 stays recorded as blocked by the missing selector; its
 refuter finding was fixed and is what the fresh lineage reviewed. Total review
 spend so far is five model runs. Remaining slices are unreviewed and the stack is
 not yet pushed.
+
+- T13 [S9] Partitioned swarm audit of the verification surface; delegated read-only explorers over skill text, feature docs, scripts and prose/fixture coverage; pending.
+- T14 [S9] Arena bakeoff for how the feature map and its enforcement should be updated; delegated candidates plus cross-judge; pending.
+- T15 [S9,S2] Implement the winning verification design, fix audited staleness and wire the enforcement; delegated writer; pending.
+- T16 [S9,S5] Interrogate the resulting candidate with independent adversarial reviewers; pending.
+- T17 [S9,S6] Deliver as one reviewable PR; parent owns Git; pending.
+
+L28. Verification surface audit and arena. Four read-only partitions audited the
+skill text, the feature docs, the scripts and the prose, writing reports under
+/tmp/lazypi-followup-audit/reports/verify-audit/. Partition A counted 62 claims,
+47 accurate, 10 stale, 5 unverifiable. Partition B found the map wrong on two of
+five manual items and caught remove.md crediting a test that runs global-only.
+Partition C found the only untested script is the one that runs a live npm exec,
+and that two of the eight e2e checks are empty bodies. Partition D added four
+sites nobody had listed and two contract traps, including that the update-scope
+delta is ADDED only, so archiving it would leave the live spec self-contradicting.
+Parent independently re-verified the empty bodies, the check() counting, the npm
+exec and the CI wiring before acting on any of it. Arena ran three designs and a
+cross-judge. A manifest and a generated map scored 1 and 2 on defect class and on
+failure honesty, because A pins a test name that may assert nothing and B hides
+holes in a complete-looking table. The hand-correct design won on defect class and
+gate fit. Parent adopted it with two grafts and one cut: keep its own flip
+condition as a forty-five line forbidden-phrase rule inside the existing
+cli-surface audit, keep the tool-defect fixes as a second unit, and cut the
+mutual-exclusion property because it cannot be computed without the generator it
+came from. The cross-judge also caught candidate C being wrong that the recipes
+already used the node binary; parent confirmed all four used bare node with a dead
+environment variable. Writer one delivered ac02470: eleven stale claims corrected
+and each re-checked against the code, four recipes made executable and driven
+literally, three docs pages fixed, the update-scope delta made archive-consistent,
+and the rule proven to report eleven issues against the previous prose and zero
+against the tree. Parent measured 235 of 235 tests and spec:validate 18 plus 41
+items, 0 failed. Slice boundary: a79e910 is the plan, ac02470 is the text and rule
+half. The tool-defect half is a separate unit with disjoint surfaces, so the 424
+authored lines recorded across two commits are the text slice alone and the
+remaining work is tracked separately rather than folded in to fit a number.
+
+L29. Tool-defect half delivered. Commit ae5b83e. Two of the eight e2e checks were
+`() => {}` bodies that `check()` counted as passes; the worker showed the real
+false pass by driving a doctor fixture that prints a problem line and exits 0 and
+still reported E2E PASS: 8 checks. Both bodies now assert state. Optional sources
+derive like core, the pstack index comes from the catalog, subagent overrides
+compare exactly, doctor's exit-1 branch has an exact-output pin, and the Windows
+step that could not fail now runs the empty-optional gate on that runner. One
+instruction was wrong: parent told the worker to forward `--settings`, but
+`bin/lazypi.mjs` has no such flag and exits 2 on unknown arguments. The worker
+forwarded the asserted file through PI_CODING_AGENT_DIR, resolved the CLI beside
+the script, and failed closed on any other filename, and its probe showed the base
+comparing one file's sources against another file's count. Parent measured 242 of
+242 tests with spec:validate 18 plus 41 clean and confirmed no empty check bodies
+remain. Slice boundary: a79e910 plan, ac02470 text and rule, 8553b18 records,
+ae5b83e tools. The 684 authored lines across four commits are two coherent slices,
+not one; reshaping them to satisfy a heuristic would have merged text and CI risk
+into a single unreadable review.
 

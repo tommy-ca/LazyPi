@@ -29,7 +29,7 @@ const file=join(process.env.PI_CODING_AGENT_DIR,'settings.json');
 mkdirSync(process.env.PI_CODING_AGENT_DIR,{recursive:true});
 let s; try { s=JSON.parse(readFileSync(file)); } catch { s={packages:[]}; }
 const core=${JSON.stringify(PACKAGES.filter(p => p.category === "core").map(p => p.installSource ?? p.source))};
-const optional=${JSON.stringify(PACKAGES.filter(p => p.category === "optional").map(p => p.source))};
+const optional=${JSON.stringify(PACKAGES.filter(p => p.category === "optional").map(p => p.installSource ?? p.source))};
 const a=process.argv.slice(2);
 if(${JSON.stringify(mode)}==='stage' && a[0]==='status') { console.error('fixture status failure'); process.exit(23); }
 if(a[0]==='install') {
@@ -40,9 +40,14 @@ if(a[0]==='install') {
  s.subagents={agentOverrides:Object.fromEntries(['context-builder','planner','researcher','reviewer','scout','worker'].map(n=>[n,{model:''}]))};
  console.log(fresh.length?'Will install: '+fresh.length+'\\nInstalled '+fresh.length+' package(s)':'Nothing to do');
  if(a.includes('pstack')) process.exit(0);
-} else if(a[0]==='status') console.log('Installed from LazyPi catalog (${PACKAGES.length}/${PACKAGES.length})\\nnone — full catalog is installed');
+} else if(a[0]==='status') {
+ const reported=${JSON.stringify(mode)}==='wrong-header'?${PACKAGES.length - 1}:${PACKAGES.length};
+ console.log('Installed from LazyPi catalog ('+reported+'/${PACKAGES.length})\\nnone — full catalog is installed');
+ if(${JSON.stringify(mode)}==='bad-status') s.packages=[];
+ if(${JSON.stringify(mode)}==='bad-overrides') delete s.subagents;
+}
 else if(a[0]==='remove') s.packages=s.packages.filter(p=>typeof p==='string');
-else if(a[0]==='doctor') console.log('\u0060pi\u0060 is on PATH\\nsettings.json readable');
+else if(a[0]==='doctor') console.log('  ✓ Node 20.0.0\\n  ✓ npm is on PATH\\n  ✓ \u0060pi\u0060 is on PATH\\n  ✓ '+file+' is readable'+(${JSON.stringify(mode)}==='bad-doctor'?'\\n  ✗ npm is not on PATH\\n1 problem(s) found.':''));
 else process.exit(91);
 writeFileSync(file,JSON.stringify(s));`;
 	const executable = (name, body) => writeFileSync(join(bin, name), `#!${process.execPath}\n${body}`, { mode: 0o755 });
@@ -78,6 +83,30 @@ fs.writeFileSync(file,JSON.stringify(s));`);
 }
 
 const posix = { skip: process.platform === "win32" ? "Fixture launchers require POSIX" : false };
+
+// `check()` counts a pass as soon as its body returns, so a body that asserts
+// nothing reports a pass. Two such bodies reached a live e2e run and were
+// counted, so the shape is read from the script here instead of trusted.
+function checkCallBodies(source) {
+	const bodies = [];
+	for (const match of source.matchAll(/\bcheck\(\s*[`"]/g)) {
+		const arrow = source.indexOf("=> {", match.index);
+		assert.notEqual(arrow, -1, `check() call without an arrow body: ${source.slice(match.index, match.index + 60)}`);
+		const open = arrow + "=> ".length;
+		let depth = 0;
+		let close = -1;
+		for (let i = open; i < source.length; i++) {
+			if (source[i] === "{") depth++;
+			else if (source[i] === "}" && --depth === 0) { close = i; break; }
+		}
+		assert.notEqual(close, -1, "unbalanced check() body");
+		bodies.push({ start: open + 1, end: close, source: source.slice(open + 1, close) });
+	}
+	return bodies;
+}
+
+const nonAssertingBodies = (source) => checkCallBodies(source).filter((body) => !/\bassert\./.test(body.source));
+
 test("packed verification uses private state and an allowlisted environment for every command", posix, () => {
 	const r = drive();
 	assert.equal(r.status, 0, r.stderr);
@@ -146,6 +175,86 @@ for (const [mode, message] of [
 	if (mode === "pi") assert.deepEqual(r.calls.map(c => [c.command, ...c.args]), [["pi", "--version"]]);
 	if (mode === "bad-pack") assert.deepEqual(r.calls.map(c => c.command), ["pi", "npm"]);
 	if (mode === "stage") assert.deepEqual(r.calls.at(-1).args, ["status"]);
+});
+
+test("a status result that rewrites the catalog it reports fails the counted check", posix, () => {
+	// The empty body this replaces counted as a pass, so a status run that wiped
+	// the installed catalog while printing a full-catalog header reached E2E PASS.
+	const r = drive({ mode: "bad-status" });
+	assert.equal(r.status, 1, r.stdout);
+	assert.doesNotMatch(r.stdout, /E2E PASS/);
+	assert.match(r.stderr, /^E2E FAIL: Expected values to be strictly deep-equal:/m);
+	assert.deepEqual(r.calls.at(-1).args, ["status"]);
+	const root = r.stdout.match(/^sandbox: (.+)\n/)[1];
+	assert.equal(existsSync(root), false);
+});
+
+test("a doctor result that reports a problem fails the counted check", posix, () => {
+	const r = drive({ mode: "bad-doctor" });
+	assert.equal(r.status, 1, r.stdout);
+	assert.doesNotMatch(r.stdout, /E2E PASS/);
+	assert.match(r.stderr, /^E2E FAIL: The input was expected to not match the regular expression/m);
+	assert.deepEqual(r.calls.at(-1).args, ["doctor"]);
+	const root = r.stdout.match(/^sandbox: (.+)\n/)[1];
+	assert.equal(existsSync(root), false);
+});
+
+test("a status header that reports the wrong count fails the counted check", posix, () => {
+	// The fixture prints the header the script matches, so without a mode that
+	// prints a different count those banner regexes could never fail.
+	const r = drive({ mode: "wrong-header" });
+	assert.equal(r.status, 1, r.stdout);
+	assert.doesNotMatch(r.stdout, /E2E PASS/);
+	assert.match(r.stderr, /^E2E FAIL: The input did not match the regular expression/m);
+	assert.deepEqual(r.calls.at(-1).args, ["status"]);
+	const root = r.stdout.match(/^sandbox: (.+)\n/)[1];
+	assert.equal(existsSync(root), false);
+});
+
+test("a status result that drops the subagent overrides fails the counted check", posix, () => {
+	// Reading back `packages` alone let a status run delete the six overrides the
+	// install wrote and still reach E2E PASS.
+	const r = drive({ mode: "bad-overrides" });
+	assert.equal(r.status, 1, r.stdout);
+	assert.doesNotMatch(r.stdout, /E2E PASS/);
+	assert.match(r.stderr, /^E2E FAIL: Expected values to be strictly deep-equal:/m);
+	assert.deepEqual(r.calls.at(-1).args, ["status"]);
+	const root = r.stdout.match(/^sandbox: (.+)\n/)[1];
+	assert.equal(existsSync(root), false);
+});
+
+test("every counted e2e check body asserts, so an empty body cannot report a pass", () => {
+	const source = readFileSync(script, "utf8");
+	assert.equal(checkCallBodies(source).length, 8, "the eight counted checks drive the E2E PASS count");
+	assert.deepEqual(nonAssertingBodies(source), [], "a check body that asserts nothing still prints a pass");
+	assert.doesNotMatch(source, /check\(\s*[`"][^`"]*[`"]\s*,\s*\(\)\s*=>\s*\{\s*\}/, "the empty check body form must not come back");
+});
+
+test("the counted-check guard fails on a planted empty body", () => {
+	// Planting the defect in a copy of the real source proves the guard can fail;
+	// a guard that only describes the current tree passes whatever it reads.
+	const source = readFileSync(script, "utf8");
+	const [first] = checkCallBodies(source);
+	const planted = source.slice(0, first.start) + source.slice(first.end);
+	assert.notEqual(planted, source, "planting must change the source");
+	const offending = nonAssertingBodies(planted);
+	assert.equal(offending.length, 1);
+	assert.equal(offending[0].source.trim(), "");
+});
+
+test("catalog source derivation resolves a pin in the optional tier the way it does in core", () => {
+	// Every catalog entry is core, so no live stage can put a pinned optional
+	// package in front of the two derivations. The premise is asserted here: when
+	// a pinned optional package appears, this test fails and asks for a live stage
+	// instead of leaving the derivation pinned only by its source text.
+	assert.deepEqual(
+		PACKAGES.filter((p) => p.category === "optional"),
+		[],
+		"add a live stage for the pinned optional package instead of relying on this source-text pin",
+	);
+	const script = readFileSync("scripts/e2e-install.mjs", "utf8");
+	assert.equal(script.match(/p\.installSource \?\? p\.source/g).length, 2, "the core and optional derivations must both resolve a pin");
+	assert.doesNotMatch(script, /p\.category === "(?:core|optional)"\)\.map\(\(p\) => p\.source\)/, "a derivation that ignores installSource compares the wrong source");
 });
 
 test("kept successful run retains only private artifacts and settings", posix, () => {
