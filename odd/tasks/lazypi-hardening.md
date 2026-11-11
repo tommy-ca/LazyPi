@@ -19,6 +19,8 @@ S6. "new stacked prs, ship the stack then" — deliver as new stacked pull reque
 
 S7. (decision 2026-11-10) `pi` must resolve through the mise-managed harness; the accidental global install is removed.
 
+S9. "build and update verification skills/tools and the feature maps, review and audit with swarm, arena, interrogate" (2026-11-11, after 0.11.0 shipped) — the verify skill, its feature docs, its scripts and the feature map must describe what the shipped CLI and suite actually do, and the audit must use a partitioned swarm, an arena bakeoff and an adversarial interrogate pass.
+
 S8. "Reject update --local explicitly (recommended)". Accepted outcome: reject project-only update before spawning or writing; plain update requests extension packages across global and already-trusted project declarations, without changing project trust. Do not add unsupported `-l` or silently use `--approve`.
 
 ## Tasks
@@ -313,4 +315,10 @@ review-8a1de3d2981a5139 stays recorded as blocked by the missing selector; its
 refuter finding was fixed and is what the fresh lineage reviewed. Total review
 spend so far is five model runs. Remaining slices are unreviewed and the stack is
 not yet pushed.
+
+- T13 [S9] Partitioned swarm audit of the verification surface; delegated read-only explorers over skill text, feature docs, scripts and prose/fixture coverage; pending.
+- T14 [S9] Arena bakeoff for how the feature map and its enforcement should be updated; delegated candidates plus cross-judge; pending.
+- T15 [S9,S2] Implement the winning verification design, fix audited staleness and wire the enforcement; delegated writer; pending.
+- T16 [S9,S5] Interrogate the resulting candidate with independent adversarial reviewers; pending.
+- T17 [S9,S6] Deliver as one reviewable PR; parent owns Git; pending.
 
