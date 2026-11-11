@@ -8,12 +8,12 @@ writes; its only spawn is `pi --version`.
 
 Use the stub-first recipe in [the verify skill](../SKILL.md): private `HOME`,
 `USERPROFILE`, `PI_CODING_AGENT_DIR`, XDG directories, `TMPDIR`, and npm
-config/cache, with stub `pi`, stub `npm`, stub `git`, and stub `which` in the one
+config/cache, with stub `pi`, stub `npm`, and stub `git` in the one
 `PATH` directory. The stub `pi` appends its argv to a log file outside the
 checkout and answers `--version` with `0.5.0-fixture`; the stub `npm` logs and
-exits 0; the stub `which` reports the stubs that exist, because `doctor` asks
-`which` for `pi`, `npm`, and `git`. `PATH` holds that directory alone, so a
-missing stub fails the drive instead of reaching a real `pi`, `npm`, or git.
+exits 0. The CLI walks `PATH` itself for `pi`, `npm`, and `git` and spawns no
+lookup tool. `PATH` holds that directory alone, so a missing stub fails the drive
+instead of reaching a real `pi`, `npm`, or git.
 
 ## Drive
 

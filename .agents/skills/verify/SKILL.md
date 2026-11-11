@@ -46,22 +46,14 @@ Use the feature map in `features/README.md`, which also states the split between
 
 ## Stub-first commands
 
-`install`, `status`, `update`, `doctor`, and `remove` may be driven, including with `--local`, only with stub `pi`, stub `npm`, and a stub `which` in the one `PATH` directory. Redirecting `HOME`, `USERPROFILE`, `PI_CODING_AGENT_DIR`, the XDG directories, `TMPDIR`, and the npm config and cache is necessary and not sufficient: environment redirection alone does not stop a real `npm install -g`. The stub is what keeps a spawn from reaching a real tool.
+`install`, `status`, `update`, `doctor`, and `remove` may be driven, including with `--local`, only with stub `pi`, stub `npm`, and stub `git` in the one `PATH` directory. Redirecting `HOME`, `USERPROFILE`, `PI_CODING_AGENT_DIR`, the XDG directories, `TMPDIR`, and the npm config and cache is necessary and not sufficient: environment redirection alone does not stop a real `npm install -g`. The stub is what keeps a spawn from reaching a real tool.
 
-The CLI resolves `pi` and `npm` through `which`, so the stub `which` must answer
-for the stubs that exist and exit 1 for anything else. Without it every tool
-looks missing, and with a real `which` a missing stub would fall through to the
-host.
+The CLI walks `PATH` itself to resolve `pi`, `npm` and `git`: it spawns no lookup
+tool, so a stub `which` is neither needed nor asked for. A candidate is accepted
+only as a regular file with an execute bit, and `PATH` holds that one private
+directory, so a command with no stub is simply not found.
 
 ```sh
-cat > "$bin/which" <<EOF
-#!$node_bin
-import { existsSync } from "node:fs";
-const name = process.argv[2];
-const path = "$bin/" + name;
-if (!name || !existsSync(path)) process.exit(1);
-process.stdout.write(path + "\\n");
-EOF
 cat > "$bin/pi" <<EOF
 #!$node_bin
 import { appendFileSync } from "node:fs";
@@ -75,7 +67,7 @@ import { appendFileSync } from "node:fs";
 const entry = { command: "npm", argv: process.argv.slice(2) };
 process.on("exit", (status) => appendFileSync("$calls", JSON.stringify({ ...entry, status }) + "\\n"));
 EOF
-chmod 755 "$bin/which" "$bin/pi" "$bin/npm"
+chmod 755 "$bin/pi" "$bin/npm"
 ```
 
 Every drive then uses `PATH="$bin"` plus the isolated environment, and nothing
@@ -85,9 +77,10 @@ exit status. A stub that exits 0 also proves nothing about Pi's own behavior. If
 a drive needs another external command, add a stub for it in `$bin`; do not add a
 system directory or the Node install directory to `PATH`.
 
-To model a tool that is not installed, remove its stub and keep the stub `which`,
-which then answers not-found: `rm "$bin/pi"`. The CLI must fail before it spawns
-anything, and the empty invocation log proves it did not fall back.
+To model a tool that is not installed, remove its stub: `rm "$bin/pi"`. With
+`PATH` holding only that private directory the command is then not found. The CLI
+must fail before it spawns anything, and the empty invocation log proves it did
+not fall back.
 
 ### The same rule in the automated suite
 

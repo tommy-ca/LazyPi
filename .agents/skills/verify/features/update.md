@@ -8,7 +8,7 @@ It does not select, install, or reconcile catalog entries.
 
 Use the stub-first recipe in [the verify skill](../SKILL.md): private `HOME`,
 `USERPROFILE`, `PI_CODING_AGENT_DIR`, XDG directories, `TMPDIR`, and npm
-config/cache, with stub `pi`, stub `npm`, and stub `which` as the only `PATH` entry. The stub `pi`
+config/cache, with stub `pi` and stub `npm` as the only `PATH` entries. The stub `pi`
 appends its argv to a log outside the checkout and exits 0, so a drive can
 assert the exact delegation instead of observing a real update.
 
