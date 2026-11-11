@@ -6,13 +6,17 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { PACKAGES, parseList } from "../bin/lazypi.mjs";
 import { resolveAgentConfigDir } from "../bin/pi-host.mjs";
 
 const TIERS = ["core", "optional", "all"];
+
+// The CLI the status oracle runs, resolved beside this script so the caller's
+// working directory cannot change which CLI answers.
+const CLI_ENTRY = join(import.meta.dirname, "..", "bin", "lazypi.mjs");
 
 export function packageSourcesFromSettings(settings) {
 	return new Set(
@@ -72,10 +76,20 @@ function parseArgs(args) {
 	return flags;
 }
 
-function assertStatusCount(expectedCount) {
-	const statusOutput = execFileSync("node", ["bin/lazypi.mjs", "status"], {
+function assertStatusCount(expectedCount, settingsPath) {
+	// The CLI is the status oracle, and it has no --settings flag: an unknown
+	// argument makes it exit 2 before it reads anything. It resolves its settings
+	// file from PI_CODING_AGENT_DIR, so that directory is how the file asserted
+	// above reaches the child. Without this, `--settings X --check-status`
+	// asserts the sources in X and then compares the count from the ambient
+	// profile, which is a comparison of two different files.
+	if (basename(settingsPath) !== "settings.json") {
+		throw new Error(`--check-status needs a settings.json path, got ${settingsPath}: the CLI derives its settings file from PI_CODING_AGENT_DIR, so no other filename can be forwarded`);
+	}
+	const statusOutput = execFileSync(process.execPath, [CLI_ENTRY, "status"], {
 		encoding: "utf8",
 		stdio: ["ignore", "pipe", "pipe"],
+		env: { ...process.env, PI_CODING_AGENT_DIR: dirname(resolve(settingsPath)) },
 	});
 	const expectedLine = `Installed from LazyPi catalog (${expectedCount}/${PACKAGES.length}):`;
 	assert.match(statusOutput, new RegExp(expectedLine.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
@@ -98,7 +112,7 @@ export function main() {
 	assert.deepEqual(missing, [], `Missing package sources in settings.json: ${missing.join(", ")}`);
 	assert.deepEqual(unexpected, [], `Unexpected package sources in settings.json: ${unexpected.join(", ")}`);
 
-	if (flags.checkStatus) assertStatusCount(expectedSources.length);
+	if (flags.checkStatus) assertStatusCount(expectedSources.length, settingsPath);
 
 	console.log(`Verified ${expectedSources.length} expected package source(s) in ${settingsPath}.`);
 }

@@ -99,9 +99,15 @@ try {
 	console.log("Stage 1.5: install --yes --only optional");
 	r = lazypi("install --yes --only optional");
 	assert.equal(r.status, 0, `optional install failed\n${r.stdout}\n${r.stderr}`);
-	const optionalSources = PACKAGES.filter((p) => p.category === "optional").map((p) => p.source);
+	const optionalSources = PACKAGES.filter((p) => p.category === "optional").map((p) => p.installSource ?? p.source);
 	const OPTIONAL_COUNT = optionalSources.length;
 	const fullSources = [...coreSources, ...optionalSources];
+	// Stages 5 and 6 address pstack inside the settings array, so its position is
+	// derived from the catalog instead of assuming the catalog keeps it first.
+	const pstack = PACKAGES.find((pkg) => pkg.id === "pstack");
+	assert.ok(pstack, "the catalog must keep a pstack entry: stages 5 and 6 address it by id");
+	const pstackIndex = fullSources.indexOf(pstack.installSource ?? pstack.source);
+	assert.notEqual(pstackIndex, -1, "pstack is missing from the installed source list");
 	if (OPTIONAL_COUNT === 0) assert.equal(r.stdout, "Nothing selected — nothing to install.\n");
 	else assert.match(r.stdout, new RegExp(`Will install:\\s+${OPTIONAL_COUNT}`));
 	check(`exit 0, ${OPTIONAL_COUNT} optional packages installed`, () => {
@@ -119,27 +125,31 @@ try {
 
 	// --- Stage 3: subagent overrides ---------------------------------------
 	console.log("Stage 3: subagent override side effect");
+	const BUILTIN_AGENTS = ["context-builder", "planner", "researcher", "reviewer", "scout", "worker"];
 	check("empty-model overrides for the 6 builtin agents", () => {
 		const overrides = readSettings(agentDir).subagents?.agentOverrides ?? {};
-		for (const name of ["context-builder", "planner", "researcher", "reviewer", "scout", "worker"]) {
-			assert.deepEqual(overrides[name], { model: "" }, `missing override for ${name}`);
-		}
+		// The exact object, not six presence lookups: an extra override or a
+		// non-empty model is a different settings side effect than this label says.
+		assert.deepEqual(overrides, Object.fromEntries(BUILTIN_AGENTS.map((name) => [name, { model: "" }])));
 	});
 
 	// --- Stage 4: status -----------------------------------------------------
 	console.log("Stage 4: status");
 	r = lazypi("status");
 	assert.equal(r.status, 0);
-	assert.match(r.stdout, new RegExp(`Installed from LazyPi catalog \\(${PACKAGES.length}/${PACKAGES.length}\\)`));
-	assert.match(r.stdout, /none — full catalog is installed/);
-	check("status shows full catalog installed", () => {});
+	check("status shows full catalog installed", () => {
+		assert.match(r.stdout, new RegExp(`Installed from LazyPi catalog \\(${PACKAGES.length}/${PACKAGES.length}\\)`));
+		assert.match(r.stdout, /none — full catalog is installed/);
+		// status reports the catalog; reporting must not rewrite it.
+		assert.deepEqual(readSettings(agentDir).packages, fullSources);
+	});
 
 	// --- Stage 5: registration preservation, not native loading --------------
 	console.log("Stage 5: preserve an older canonical pin and unmanaged registrations");
 	const oldSource = "git:github.com/tommy-ca/pstack@bdbb67f0f08212ce3136d2c22fb3b17e30bb717c";
 	const settingsFile = join(agentDir, "settings.json");
 	const seeded = readSettings(agentDir);
-	seeded.packages[0] = { source: oldSource, skills: [], metadata: { fixture: true } };
+	seeded.packages[pstackIndex] = { source: oldSource, skills: [], metadata: { fixture: true } };
 	seeded.packages.push({ source: "npm:pi-btw@0.1.0", extensions: [], metadata: { fixture: true } });
 	writeFileSync(settingsFile, JSON.stringify(seeded, null, 2) + "\n");
 	const before = readFileSync(settingsFile, "utf8");
@@ -155,16 +165,23 @@ try {
 	r = lazypi("remove pstack npm:pi-btw@0.1.0");
 	assert.equal(r.status, 0, `remove failed\n${r.stdout}\n${r.stderr}`);
 	check("only requested registrations removed", () => {
-		assert.deepEqual(readSettings(agentDir), { ...seeded, packages: fullSources.slice(1) });
+		const remaining = [...fullSources.slice(0, pstackIndex), ...fullSources.slice(pstackIndex + 1)];
+		assert.deepEqual(readSettings(agentDir), { ...seeded, packages: remaining });
 	});
 
 	// --- Stage 7: doctor ------------------------------------------------------
 	console.log("Stage 7: doctor");
 	r = lazypi("doctor");
 	assert.equal(r.status, 0, `doctor failed\n${r.stdout}\n${r.stderr}`);
-	assert.match(r.stdout, /`pi` is on PATH/);
-	assert.match(r.stdout, /settings.json.*readable/);
-	check("doctor passes environment and settings checks", () => {});
+	check("doctor passes environment and settings checks", () => {
+		assert.match(r.stdout, /  ✓ Node /);
+		assert.match(r.stdout, /  ✓ npm is on PATH/);
+		assert.match(r.stdout, /  ✓ `pi` is on PATH/);
+		assert.match(r.stdout, /settings\.json is readable/);
+		// A doctor run that reports a problem exits 1, so a passing run of this
+		// check cannot also carry a problem marker or a problem summary.
+		assert.doesNotMatch(r.stdout, /✗|problem\(s\) found/);
+	});
 
 	console.log(`\nE2E PASS: ${passed} checks`);
 } catch (err) {

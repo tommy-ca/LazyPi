@@ -32,8 +32,8 @@ jobs:
       - name: Run lazypi --yes
         run: node bin/lazypi.mjs --yes
 
-      - name: Install optional catalog tier
-        run: node bin/lazypi.mjs --yes --only optional
+      - name: Assert empty optional selection changes nothing
+        run: node --test --test-name-pattern="^empty optional selection" test/ci-workflows.test.mjs
 
       - name: Assert expected packages for full install
         run: node scripts/assert-installed-packages.mjs --check-status

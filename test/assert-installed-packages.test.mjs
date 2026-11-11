@@ -9,8 +9,9 @@ import { createCliSandbox } from "./helpers/cli-spawn.mjs";
 
 const ASSERT_SCRIPT = resolve("scripts/assert-installed-packages.mjs");
 
-// The assertion script spawns nothing itself, so it runs with the same isolated
-// environment every other child gets.
+// The assertion script spawns nothing unless --check-status asks it to, and then
+// it runs the CLI through the running Node with the asserted settings file
+// forwarded as PI_CODING_AGENT_DIR, so it stays inside this sandbox.
 function runAssertion(sandbox, args) {
 	return sandbox.spawn(process.execPath, [ASSERT_SCRIPT, ...args]);
 }
@@ -130,4 +131,47 @@ test("packageSourcesFromSettings reads string and object package entries", () =>
 	});
 
 	assert.deepEqual([...sources].sort(), ["npm:pi-ask-user", "npm:pi-mcp-adapter", "npm:pi-subagents"]);
+});
+
+test("--check-status without --settings still asserts the agent profile it reads", (t) => {
+	// The child would read this file anyway; the forwarding must not move it.
+	const sandbox = fullProfile(t);
+	const r = runAssertion(sandbox, ["--check-status"]);
+	assert.equal(r.error, undefined);
+	assert.equal(r.status, 0, r.stderr);
+	assert.equal(r.stdout, `Verified 6 expected package source(s) in ${sandbox.settingsPath()}.\n`);
+	assert.equal(r.stderr, "");
+});
+
+test("--check-status asks the CLI about the file named by --settings, not the ambient profile", (t) => {
+	const sandbox = createCliSandbox(t, { prefix: "status-forwarding-" });
+	mkdirSync(sandbox.agent, { recursive: true });
+	// The ambient profile is a partial one, so a child that read it instead of
+	// the --settings file counts 3 of 6 and the strict header assertion fails.
+	writeFileSync(sandbox.settingsPath(), JSON.stringify({ packages: allFresh.slice(0, 3) }) + "\n");
+	const otherDir = join(sandbox.root, "other");
+	mkdirSync(otherDir, { recursive: true });
+	const other = join(otherDir, "settings.json");
+	writeFileSync(other, JSON.stringify({ packages: allFresh }) + "\n");
+
+	const r = runAssertion(sandbox, ["--settings", other, "--check-status"]);
+	assert.equal(r.error, undefined);
+	assert.equal(r.status, 0, r.stderr);
+	assert.equal(r.stdout, `Verified 6 expected package source(s) in ${other}.\n`);
+	assert.equal(r.stderr, "");
+	assert.equal(readFileSync(other, "utf8"), JSON.stringify({ packages: allFresh }) + "\n");
+});
+
+test("--check-status refuses a settings file it cannot forward to the CLI", (t) => {
+	const sandbox = fullProfile(t);
+	const named = join(sandbox.root, "profile.json");
+	writeFileSync(named, JSON.stringify({ packages: allFresh }) + "\n");
+
+	const r = runAssertion(sandbox, ["--settings", named, "--check-status"]);
+	assert.equal(r.error, undefined);
+	assert.equal(r.status, 1);
+	assert.equal(r.stdout, "");
+	// Comparing the sources in profile.json against the count from
+	// settings.json is the silent wrong-file comparison this refusal replaces.
+	assert.ok(r.stderr.includes(`--check-status needs a settings.json path, got ${named}`));
 });

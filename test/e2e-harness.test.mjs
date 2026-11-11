@@ -29,7 +29,7 @@ const file=join(process.env.PI_CODING_AGENT_DIR,'settings.json');
 mkdirSync(process.env.PI_CODING_AGENT_DIR,{recursive:true});
 let s; try { s=JSON.parse(readFileSync(file)); } catch { s={packages:[]}; }
 const core=${JSON.stringify(PACKAGES.filter(p => p.category === "core").map(p => p.installSource ?? p.source))};
-const optional=${JSON.stringify(PACKAGES.filter(p => p.category === "optional").map(p => p.source))};
+const optional=${JSON.stringify(PACKAGES.filter(p => p.category === "optional").map(p => p.installSource ?? p.source))};
 const a=process.argv.slice(2);
 if(${JSON.stringify(mode)}==='stage' && a[0]==='status') { console.error('fixture status failure'); process.exit(23); }
 if(a[0]==='install') {
@@ -40,9 +40,12 @@ if(a[0]==='install') {
  s.subagents={agentOverrides:Object.fromEntries(['context-builder','planner','researcher','reviewer','scout','worker'].map(n=>[n,{model:''}]))};
  console.log(fresh.length?'Will install: '+fresh.length+'\\nInstalled '+fresh.length+' package(s)':'Nothing to do');
  if(a.includes('pstack')) process.exit(0);
-} else if(a[0]==='status') console.log('Installed from LazyPi catalog (${PACKAGES.length}/${PACKAGES.length})\\nnone — full catalog is installed');
+} else if(a[0]==='status') {
+ console.log('Installed from LazyPi catalog (${PACKAGES.length}/${PACKAGES.length})\\nnone — full catalog is installed');
+ if(${JSON.stringify(mode)}==='bad-status') s.packages=[];
+}
 else if(a[0]==='remove') s.packages=s.packages.filter(p=>typeof p==='string');
-else if(a[0]==='doctor') console.log('\u0060pi\u0060 is on PATH\\nsettings.json readable');
+else if(a[0]==='doctor') console.log('  ✓ Node 20.0.0\\n  ✓ npm is on PATH\\n  ✓ \u0060pi\u0060 is on PATH\\n  ✓ '+file+' is readable'+(${JSON.stringify(mode)}==='bad-doctor'?'\\n  ✗ npm is not on PATH\\n1 problem(s) found.':''));
 else process.exit(91);
 writeFileSync(file,JSON.stringify(s));`;
 	const executable = (name, body) => writeFileSync(join(bin, name), `#!${process.execPath}\n${body}`, { mode: 0o755 });
@@ -146,6 +149,43 @@ for (const [mode, message] of [
 	if (mode === "pi") assert.deepEqual(r.calls.map(c => [c.command, ...c.args]), [["pi", "--version"]]);
 	if (mode === "bad-pack") assert.deepEqual(r.calls.map(c => c.command), ["pi", "npm"]);
 	if (mode === "stage") assert.deepEqual(r.calls.at(-1).args, ["status"]);
+});
+
+test("a status result that rewrites the catalog it reports fails the counted check", posix, () => {
+	// The empty body this replaces counted as a pass, so a status run that wiped
+	// the installed catalog while printing a full-catalog header reached E2E PASS.
+	const r = drive({ mode: "bad-status" });
+	assert.equal(r.status, 1, r.stdout);
+	assert.doesNotMatch(r.stdout, /E2E PASS/);
+	assert.match(r.stderr, /^E2E FAIL: Expected values to be strictly deep-equal:/m);
+	assert.deepEqual(r.calls.at(-1).args, ["status"]);
+	const root = r.stdout.match(/^sandbox: (.+)\n/)[1];
+	assert.equal(existsSync(root), false);
+});
+
+test("a doctor result that reports a problem fails the counted check", posix, () => {
+	const r = drive({ mode: "bad-doctor" });
+	assert.equal(r.status, 1, r.stdout);
+	assert.doesNotMatch(r.stdout, /E2E PASS/);
+	assert.match(r.stderr, /^E2E FAIL: The input was expected to not match the regular expression/m);
+	assert.deepEqual(r.calls.at(-1).args, ["doctor"]);
+	const root = r.stdout.match(/^sandbox: (.+)\n/)[1];
+	assert.equal(existsSync(root), false);
+});
+
+test("catalog source derivation resolves a pin in the optional tier the way it does in core", () => {
+	// Every catalog entry is core, so no live stage can put a pinned optional
+	// package in front of the two derivations. The premise is asserted here: when
+	// a pinned optional package appears, this test fails and asks for a live stage
+	// instead of leaving the derivation pinned only by its source text.
+	assert.deepEqual(
+		PACKAGES.filter((p) => p.category === "optional"),
+		[],
+		"add a live stage for the pinned optional package instead of relying on this source-text pin",
+	);
+	const script = readFileSync("scripts/e2e-install.mjs", "utf8");
+	assert.equal(script.match(/p\.installSource \?\? p\.source/g).length, 2, "the core and optional derivations must both resolve a pin");
+	assert.doesNotMatch(script, /p\.category === "(?:core|optional)"\)\.map\(\(p\) => p\.source\)/, "a derivation that ignores installSource compares the wrong source");
 });
 
 test("kept successful run retains only private artifacts and settings", posix, () => {

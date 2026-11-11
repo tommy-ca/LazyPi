@@ -8,16 +8,16 @@ import { spawnSync } from "node:child_process";
 import { createCliSandbox } from "./helpers/cli-spawn.mjs";
 
 const PACKED_CLI_SMOKE_COMMAND = "node scripts/packed-cli-smoke.mjs";
-const OPTIONAL_INSTALL = "node bin/lazypi.mjs --yes --only optional";
-// The Linux gate for an empty optional selection. A bare `--only optional` run
-// cannot be that gate: it prints "Nothing selected" and exits 0 whatever the
-// product does, so the step only fails when the command itself breaks.
+// The gate for an empty optional selection, asserted on both operating systems
+// by the same hermetic proof. A bare `--only optional` run cannot be that gate:
+// it prints "Nothing selected" and exits 0 whatever the product does, so the
+// step only fails when the command itself breaks.
 const EMPTY_OPTIONAL_GATE = 'node --test --test-name-pattern="^empty optional selection" test/ci-workflows.test.mjs';
 const WINDOWS_COMMANDS = [
 	"npm test",
 	PACKED_CLI_SMOKE_COMMAND,
 	"node bin/lazypi.mjs --yes",
-	OPTIONAL_INSTALL,
+	EMPTY_OPTIONAL_GATE,
 	"node scripts/assert-installed-packages.mjs --check-status",
 	"node bin/lazypi.mjs doctor",
 ];
@@ -159,18 +159,23 @@ test("trigger recording fails when a pull request trigger is added to the dispat
 	assert.throws(() => triggersFromWorkflowText("name: no-triggers\njobs:\n  x:\n"));
 });
 
-test("windows CI executes optional installation before the full-catalog assertion", () => {
-	assertCommandsInOrder(readWorkflow(".github/workflows/windows-smoke.yml"), WINDOWS_COMMANDS);
+test("windows CI asserts the empty optional selection with a step that can fail", () => {
+	const workflow = readWorkflow(".github/workflows/windows-smoke.yml");
+	assertCommandsInOrder(workflow, WINDOWS_COMMANDS);
+	// The same contradiction the Linux job closed: a bare empty optional install
+	// exits 0 whatever the product does, so it cannot be the enforced gate.
+	assert.doesNotMatch(workflow, /--yes --only optional/, "a bare empty optional run cannot fail, so it cannot be the gate");
+	assert.match(workflow, /- name: Assert empty optional selection changes nothing/);
 });
 
 test("workflow checks reject commented, conditional, and unsupported required commands", () => {
 	const workflow = readWorkflow(".github/workflows/windows-smoke.yml");
-	const step = `        run: ${OPTIONAL_INSTALL}`;
+	const step = `        run: ${EMPTY_OPTIONAL_GATE}`;
 	for (const replacement of [
-		`        # run: ${OPTIONAL_INSTALL}`,
+		`        # run: ${EMPTY_OPTIONAL_GATE}`,
 		`        if: false\n${step}`,
 		`        if: \${{ false }}\n${step}`,
-		`        run: |\n          ${OPTIONAL_INSTALL}`,
+		`        run: |\n          ${EMPTY_OPTIONAL_GATE}`,
 	]) {
 		assert.throws(() => assertCommandsInOrder(workflow.replace(step, replacement), WINDOWS_COMMANDS), replacement);
 	}
@@ -178,10 +183,10 @@ test("workflow checks reject commented, conditional, and unsupported required co
 
 test("workflow checks reject command text in environment or multiline step names", () => {
 	const workflow = readWorkflow(".github/workflows/windows-smoke.yml");
-	const step = `        run: ${OPTIONAL_INSTALL}`;
+	const step = `        run: ${EMPTY_OPTIONAL_GATE}`;
 	const mutations = [
-		workflow.replace(step, `        env:\n          run: ${OPTIONAL_INSTALL}\n        run: echo skipped`),
-		workflow.replace(`      - name: Install optional catalog tier\n${step}`, `      - name: |\n          run: ${OPTIONAL_INSTALL}\n        run: echo skipped`),
+		workflow.replace(step, `        env:\n          run: ${EMPTY_OPTIONAL_GATE}\n        run: echo skipped`),
+		workflow.replace(`      - name: Assert empty optional selection changes nothing\n${step}`, `      - name: |\n          run: ${EMPTY_OPTIONAL_GATE}\n        run: echo skipped`),
 	];
 	for (const mutated of mutations) {
 		assert.notEqual(mutated, workflow, "Mutation must change the workflow fixture");
@@ -219,8 +224,8 @@ test("workflow suite accepts CRLF checkout files without weakening mutations", (
 
 test("workflow checks reject reversed required command order", () => {
 	const workflow = readWorkflow(".github/workflows/windows-smoke.yml");
-	const swapped = workflow.replace(OPTIONAL_INSTALL, "__OPTIONAL__")
-		.replace("node scripts/assert-installed-packages.mjs --check-status", OPTIONAL_INSTALL)
+	const swapped = workflow.replace(EMPTY_OPTIONAL_GATE, "__OPTIONAL__")
+		.replace("node scripts/assert-installed-packages.mjs --check-status", EMPTY_OPTIONAL_GATE)
 		.replace("__OPTIONAL__", "node scripts/assert-installed-packages.mjs --check-status");
 	assert.throws(() => assertCommandsInOrder(swapped, WINDOWS_COMMANDS));
 });
