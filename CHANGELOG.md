@@ -1,6 +1,23 @@
 # Changelog
 
-## Unreleased
+## [0.11.0](https://github.com/tommy-ca/LazyPi/compare/v0.10.4...v0.11.0) (2026-11-11)
+
+### Bug Fixes
+
+* **test:** give every fixture child one private stub directory on `PATH`, with absolute interpreter shebangs, recorded invocations and a fail-closed missing stub, so a test can no longer reach a real `pi`, `npm` or system tool ([#38](https://github.com/tommy-ca/LazyPi/pull/38))
+* **test:** fail the suite when a fixture builds a child `PATH` from the parent environment, names a system directory, or spawns the CLI without the shared helper ([#38](https://github.com/tommy-ca/LazyPi/pull/38))
+* **cli:** resolve `pi` and `npm` by walking `PATH` instead of spawning `which`, so a host without `which` no longer makes a present `pi` look absent and offer a real global `npm install -g` ([#38](https://github.com/tommy-ca/LazyPi/pull/38))
+* **cli:** refuse `update --local` and `-l` with exit 2 before reading settings or starting a child, because Pi cannot update one project's extensions alone ([#38](https://github.com/tommy-ca/LazyPi/pull/38))
+
+### Features
+
+* **cli:** plain `update` requests extension updates with `pi update --extensions`, printed from the same constant it spawns, so it no longer self-updates the Pi harness and never overrides project trust ([#38](https://github.com/tommy-ca/LazyPi/pull/38))
+
+### Documentation
+
+* **verify:** prescribe the stub-only `PATH`, the absence rule and the shared helper, and describe `PATH`-based resolution instead of a stub `which` ([#38](https://github.com/tommy-ca/LazyPi/pull/38))
+* **contract:** add `verification-isolation`, `executable-discovery` and `update-scope` deltas, and replace the fixture clause that required retaining the system `PATH` ([#38](https://github.com/tommy-ca/LazyPi/pull/38))
+
 
 ### Bug Fixes
 
