@@ -30,11 +30,11 @@ S8. "Reject update --local explicitly (recommended)". Accepted outcome: reject p
 - T5 [S4] Documentation and graph; inline; delivered in b6d2c90 through PR #36; historical record corrections are T11.
 - T6 [S6] Prior stack landing; inline; merged at a567f9f; delivery happened without completed settings authority and is not retrospectively approved.
 - T7 [S1,S5] Follow-up audit and design; delegated read-only map, swarm, arena and interrogate; pending T8; source/contract audit and arena design returned, runtime audit incomplete and interrogate not run; no complete candidate verdict.
-- T8 [S2,S3] Verification safety and baseline; delegated then parent-verified; delivered in f8a907b, 6fa18a1, de67d34 and e69d421; suite 219 of 219 and spec:validate green in private state; Windows launcher NOT RUN; independent verdict pending the admission gate.
-- T9 [S1,S3] Executable discovery; delegated then parent-verified; delivered in c08ace4; 7 new behaviour tests, suite 226 of 226, differential clean; Windows resolution NOT RUN.
-- T10 [S1,S3,S8] Update scope; delegated then parent-verified; delivered in 8f4a6ab; suite 232 of 232 and spec:validate green; real Pi update behaviour and Windows NOT RUN.
+- T8 [S2,S3] Verification safety and baseline; delegated then parent-verified; delivered in fa68229, 2b69c76, d805dee and bb37e54; native slice review found one CRITICAL Windows defect, fixed in fa68229; suite 219 of 219 and spec:validate green in private state; Windows launcher NOT RUN; independent verdict pending the admission gate.
+- T9 [S1,S3] Executable discovery; delegated then parent-verified; delivered in 2e4d8ce; 7 new behaviour tests, suite 226 of 226, differential clean; Windows resolution NOT RUN.
+- T10 [S1,S3,S8] Update scope; delegated then parent-verified; delivered in b5027b7; suite 232 of 232 and spec:validate green; real Pi update behaviour and Windows NOT RUN.
 - T11 [S4] Reconcile graph, inherited delivery claims and confirmed contract gaps; inline record updates plus delegated substantive changes under context backstop; pending; graph delivery/authority corrections written but uncommitted, contract reconciliation and final evidence remain incomplete.
-- T12 [S3,S6] Independently verify exact PR slices and ship contiguous accepted stack; parent owns Git and delivery; pending; native terminal outcomes remain binding.
+- T12 [S3,S6] Independently verify exact PR slices and ship contiguous accepted stack; parent owns Git and delivery; blocked on the slice-1 targeted-validator slot, see L26; native terminal outcomes remain binding.
 
 ## Log
 
@@ -276,3 +276,24 @@ stub-first state, followed by independent acceptance of that changed candidate.
 Do not rerun or relabel either failed baseline attempt. The original installer
 fixes, adversarial review and stacked delivery remain the authorized objective,
 but their missing proof and the historical native stop are not waived.
+
+L26. Native review of slice 1 and its one real finding. Reviewers ran on
+openai/gpt-6.1-sol (risk, reliability) and the provider refuter on
+opencode-go/deepseek-v4.1-flash, three model runs in total. The refuter returned
+correction_required with R3-windows-executable-path, CRITICAL and introduced: the
+helper treated any command without a forward slash as a bare stub name, so on
+Windows the Node executable with backslashes was mistaken for a stub and every
+sandbox.run threw. Parent accepted the finding, fixed it with isAbsolute plus both
+separators, and committed it in the review worktree as the bounded correction at
+11 declared diff lines. Parent then rebased the branch so slice 1 carries the fix,
+and slice 1's tree now equals the reviewed correction tree exactly:
+1b71c0cac665c9f8b6865e2646958f69ee619a8e. The rebase rewrote commit identities;
+slice 1 fa68229, guard 2b69c76, skill d805dee, isolation delta bb37e54, records
+118c4bb, resolution 2e4d8ce, skill words 1dd69b1, update scope b5027b7, records
+c3a4eff. Post-rebase suite is 232 of 232 and spec:validate 18 plus 41 with 0
+failed, and the Windows guard fix is present in the slice-1 commit itself. The
+provider then required a targeted validator and the facade rejected its issued
+binding twice as missing or stale, with no mutation either time. Parent did not
+compose substitute tokens and is not retrying; the reviewer of immutable trees
+produced no verdict, so lineage review-8a1de3d2981a5139 stays open at
+correction_required and needs a human decision or a facade fix.
