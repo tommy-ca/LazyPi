@@ -33,7 +33,7 @@ jobs:
         run: node bin/lazypi.mjs --yes
 
       - name: Assert empty optional selection changes nothing
-        run: node --test --test-name-pattern="^empty optional selection" test/ci-workflows.test.mjs
+        run: node --test test/ci-workflows.test.mjs
 
       - name: Assert expected packages for full install
         run: node scripts/assert-installed-packages.mjs --check-status

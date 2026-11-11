@@ -135,19 +135,28 @@ try {
 
 	// --- Stage 4: status -----------------------------------------------------
 	console.log("Stage 4: status");
+	const settingsFile = join(agentDir, "settings.json");
+	const beforeStatus = readFileSync(settingsFile, "utf8");
 	r = lazypi("status");
 	assert.equal(r.status, 0);
-	check("status shows full catalog installed", () => {
+	check("status reports the catalog without rewriting state", () => {
+		// A fixture that prints a different count is what proves these two banner
+		// matches can fail; without it the fixture only echoes the constants.
 		assert.match(r.stdout, new RegExp(`Installed from LazyPi catalog \\(${PACKAGES.length}/${PACKAGES.length}\\)`));
 		assert.match(r.stdout, /none — full catalog is installed/);
-		// status reports the catalog; reporting must not rewrite it.
-		assert.deepEqual(readSettings(agentDir).packages, fullSources);
+		// Reading back `packages` alone let a status run delete the six overrides
+		// the install wrote and still count as a pass, so every part of the state
+		// this stage can reach is asserted, then the bytes.
+		const settings = readSettings(agentDir);
+		assert.deepEqual(settings.packages, fullSources);
+		assert.deepEqual(settings.subagents?.agentOverrides, Object.fromEntries(BUILTIN_AGENTS.map((name) => [name, { model: "" }])));
+		// status reports the catalog; reporting must not rewrite the file.
+		assert.equal(readFileSync(settingsFile, "utf8"), beforeStatus);
 	});
 
 	// --- Stage 5: registration preservation, not native loading --------------
 	console.log("Stage 5: preserve an older canonical pin and unmanaged registrations");
 	const oldSource = "git:github.com/tommy-ca/pstack@bdbb67f0f08212ce3136d2c22fb3b17e30bb717c";
-	const settingsFile = join(agentDir, "settings.json");
 	const seeded = readSettings(agentDir);
 	seeded.packages[pstackIndex] = { source: oldSource, skills: [], metadata: { fixture: true } };
 	seeded.packages.push({ source: "npm:pi-btw@0.1.0", extensions: [], metadata: { fixture: true } });

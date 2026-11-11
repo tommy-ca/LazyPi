@@ -12,12 +12,16 @@ const PACKED_CLI_SMOKE_COMMAND = "node scripts/packed-cli-smoke.mjs";
 // by the same hermetic proof. A bare `--only optional` run cannot be that gate:
 // it prints "Nothing selected" and exits 0 whatever the product does, so the
 // step only fails when the command itself breaks.
-const EMPTY_OPTIONAL_GATE = 'node --test --test-name-pattern="^empty optional selection" test/ci-workflows.test.mjs';
+const EMPTY_OPTIONAL_GATE = "node --test test/ci-workflows.test.mjs";
+// Windows runs the whole file, not a title pattern: a renamed test makes a
+// pattern select zero tests, and `node --test` reports those as skipped with
+// exit 0, so the gate would disappear with nothing to see in the log.
+const WINDOWS_OPTIONAL_GATE = "node --test test/ci-workflows.test.mjs";
 const WINDOWS_COMMANDS = [
 	"npm test",
 	PACKED_CLI_SMOKE_COMMAND,
 	"node bin/lazypi.mjs --yes",
-	EMPTY_OPTIONAL_GATE,
+	WINDOWS_OPTIONAL_GATE,
 	"node scripts/assert-installed-packages.mjs --check-status",
 	"node bin/lazypi.mjs doctor",
 ];
@@ -168,14 +172,22 @@ test("windows CI asserts the empty optional selection with a step that can fail"
 	assert.match(workflow, /- name: Assert empty optional selection changes nothing/);
 });
 
+test("windows CI runs the gate file whole so a renamed test cannot empty the step", () => {
+	const workflow = readWorkflow(".github/workflows/windows-smoke.yml");
+	const step = `        run: ${WINDOWS_OPTIONAL_GATE}`;
+	assert.ok(workflow.includes(`${step}\n`), `the Windows gate step runs the whole gate file: ${WINDOWS_OPTIONAL_GATE}`);
+	assert.doesNotMatch(workflow, /--test-name-pattern/, "a title pattern selects zero tests after a rename and still exits 0");
+	assert.match(workflow, /- name: Assert empty optional selection changes nothing/);
+});
+
 test("workflow checks reject commented, conditional, and unsupported required commands", () => {
 	const workflow = readWorkflow(".github/workflows/windows-smoke.yml");
-	const step = `        run: ${EMPTY_OPTIONAL_GATE}`;
+	const step = `        run: ${WINDOWS_OPTIONAL_GATE}`;
 	for (const replacement of [
-		`        # run: ${EMPTY_OPTIONAL_GATE}`,
+		`        # run: ${WINDOWS_OPTIONAL_GATE}`,
 		`        if: false\n${step}`,
 		`        if: \${{ false }}\n${step}`,
-		`        run: |\n          ${EMPTY_OPTIONAL_GATE}`,
+		`        run: |\n          ${WINDOWS_OPTIONAL_GATE}`,
 	]) {
 		assert.throws(() => assertCommandsInOrder(workflow.replace(step, replacement), WINDOWS_COMMANDS), replacement);
 	}
@@ -183,10 +195,10 @@ test("workflow checks reject commented, conditional, and unsupported required co
 
 test("workflow checks reject command text in environment or multiline step names", () => {
 	const workflow = readWorkflow(".github/workflows/windows-smoke.yml");
-	const step = `        run: ${EMPTY_OPTIONAL_GATE}`;
+	const step = `        run: ${WINDOWS_OPTIONAL_GATE}`;
 	const mutations = [
-		workflow.replace(step, `        env:\n          run: ${EMPTY_OPTIONAL_GATE}\n        run: echo skipped`),
-		workflow.replace(`      - name: Assert empty optional selection changes nothing\n${step}`, `      - name: |\n          run: ${EMPTY_OPTIONAL_GATE}\n        run: echo skipped`),
+		workflow.replace(step, `        env:\n          run: ${WINDOWS_OPTIONAL_GATE}\n        run: echo skipped`),
+		workflow.replace(`      - name: Assert empty optional selection changes nothing\n${step}`, `      - name: |\n          run: ${WINDOWS_OPTIONAL_GATE}\n        run: echo skipped`),
 	];
 	for (const mutated of mutations) {
 		assert.notEqual(mutated, workflow, "Mutation must change the workflow fixture");
@@ -224,8 +236,8 @@ test("workflow suite accepts CRLF checkout files without weakening mutations", (
 
 test("workflow checks reject reversed required command order", () => {
 	const workflow = readWorkflow(".github/workflows/windows-smoke.yml");
-	const swapped = workflow.replace(EMPTY_OPTIONAL_GATE, "__OPTIONAL__")
-		.replace("node scripts/assert-installed-packages.mjs --check-status", EMPTY_OPTIONAL_GATE)
+	const swapped = workflow.replace(WINDOWS_OPTIONAL_GATE, "__OPTIONAL__")
+		.replace("node scripts/assert-installed-packages.mjs --check-status", WINDOWS_OPTIONAL_GATE)
 		.replace("__OPTIONAL__", "node scripts/assert-installed-packages.mjs --check-status");
 	assert.throws(() => assertCommandsInOrder(swapped, WINDOWS_COMMANDS));
 });

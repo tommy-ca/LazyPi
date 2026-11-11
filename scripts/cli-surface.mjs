@@ -12,9 +12,39 @@ import { pathToFileURL } from "node:url";
 export const SURFACE_SOURCE = "bin/lazypi.mjs";
 export const FEATURES_DIR = ".agents/skills/verify/features";
 export const FEATURES_README = "README.md";
-// Prose outside the feature map that repeats the same claims: the skill itself
-// and the operator pages that named LazyPi's update for months.
-export const PROSE_SOURCES = [".agents/skills/verify/SKILL.md", "docs/docs/index.html", "docs/docs/philosophy.html", "docs/docs/removing.html"];
+export const SKILL_DOC = ".agents/skills/verify/SKILL.md";
+export const DOCS_DIR = "docs/docs";
+
+// The prose the CLI claims live in, discovered instead of listed: a new feature
+// doc or docs page is swept without editing this file, which is how three pages
+// kept naming bare `pi update` for months. `root` is injectable so a test can
+// point discovery at a fixture tree.
+//
+// openspec/ is deliberately outside the sweep. The live spec still says
+// "broad pi update" at openspec/specs/lazypi/installer/spec.md:554, and the
+// 2026-11-10-update-scope delta rewrites that requirement when it archives; a
+// scanner pointed at it would fail every run until an archive that is not this
+// change's to perform.
+export function discoverProseSources({ root = process.cwd() } = {}) {
+	const sources = [SKILL_DOC];
+	const featuresDir = join(root, FEATURES_DIR);
+	if (existsSync(featuresDir)) {
+		for (const name of readdirSync(featuresDir).sort()) {
+			if (name.endsWith(".md")) sources.push(`${FEATURES_DIR}/${name}`);
+		}
+	}
+	collectHtml(join(root, DOCS_DIR), DOCS_DIR, sources);
+	return sources;
+}
+
+function collectHtml(directory, relative, out) {
+	if (!existsSync(directory)) return;
+	for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+		const path = `${relative}/${entry.name}`;
+		if (entry.isDirectory()) collectHtml(join(directory, entry.name), path, out);
+		else if (entry.name.endsWith(".html")) out.push(path);
+	}
+}
 
 // One entry per accepted surface item. `mention` is the token the doc has to
 // carry, so a doc that names the command but never its flag does not count.
@@ -82,9 +112,10 @@ export function auditCoverage({ surface, coverage = COVERAGE, features, readme, 
 	return [...issues, ...auditProse(prose)];
 }
 
-// A mention token only proves a word appears, which is how a doc kept saying
-// `update --local` spawns a Pi command while `parseArgs` exited 2 on the flag.
-// Every entry is a phrase, so prose that merely shares a word still passes.
+// A phrase table is only for phrasings that are wrong however the sentence is
+// rewritten, and every entry carries its reason, so a reviewer can reject an
+// entry without re-deriving the CLI. Claims that survive rewording are checked
+// below, on the line rather than on the wording.
 export const FORBIDDEN_PHRASES = [
 	["including with `--local`", "only install, status, doctor, and remove accept --local"],
 	["all accept it", "update refuses --local with exit 2"],
@@ -92,26 +123,60 @@ export const FORBIDDEN_PHRASES = [
 	["`--local` argv in `test/pstack-retirement.test.mjs`", "no test pins removal's local argv"],
 	["neither needed nor asked for", "Windows resolution still asks where"],
 	["must fail before it spawns anything", "--yes lets a missing pi spawn npm install -g"],
-	["broad `pi update`", "update asks Pi for pi update --extensions"],
-	["<code>pi update</code>", "update asks Pi for pi update --extensions"],
 ];
 
-// The manual-versus-pinned split goes stale in both directions: a surface the
-// suite pins has to be described the way its pin describes it.
+// A pinned surface has to be described the way the suite pins it, on the line
+// that describes it. File-wide co-presence proves nothing: remove.md and
+// doctor.md carry "exit 2" text about a missing target and a corrupt settings
+// file, so a file-wide check would let any sentence about `update --local` pass
+// off that unrelated text as its own outcome. A line that only names the surface
+// is a reference or a recipe step, not a claim, and is not asked to restate it.
 export const PINNED_SURFACES = [["update --local", "exit 2"]];
+const EXIT_CODE = /\bexits?\s+(\d+)\b/g;
+
+// `update` has to ask Pi for `--extensions`, because bare `pi update` upgrades
+// the harness itself. Wording cannot carry that: "broad `pi update`",
+// "<code>pi update</code>" and "runs pi update" are one stale claim, and the
+// first two were separate phrase entries that a capital B or a reflowed
+// paragraph defeated. So this is a claim check on the line: naming bare
+// `pi update` fails unless the same line names `--extensions`. The one exemption
+// is a sentence that denies the claim, which keeps true prose such as
+// updating.html's "Bare pi update upgrades Pi itself, so LazyPi never asks for
+// it." passing without excusing a stale sentence that only shares the line with
+// a "not" — that is how philosophy.html and removing.html stayed stale.
+const BARE_PI_UPDATE = /\bpi update\b/;
+const EXTENSIONS = /--extensions/;
+const SENTENCE = /(?<=[.!?])\s+/;
+const PI_UPDATE_DISCLAIMER = /\b(?:never|not|no longer|neither)\b/i;
 
 export function auditProse(prose) {
 	const issues = [];
 	for (const [doc, text] of prose) {
-		for (const [phrase, why] of FORBIDDEN_PHRASES) if (text.includes(phrase)) issues.push(`${doc} repeats a stale claim: "${phrase}" — ${why}`);
-		for (const [surface, outcome] of PINNED_SURFACES) {
-			if (text.includes(surface) && !text.includes(outcome)) issues.push(`${doc} names ${surface} without its pinned outcome "${outcome}"`);
+		// An exact wrong phrasing is wrong wherever it sits, including across a
+		// reflowed line, so this scan stays file-wide.
+		for (const [phrase, why] of FORBIDDEN_PHRASES) {
+			if (text.includes(phrase)) issues.push(`${doc} repeats a stale claim: "${phrase}" — ${why}`);
+		}
+		for (const [index, line] of text.split(/\r?\n/).entries()) {
+			const at = `${doc}:${index + 1}`;
+			const unclaimed = line.split(SENTENCE)
+				.filter((sentence) => BARE_PI_UPDATE.test(sentence) && !PI_UPDATE_DISCLAIMER.test(sentence));
+			if (unclaimed.length > 0 && !EXTENSIONS.test(line)) {
+				issues.push(`${at} names bare \`pi update\` without \`--extensions\`; update asks Pi for \`pi update --extensions\``);
+			}
+			for (const [surface, outcome] of PINNED_SURFACES) {
+				if (!line.includes(surface)) continue;
+				const stated = [...line.matchAll(EXIT_CODE)].map((match) => `exit ${match[1]}`);
+				if (stated.length > 0 && !stated.includes(outcome)) {
+					issues.push(`${at} names ${surface} with ${stated.join("/")} — the suite pins "${outcome}"`);
+				}
+			}
 		}
 	}
 	return issues;
 }
 
-export function auditRepository({ root = process.cwd() } = {}) {
+export function auditRepository({ root = process.cwd(), sources = discoverProseSources({ root }) } = {}) {
 	const surface = parseCliSurface(readFileSync(resolve(root, SURFACE_SOURCE), "utf8"));
 	const featuresDir = join(root, FEATURES_DIR);
 	const features = new Map();
@@ -120,11 +185,8 @@ export function auditRepository({ root = process.cwd() } = {}) {
 		if (existsSync(path)) features.set(entry.doc, readFileSync(path, "utf8"));
 	}
 	const readmePath = join(featuresDir, FEATURES_README);
-	// Every feature doc is prose-covered, not only the ones COVERAGE names.
-	const prose = new Map(PROSE_SOURCES.map((path) => [path, readFileSync(resolve(root, path), "utf8")]));
-	for (const name of existsSync(featuresDir) ? readdirSync(featuresDir) : []) {
-		if (name.endsWith(".md")) prose.set(`${FEATURES_DIR}/${name}`, readFileSync(join(featuresDir, name), "utf8"));
-	}
+	// Every discovered source is prose-covered, not only the ones COVERAGE names.
+	const prose = new Map(sources.map((path) => [path, readFileSync(resolve(root, path), "utf8")]));
 	return auditCoverage({
 		surface,
 		readme: existsSync(readmePath) ? readFileSync(readmePath, "utf8") : "",

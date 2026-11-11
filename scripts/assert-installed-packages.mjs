@@ -83,7 +83,9 @@ function assertStatusCount(expectedCount, settingsPath) {
 	// above reaches the child. Without this, `--settings X --check-status`
 	// asserts the sources in X and then compares the count from the ambient
 	// profile, which is a comparison of two different files.
-	if (basename(settingsPath) !== "settings.json") {
+	// Windows resolves a settings file case-insensitively, so a comparison that
+	// rejects `SETTINGS.JSON` would refuse a path that filesystem accepts.
+	if (basename(settingsPath).toLowerCase() !== "settings.json") {
 		throw new Error(`--check-status needs a settings.json path, got ${settingsPath}: the CLI derives its settings file from PI_CODING_AGENT_DIR, so no other filename can be forwarded`);
 	}
 	const statusOutput = execFileSync(process.execPath, [CLI_ENTRY, "status"], {
@@ -119,4 +121,14 @@ export function main() {
 
 const entrypoint = process.argv[1] ? pathToFileURL(resolve(process.argv[1])).href : null;
 
-if (entrypoint === import.meta.url) main();
+if (entrypoint === import.meta.url) {
+	// An operator reads this from a shell: one line naming the problem and the
+	// documented exit 1, because a stack trace hides the line that says what to
+	// fix. Every refusal and assertion failure lands here.
+	try {
+		main();
+	} catch (err) {
+		console.error(err.message);
+		process.exitCode = 1;
+	}
+}
