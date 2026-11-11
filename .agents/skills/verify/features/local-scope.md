@@ -1,36 +1,43 @@
 # Local scope
 
 `-l` / `--local` switches the settings file from the Pi agent directory to
-`<cwd>/.pi/settings.json`. `install`, `status`, `update`, `doctor`, and `remove`
-all accept it; global is the default for every command. `--only` and `--except`
-stay install-only and are rejected by the other four in both scopes.
+`<cwd>/.pi/settings.json`. `install`, `status`, `doctor`, and `remove` accept it;
+global is the default for every command. `update` refuses it: `update --local`
+and `update -l` exit 2 with
+`update does not support --local: pi cannot update project extensions on their own`
+before LazyPi reads settings or starts a child, because Pi cannot update one
+project's extensions alone. `--only` and `--except` stay install-only and are
+rejected by the other four in both scopes.
 
 ## Isolation recipe
 
 Use the stub-first recipe in [the verify skill](../SKILL.md): private `HOME`,
 `USERPROFILE`, `PI_CODING_AGENT_DIR`, XDG directories, `TMPDIR`, and npm
-config/cache, with stub `pi` and stub `npm` as the only `PATH` entries. The stub `pi` logs
-its argv outside the checkout. A project settings file lives under the drive's
-own working directory, so create a fresh work directory per drive and write only
+config/cache, with stub `pi` and stub `npm` as the only `PATH` entries. The stub `pi`
+appends its argv and exit status to `$calls`, which is `$scratch/calls.jsonl`
+outside the checkout. A project settings file lives under the drive's own
+working directory, so create a fresh work directory per drive and write only
 disposable fixtures.
 
 ## Drive
 
 ```sh
-env -i PATH="$probe/bin" HOME="$probe/home" USERPROFILE="$probe/home" \
-  PI_CODING_AGENT_DIR="$probe/agent" TMPDIR="$probe/tmp" \
-  XDG_CONFIG_HOME="$probe/config" XDG_CACHE_HOME="$probe/cache" \
-  XDG_DATA_HOME="$probe/data" XDG_STATE_HOME="$probe/state" \
-  npm_config_cache="$probe/npm" npm_config_userconfig="$probe/npmrc" \
-  npm_config_globalconfig="$probe/npmrc-global" TERM=dumb NO_COLOR=1 \
-  LAZYPI_PROBE_CALLS="$probe/calls" node bin/lazypi.mjs status --local
+env -i PATH="$bin" HOME="$scratch/home" USERPROFILE="$scratch/home" \
+  PI_CODING_AGENT_DIR="$scratch/agent" TMPDIR="$scratch/tmp" \
+  XDG_CONFIG_HOME="$scratch/config" XDG_CACHE_HOME="$scratch/cache" \
+  XDG_DATA_HOME="$scratch/data" XDG_STATE_HOME="$scratch/state" \
+  npm_config_cache="$scratch/npm" npm_config_userconfig="$scratch/npmrc" \
+  npm_config_globalconfig="$scratch/npmrc-global" TERM=dumb NO_COLOR=1 \
+  "$node_bin" "$repo/bin/lazypi.mjs" status --local
 ```
 
-Run it from a work directory with no `.pi/settings.json`, then from one that
-has a fixture file. Repeat with `install --local --only core`,
-`install --local --yes --only optional`, `update --local`, `doctor --local`, and
-`remove --local pstack`. Snapshot both the project file and the agent directory
-before each run.
+Every variable in that block comes from the verify skill's launch block, and
+`$calls` is the stub log it writes. Run it from `$scratch/work` with no
+`.pi/settings.json`, then from a fresh `drive="$(mktemp -d "$scratch/work.XXXXXX")"`
+that holds a fixture `$drive/.pi/settings.json`. Repeat with
+`install --local --only core`, `install --local --yes --only optional`,
+`doctor --local`, `remove --local pstack`, and the refusal `update --local`.
+Snapshot both the project file and the agent directory before each run.
 
 ## Assert
 
@@ -51,16 +58,23 @@ models and a new `.lazypi.<timestamp>.bak` holding the previous bytes.
 `Nothing selected — nothing to install.`, no invocation, and both settings
 files byte-identical.
 
-`update --local` spawns `pi update --extensions` and no `-l`; see
-[update](update.md) for why that argument set is reported rather than assumed.
+`update --local`: exit 2, the help text on stdout, and
+`update does not support --local: pi cannot update project extensions on their own`
+on stderr, with `$calls` empty, which is what proves the refusal happens before
+any child process starts. Both settings files and the backup set are
+byte-identical afterwards. This is a refusal drive, not a scope drive; see
+[update](update.md) for the global delegation.
+
 `doctor --local` reads only the project file; see [doctor](doctor.md).
 `remove --local` adds `-l --approve` to every spawn; see [remove](remove.md).
 
 With a corrupt agent settings file and a valid project file, `doctor --local`,
 `status --local`, and `remove --local` all exit 0 and spawn only their own
 command, so the local scope never falls back to the agent directory. `status
---local` against the same fixture reports 1/6 and lists `subagents` as installed
-with source `npm:pi-subagents`.
+--local` against the same two-source fixture reports 2/6 and lists both
+registrations as installed: `pstack` with source
+`git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8` and
+`subagents` with source `npm:pi-subagents`.
 
 Local reads and writes never touch `PI_CODING_AGENT_DIR`. The automated half
 pins that separation and install's `-l --approve` argv in

@@ -43,9 +43,16 @@
 - [ ] Not observed: what `pi update --extensions` does to real registrations,
       trusted-project detection, archives, or network state. The stub proves
       LazyPi's argv, header, state preservation, and exit-code passthrough only.
-- [ ] Still stale, outside every edit surface this change was given:
-      `docs/docs/index.html` ("Run `pi update` for installed packages"),
-      `docs/docs/philosophy.html` ("`update` remains broad `pi update`"),
-      `docs/docs/removing.html` ("stay eligible for broad `pi update`"), and two
-      sentences of the accumulated installer spec under Troubleshooting and
-      Catalog retirement.
+- [x] Formerly stale prose, delivered by the `chore/verification-surface`
+      follow-up: `docs/docs/index.html` ("Run `pi update` for installed
+      packages"), `docs/docs/philosophy.html` ("`update` remains broad
+      `pi update`"), `docs/docs/removing.html` ("stay eligible for broad
+      `pi update`"), plus the two requirement sentences of the accumulated
+      installer spec under Troubleshooting and Catalog retirement. The spec
+      sentences are corrected by the MODIFIED Requirements in this delta; the
+      accumulated spec itself is not hand-edited.
+- [x] `openspec validate` does not compare a MODIFIED requirement name or its
+      scenario text with the live spec, so this delta was checked by reading it
+      against `openspec/specs/lazypi/installer/spec.md` line by line. A renamed
+      MODIFIED requirement still validates clean, which is a validator gap, not
+      a property this change can rely on.

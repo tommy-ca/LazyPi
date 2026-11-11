@@ -5,13 +5,16 @@
 // flags exist. A surface item without a feature-map entry is invisible to the
 // verification skill, and a feature-map entry for an item the parser does not
 // accept is a claim about a CLI that does not exist. Both directions fail.
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 export const SURFACE_SOURCE = "bin/lazypi.mjs";
 export const FEATURES_DIR = ".agents/skills/verify/features";
 export const FEATURES_README = "README.md";
+// Prose outside the feature map that repeats the same claims: the skill itself
+// and the operator pages that named LazyPi's update for months.
+export const PROSE_SOURCES = [".agents/skills/verify/SKILL.md", "docs/docs/index.html", "docs/docs/philosophy.html", "docs/docs/removing.html"];
 
 // One entry per accepted surface item. `mention` is the token the doc has to
 // carry, so a doc that names the command but never its flag does not count.
@@ -53,7 +56,7 @@ export function parseCliSurface(source) {
 	return { commands, flags: [...flags], unrecognized };
 }
 
-export function auditCoverage({ surface, coverage = COVERAGE, features, readme }) {
+export function auditCoverage({ surface, coverage = COVERAGE, features, readme, prose = new Map() }) {
 	const issues = [];
 	const covered = new Set(coverage.flatMap((entry) => entry.ids));
 
@@ -76,6 +79,35 @@ export function auditCoverage({ surface, coverage = COVERAGE, features, readme }
 		if (!text.includes(entry.mention)) issues.push(`${entry.doc} does not document ${entry.mention}`);
 	}
 
+	return [...issues, ...auditProse(prose)];
+}
+
+// A mention token only proves a word appears, which is how a doc kept saying
+// `update --local` spawns a Pi command while `parseArgs` exited 2 on the flag.
+// Every entry is a phrase, so prose that merely shares a word still passes.
+export const FORBIDDEN_PHRASES = [
+	["including with `--local`", "only install, status, doctor, and remove accept --local"],
+	["all accept it", "update refuses --local with exit 2"],
+	["`update --local` spawns", "update --local is refused before any spawn"],
+	["`--local` argv in `test/pstack-retirement.test.mjs`", "no test pins removal's local argv"],
+	["neither needed nor asked for", "Windows resolution still asks where"],
+	["must fail before it spawns anything", "--yes lets a missing pi spawn npm install -g"],
+	["broad `pi update`", "update asks Pi for pi update --extensions"],
+	["<code>pi update</code>", "update asks Pi for pi update --extensions"],
+];
+
+// The manual-versus-pinned split goes stale in both directions: a surface the
+// suite pins has to be described the way its pin describes it.
+export const PINNED_SURFACES = [["update --local", "exit 2"]];
+
+export function auditProse(prose) {
+	const issues = [];
+	for (const [doc, text] of prose) {
+		for (const [phrase, why] of FORBIDDEN_PHRASES) if (text.includes(phrase)) issues.push(`${doc} repeats a stale claim: "${phrase}" — ${why}`);
+		for (const [surface, outcome] of PINNED_SURFACES) {
+			if (text.includes(surface) && !text.includes(outcome)) issues.push(`${doc} names ${surface} without its pinned outcome "${outcome}"`);
+		}
+	}
 	return issues;
 }
 
@@ -88,7 +120,17 @@ export function auditRepository({ root = process.cwd() } = {}) {
 		if (existsSync(path)) features.set(entry.doc, readFileSync(path, "utf8"));
 	}
 	const readmePath = join(featuresDir, FEATURES_README);
-	return auditCoverage({ surface, readme: existsSync(readmePath) ? readFileSync(readmePath, "utf8") : "", features });
+	// Every feature doc is prose-covered, not only the ones COVERAGE names.
+	const prose = new Map(PROSE_SOURCES.map((path) => [path, readFileSync(resolve(root, path), "utf8")]));
+	for (const name of existsSync(featuresDir) ? readdirSync(featuresDir) : []) {
+		if (name.endsWith(".md")) prose.set(`${FEATURES_DIR}/${name}`, readFileSync(join(featuresDir, name), "utf8"));
+	}
+	return auditCoverage({
+		surface,
+		readme: existsSync(readmePath) ? readFileSync(readmePath, "utf8") : "",
+		features,
+		prose,
+	});
 }
 
 function main() {
