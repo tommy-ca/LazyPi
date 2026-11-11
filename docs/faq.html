@@ -45,7 +45,7 @@ extra_css: /assets/css/faq.css
   <div class="faq-item">
     <div class="faq-q">Why do my packages stay on old versions after update?</div>
     <div class="faq-a">
-      <code>pi update</code> respects the version pins recorded in <code>settings.json</code>
+      <code>pi update --extensions</code> respects the version pins recorded in <code>settings.json</code>
       (for example <code>npm:pi-subagents@0.58.0</code>) and does not advance them. To move a
       package explicitly, reinstall at the version you want:
       <code>pi install npm:&lt;pkg&gt;@&lt;version&gt;</code> (or omit the <code>@version</code> to track
@@ -86,7 +86,7 @@ extra_css: /assets/css/faq.css
   <div class="faq-item">
     <div class="faq-q">How do I keep everything up to date?</div>
     <div class="faq-a">
-      Run <code>npx @tommy-ca/lazypi update</code>. This remains broad <code>pi update</code>, including installed unmanaged packages, while respecting pins. Curation retirement does not disable packages or prevent updates.
+      Run <code>npx @tommy-ca/lazypi update</code>. This remains broad <code>pi update --extensions</code>, including installed unmanaged packages, while respecting pins. Curation retirement does not disable packages or prevent updates.
     </div>
   </div>
 

@@ -14,6 +14,8 @@ test("update delegates to pi update without installing the full catalog", (t) =>
 	assert.match(result.stdout, /pi update/);
 
 	const calls = sandbox.external().map((record) => record.argv.join(" "));
-	assert.deepEqual(calls, ["update"]);
+	// The only assertion this change rewrites: plain `update` now requests
+	// extension-package updates, so the recorded argv gains `--extensions`.
+	assert.deepEqual(calls, ["update --extensions"]);
 	assert.doesNotMatch(calls.join("\n"), /install|npm:pi-mcp-adapter|npm:pi-web-access/);
 });

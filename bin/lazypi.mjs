@@ -253,6 +253,12 @@ function parseArgs(args) {
 	if (flags.only && flags.except) {
 		flags.usageError ??= "Use either --only or --except, not both";
 	}
+	// Pi's extension update covers the global scope and trusted projects and
+	// rejects `-l`, so no Pi command can update one project alone. Refuse the
+	// scope here, before settings are read and before any child process starts.
+	if (flags.command === "update" && flags.local) {
+		flags.usageError ??= "update does not support --local: pi cannot update project extensions on their own";
+	}
 
 	return flags;
 }
@@ -270,7 +276,7 @@ ${bold("Commands:")}
   install   Install the selected LazyPi catalog (default)
   remove    Remove a catalog package by id (or pass a raw pi source)
   status    Show which catalog packages are installed
-  update    Run \`pi update\` for installed Pi packages
+  update    Update extension packages with \`pi update --extensions\`
   doctor    Check your environment for common problems
 
 ${bold("Install options:")}
@@ -290,6 +296,11 @@ ${bold("Default behaviour:")}
   - --only and --except are install-only; other commands reject them.
   - Final selection happens before Pi setup. Cancelling or selecting
     nothing does not install Pi or packages or change settings.
+  - update always runs \`pi update --extensions\`, which updates extension
+    packages in the global scope and in projects Pi already trusts. It never
+    self-updates the Pi harness and never changes saved project trust.
+  - update rejects --local and exits 2: Pi cannot update one project's
+    extensions alone.
 
 ${bold("Categories:")}
   core         pstack, subagents, sandbox, verdict, pi-ask-user, web-access (6)
@@ -299,7 +310,7 @@ ${bold("Categories:")}
   PStack fresh installs use audited f1571b8; existing canonical pins stay put.
   Sandbox is disabled until configured; Ask User is not hard approval.
   Retired ids are invalid install selectors. Installed retired sources remain
-  Other, active, and eligible for broad pi update. Removal passthrough remains:
+  Other, active, and eligible for broad update. Removal passthrough remains:
   retired ids no longer resolve catalog/legacy sources; use exact installed
   sources. No automatic uninstall or conflict exclusion is performed.
 
@@ -574,8 +585,14 @@ function cmdStatus(flags) {
 // ---------------------------------------------------------------------------
 // update
 // ---------------------------------------------------------------------------
+// Bare `pi update` upgrades the Pi harness itself, so extension updates are
+// asked for by name. The same argv is printed and spawned, so the header can
+// never describe a different command than the one that runs.
+const EXTENSION_UPDATE_ARGV = ["update", "--extensions"];
+
 async function cmdUpdate(flags) {
-	const settings = readSettings(flags.local);
+	// parseArgs refuses --local for this command, so the scope is always global.
+	const settings = readSettings(false);
 	if (settings.problem) {
 		printSettingsProblem(settings);
 		return 2;
@@ -583,9 +600,9 @@ async function cmdUpdate(flags) {
 
 	if (!(await ensurePi(flags, !flags.yes && interactiveSession()))) return 127;
 
-	console.log(bold("pi update"));
+	console.log(bold(`pi ${EXTENSION_UPDATE_ARGV.join(" ")}`));
 
-	return spawnCommand("pi", flags.local ? ["update", "--extensions"] : ["update"], { stdio: "inherit" }).status ?? 1;
+	return spawnCommand("pi", EXTENSION_UPDATE_ARGV, { stdio: "inherit" }).status ?? 1;
 }
 
 // ---------------------------------------------------------------------------

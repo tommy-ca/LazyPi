@@ -53,7 +53,8 @@ commands. They are not another tier. Previously dropped packages remain outside 
 Catalog subtraction does not uninstall, disable active packages, delete data,
 or prevent updates. Installed strings, objects, exact pins, metadata, order,
 scope, and unrelated settings remain intact. Retired registrations appear as
-Other. Broad `pi update` still includes installed packages outside the catalog.
+Other. Broad `pi update --extensions` still includes installed packages outside
+the catalog.
 Retired IDs no longer resolve catalog or legacy sources on removal. Unknown
 targets still pass unchanged to Pi, so use the exact installed source, for example
 `lazypi remove npm:pi-btw@0.1.0`, not `remove btw`.
@@ -74,7 +75,7 @@ unmanaged sources. See `docs/docs/philosophy.html`.
 | `npx @tommy-ca/lazypi` | TTY Install everything and `--yes` select all 6 core registrations. Picker otherwise. |
 | `npx @tommy-ca/lazypi remove <id>` | Remove a catalog package by id (or pass a raw pi source) |
 | `npx @tommy-ca/lazypi status` | Show which catalog packages are installed, missing, or extra |
-| `npx @tommy-ca/lazypi update` | Run `pi update` for installed Pi packages |
+| `npx @tommy-ca/lazypi update` | Run `pi update --extensions` for installed Pi extension packages |
 | `npx @tommy-ca/lazypi doctor` | Check your environment for common problems |
 
 `--only` and `--except` apply only to `install`. Other commands reject them
@@ -89,8 +90,17 @@ legacy-source resolution. The candidate catalog carries no retired compatibility
 npx @tommy-ca/lazypi update
 ```
 
-This remains broad `pi update`, not a curated-only updater. Existing pins are
-respected, including older canonical PStack refs. Retirement does not freeze updates.
+This runs `pi update --extensions`, which updates extension packages in the
+global scope and in projects Pi already trusts. Existing pins are respected,
+including older canonical PStack refs. Retirement does not freeze updates.
+
+It is not a Pi harness self-update: bare `pi update` upgrades Pi itself, so
+LazyPi never asks for it.
+
+`lazypi update --local` is rejected with exit 2 before LazyPi reads settings,
+spawns anything, or writes a file. Project-only update is unsupported because
+Pi cannot perform it: Pi's extension update always spans the global scope and
+trusted projects, and it rejects `-l` itself.
 
 ## Removing packages
 

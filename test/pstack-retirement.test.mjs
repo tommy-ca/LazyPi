@@ -200,6 +200,6 @@ test("already-installed subagents still resets all six builtin models and preser
 test("update remains broad and leaves registrations unchanged", (t) => {
 	const f = fixture(t, { packages: ["npm:pi-btw@0.1.0", `${identity}@old`] });
 	const r = f.run(["update"]);
-	assert.equal(r.status, 0); assert.equal(r.stdout, "pi update\n"); assert.equal(r.stderr, "");
-	assert.deepEqual(f.readCalls(), [["update"]]); assert.deepEqual(f.snapshot(), f.before);
+	assert.equal(r.status, 0); assert.equal(r.stdout, "pi update --extensions\n"); assert.equal(r.stderr, "");
+	assert.deepEqual(f.readCalls(), [["update", "--extensions"]]); assert.deepEqual(f.snapshot(), f.before);
 });

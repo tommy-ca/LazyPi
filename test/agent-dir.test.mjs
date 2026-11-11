@@ -302,7 +302,7 @@ test("update and remove inspect the custom global settings", (t) => {
 
 	const removeResult = sandbox.run(["remove", "web-access"], { env: { PI_CODING_AGENT_DIR: customAgentDir } });
 	assert.equal(removeResult.status, 0, `STDOUT:\n${removeResult.stdout}\nSTDERR:\n${removeResult.stderr}`);
-	assert.deepEqual(calledArgv(sandbox), [["update"], ["remove", "npm:pi-web-access"]]);
+	assert.deepEqual(calledArgv(sandbox), [["update", "--extensions"], ["remove", "npm:pi-web-access"]]);
 });
 
 test("--local settings remain independent of PI_CODING_AGENT_DIR", (t) => {
