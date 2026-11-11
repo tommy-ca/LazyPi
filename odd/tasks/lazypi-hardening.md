@@ -322,3 +322,33 @@ not yet pushed.
 - T16 [S9,S5] Interrogate the resulting candidate with independent adversarial reviewers; pending.
 - T17 [S9,S6] Deliver as one reviewable PR; parent owns Git; pending.
 
+L28. Verification surface audit and arena. Four read-only partitions audited the
+skill text, the feature docs, the scripts and the prose, writing reports under
+/tmp/lazypi-followup-audit/reports/verify-audit/. Partition A counted 62 claims,
+47 accurate, 10 stale, 5 unverifiable. Partition B found the map wrong on two of
+five manual items and caught remove.md crediting a test that runs global-only.
+Partition C found the only untested script is the one that runs a live npm exec,
+and that two of the eight e2e checks are empty bodies. Partition D added four
+sites nobody had listed and two contract traps, including that the update-scope
+delta is ADDED only, so archiving it would leave the live spec self-contradicting.
+Parent independently re-verified the empty bodies, the check() counting, the npm
+exec and the CI wiring before acting on any of it. Arena ran three designs and a
+cross-judge. A manifest and a generated map scored 1 and 2 on defect class and on
+failure honesty, because A pins a test name that may assert nothing and B hides
+holes in a complete-looking table. The hand-correct design won on defect class and
+gate fit. Parent adopted it with two grafts and one cut: keep its own flip
+condition as a forty-five line forbidden-phrase rule inside the existing
+cli-surface audit, keep the tool-defect fixes as a second unit, and cut the
+mutual-exclusion property because it cannot be computed without the generator it
+came from. The cross-judge also caught candidate C being wrong that the recipes
+already used the node binary; parent confirmed all four used bare node with a dead
+environment variable. Writer one delivered ac02470: eleven stale claims corrected
+and each re-checked against the code, four recipes made executable and driven
+literally, three docs pages fixed, the update-scope delta made archive-consistent,
+and the rule proven to report eleven issues against the previous prose and zero
+against the tree. Parent measured 235 of 235 tests and spec:validate 18 plus 41
+items, 0 failed. Slice boundary: a79e910 is the plan, ac02470 is the text and rule
+half. The tool-defect half is a separate unit with disjoint surfaces, so the 424
+authored lines recorded across two commits are the text slice alone and the
+remaining work is tracked separately rather than folded in to fit a number.
+
