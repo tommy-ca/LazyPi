@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { stripVTControlCharacters } from "node:util";
@@ -13,21 +13,17 @@ const coreSources = ["git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055c
 function fixture(t, { installed = false, malformed = false } = {}) {
 	const sandbox = createCliSandbox(t, { prefix: "selection-" });
 	const settings = sandbox.settingsPath();
-	const ready = join(sandbox.root, "ready");
 	writeFileSync(settings, malformed ? "{\n" : JSON.stringify({ packages: ["npm:pi-btw@0.1.0"], subagents: { agentOverrides: { reviewer: { model: "keep-model", tools: ["read"] } } }, keep: true }) + "\n");
 	writeFileSync(`${settings}.lazypi.fixture.bak`, "existing backup\n");
-	// The stub `which` reports Pi only after the stub npm bootstrap ran, so this
-	// fixture models a machine without Pi without ever reaching a real npm. The
-	// absence is declared, so it still cannot fall back to a real tool.
-	sandbox.mayBeAbsent("pi");
-	sandbox.stub("which", `import { existsSync } from 'node:fs';
-const name = process.argv[2];
-if (!['pi', 'npm'].includes(name)) process.exit(98);
-if (name === 'pi' && !existsSync(${JSON.stringify(ready)})) process.exit(1);
-process.stdout.write(${JSON.stringify(sandbox.bin)} + '/' + name + '\\n');`);
-	sandbox.stub("npm", `import { writeFileSync } from 'node:fs';
-writeFileSync(${JSON.stringify(ready)}, 'ready');`);
-	if (installed) writeFileSync(ready, "ready");
+	// A machine without Pi is modelled by staging the `pi` stub out of PATH: the
+	// CLI resolves commands from PATH, so an absent entry is an absent command. The
+	// stub npm bootstrap puts it back, which is the only way Pi appears here.
+	const piStub = ["", ".mjs", ".cmd"].map((suffix) => join(sandbox.bin, `pi${suffix}`)).find(existsSync);
+	const stagedPi = `${piStub}.staged`;
+	renameSync(piStub, stagedPi);
+	sandbox.stub("npm", `import { renameSync } from 'node:fs';
+renameSync(${JSON.stringify(stagedPi)}, ${JSON.stringify(piStub)});`);
+	if (installed) renameSync(stagedPi, piStub);
 	const snapshot = () => Object.fromEntries(readdirSync(sandbox.agent).sort().map(name => [name, readFileSync(join(sandbox.agent, name), "utf8")]));
 	const before = snapshot();
 	const readCalls = () => sandbox.external().map(record => [record.command, ...record.argv]);

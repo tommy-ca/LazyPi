@@ -219,7 +219,7 @@ test("the helper records each invocation as JSON argv plus exit status", (t) => 
 	assert.deepEqual(sandbox.external(), [{ command: "pi", argv: ["install", "npm:pi-subagents"], status: 3 }]);
 	assert.match(result.stderr, /failed to install subagents/);
 	assert.deepEqual(sandbox.calls().at(-1), { command: "lazypi", argv: ["install", "--yes", "--only", "subagents"], status: 1 });
-	assert.ok(sandbox.queries().some((query) => query.argv[0] === "pi" && query.status === 0));
+	assert.deepEqual(sandbox.queries(), [], "the CLI resolves commands from PATH itself, so no which lookup runs");
 });
 
 test("a command with no stub breaks the test instead of reaching a real tool", (t) => {
