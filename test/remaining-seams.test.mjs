@@ -1,74 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { delimiter, join, resolve } from "node:path";
-import { spawnSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 
-import { PACKAGES, resolveSelection } from "../bin/lazypi.mjs";
-
-const CLI_PATH = resolve("bin/lazypi.mjs");
-const AUTH_ENV_VARS = [
-	"ANTHROPIC_API_KEY",
-	"OPENAI_API_KEY",
-	"GOOGLE_API_KEY",
-	"GEMINI_API_KEY",
-	"OPENROUTER_API_KEY",
-	"TOGETHER_API_KEY",
-	"GROQ_API_KEY",
-	"MISTRAL_API_KEY",
-];
-
-function createWorkspace(t) {
-	const root = mkdtempSync(join(tmpdir(), "lazypi-remaining-seams-"));
-	t.after(() => rmSync(root, { recursive: true, force: true }));
-	const home = join(root, "home");
-	const workspace = join(root, "workspace");
-	const bin = join(root, "bin");
-	mkdirSync(home, { recursive: true });
-	mkdirSync(workspace, { recursive: true });
-	mkdirSync(bin, { recursive: true });
-	return { root, home, workspace, bin };
-}
-
-function writeFakePi(bin) {
-	if (process.platform === "win32") {
-		writeFileSync(join(bin, "pi.cmd"), "@echo off\r\nif \"%1\"==\"--version\" echo pi test\r\nexit /b 0\r\n");
-		return;
-	}
-	const piPath = join(bin, "pi");
-	writeFileSync(piPath, "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'pi test'; fi\nexit 0\n");
-	chmodSync(piPath, 0o755);
-}
-
-function runCli(args, { cwd, home, agentDir, bin } = {}) {
-	const env = {
-		...process.env,
-		HOME: home,
-		USERPROFILE: home,
-		PI_CODING_AGENT_DIR: agentDir,
-	};
-	if (bin) env.PATH = [bin, process.env.PATH].filter(Boolean).join(delimiter);
-	for (const key of AUTH_ENV_VARS) delete env[key];
-	const result = spawnSync(process.execPath, [CLI_PATH, ...args], {
-		cwd,
-		env,
-		encoding: "utf8",
-		timeout: 60_000,
-	});
-	if (result.error) throw result.error;
-	return result;
-}
+import { resolveSelection } from "../bin/lazypi.mjs";
+import { createCliSandbox } from "./helpers/cli-spawn.mjs";
 
 test("--except web-access still selects the other five ids", () => {
 	assert.deepEqual([...resolveSelection({ except: ["web-access"] })], ["pstack", "subagents", "sandbox", "verdict", "pi-ask-user"]);
 });
 
 test("doctor with no settings file warns and exits 0", (t) => {
-	const { home, workspace, bin } = createWorkspace(t);
-	writeFakePi(bin);
-	const agentDir = join(home, ".pi", "agent");
-	const result = runCli(["doctor"], { cwd: workspace, home, agentDir, bin });
+	const sandbox = createCliSandbox(t);
+	const result = sandbox.run(["doctor"]);
 	const output = `${result.stdout}\n${result.stderr}`;
 	assert.equal(result.status, 0, output);
 	assert.match(output, /pi --version: pi test/);
@@ -78,27 +22,22 @@ test("doctor with no settings file warns and exits 0", (t) => {
 });
 
 test("doctor warns when Pi version exits unsuccessfully with error output", (t) => {
-	const { home, workspace, bin } = createWorkspace(t);
+	const sandbox = createCliSandbox(t);
 	if (process.platform === "win32") {
-		writeFileSync(join(bin, "pi.cmd"), "@echo off\r\necho Error: missing dependency 1>&2\r\nexit /b 1\r\n");
+		writeFileSync(join(sandbox.bin, "pi.cmd"), "@echo off\r\necho Error: missing dependency 1>&2\r\nexit /b 1\r\n");
 	} else {
-		const piPath = join(bin, "pi");
-		writeFileSync(piPath, "#!/bin/sh\necho 'Error: missing dependency' >&2\nexit 1\n");
-		chmodSync(piPath, 0o755);
+		sandbox.stub("pi", 'process.stderr.write("Error: missing dependency\\n");\nprocess.exit(1);');
 	}
-	const result = runCli(["doctor"], { cwd: workspace, home, agentDir: join(home, ".pi", "agent"), bin });
+	const result = sandbox.run(["doctor"]);
 	assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
 	assert.match(result.stdout, /Could not read `pi --version` output/);
 	assert.doesNotMatch(result.stdout, /✓ pi --version: Error/);
 });
 
 test("doctor warns on retired and outsider unpinned git", (t) => {
-	const { home, workspace, bin } = createWorkspace(t);
-	writeFakePi(bin);
-	const agentDir = join(home, ".pi", "agent");
-	mkdirSync(agentDir, { recursive: true });
+	const sandbox = createCliSandbox(t);
 	writeFileSync(
-		join(agentDir, "settings.json"),
+		sandbox.settingsPath(),
 		JSON.stringify({
 			packages: [
 				"git:github.com/VandeeFeng/pi-memory-md",
@@ -106,7 +45,7 @@ test("doctor warns on retired and outsider unpinned git", (t) => {
 			],
 		}) + "\n",
 	);
-	const result = runCli(["doctor"], { cwd: workspace, home, agentDir, bin });
+	const result = sandbox.run(["doctor"]);
 	const output = `${result.stdout}\n${result.stderr}`;
 	assert.equal(result.status, 0, output);
 	assert.match(output, /VandeeFeng\/pi-memory-md is an unpinned git head/);
@@ -114,10 +53,8 @@ test("doctor warns on retired and outsider unpinned git", (t) => {
 });
 
 test("status prints core and optional installed counts after the catalog header", (t) => {
-	const { home, workspace, bin } = createWorkspace(t);
-	writeFakePi(bin);
-	const agentDir = join(home, ".pi", "agent");
-	const result = runCli(["status"], { cwd: workspace, home, agentDir, bin });
+	const sandbox = createCliSandbox(t);
+	const result = sandbox.run(["status"]);
 	const output = `${result.stdout}\n${result.stderr}`;
 	assert.equal(result.status, 0, output);
 	assert.match(output, /Installed from LazyPi catalog \(0\/6\):/);

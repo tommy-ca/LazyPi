@@ -6,7 +6,7 @@
 // side effects and starts no entrypoint.
 import { closeSync, existsSync, fchmodSync, fsyncSync, lstatSync, mkdirSync, openSync, readFileSync, renameSync, statSync, unlinkSync, writeSync } from "node:fs";
 import { homedir, platform } from "node:os";
-import { basename, dirname, join, posix, win32 } from "node:path";
+import { basename, delimiter, dirname, join, posix, win32 } from "node:path";
 import { spawnSync } from "node:child_process";
 import { cwd } from "node:process";
 
@@ -58,13 +58,35 @@ function spawnCommand(command, args = [], options = {}) {
 	return spawnSync(spawned.command, spawned.args, spawnOptions);
 }
 
+// Resolution walks PATH itself: asking `which` means asking another external
+// command, and on a machine without `which` a present `pi` looked absent, which
+// then offered a global npm install. `statSync` follows a symlink to the file it
+// names, and a regular file without an execute bit is not a command.
+function isExecutableFile(candidate) {
+	try {
+		const info = statSync(candidate);
+		return info.isFile() && (info.mode & 0o111) !== 0;
+	} catch {
+		return false;
+	}
+}
+
+function posixCommandPath(name, env = process.env) {
+	for (const entry of String(env.PATH ?? "").split(delimiter)) {
+		if (!entry) continue;
+		const candidate = join(entry, name);
+		if (isExecutableFile(candidate)) return candidate;
+	}
+	return null;
+}
+
+// The Windows branch still asks `where`, where a `.cmd` shim needs its own
+// preference order, and native Windows resolution was never observed here.
 function commandPath(name) {
-	const command = platform() === "win32" ? "where" : "which";
-	const probe = spawnSync(command, [name], { encoding: "utf8" });
+	if (platform() !== "win32") return posixCommandPath(name);
+	const probe = spawnSync("where", [name], { encoding: "utf8" });
 	if (probe.status !== 0) return null;
-	if (platform() === "win32") return pickWindowsWhereHit(probe.stdout);
-	const first = String(probe.stdout ?? "").split(/\r?\n/).map((line) => line.trim()).find(Boolean);
-	return first || null;
+	return pickWindowsWhereHit(probe.stdout);
 }
 
 function hasCmd(name) {

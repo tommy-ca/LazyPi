@@ -1,66 +1,47 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
-import { spawn, spawnSync } from "node:child_process";
+import { existsSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { spawn } from "node:child_process";
 import { stripVTControlCharacters } from "node:util";
 
-const cli = resolve("bin/lazypi.mjs");
+import { createCliSandbox } from "./helpers/cli-spawn.mjs";
+
 const ttyRunner = "/usr/bin/script";
 const coreSources = ["git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8", "npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user", "npm:pi-web-access"];
 
-function fixture({ installed = false, malformed = false } = {}) {
-	const root = mkdtempSync(join(tmpdir(), "selection-"));
-	const dirs = Object.fromEntries(["home", "agent", "work", "bin", "tmp", "config", "cache", "data", "state", "npm-cache"].map(name => [name, join(root, name)]));
-	for (const path of Object.values(dirs)) mkdirSync(path);
-	const settings = join(dirs.agent, "settings.json");
+function fixture(t, { installed = false, malformed = false } = {}) {
+	const sandbox = createCliSandbox(t, { prefix: "selection-" });
+	const settings = sandbox.settingsPath();
 	writeFileSync(settings, malformed ? "{\n" : JSON.stringify({ packages: ["npm:pi-btw@0.1.0"], subagents: { agentOverrides: { reviewer: { model: "keep-model", tools: ["read"] } } }, keep: true }) + "\n");
-	writeFileSync(join(dirs.agent, "settings.json.lazypi.fixture.bak"), "existing backup\n");
-	writeFileSync(join(root, "npmrc"), "");
-	const calls = join(root, "calls.jsonl");
-	writeFileSync(calls, "");
-	function executable(name, body) {
-		const path = join(dirs.bin, name);
-		writeFileSync(path, `#!${process.execPath}\n${body}`);
-		chmodSync(path, 0o755);
-	}
-	executable("which", `import { existsSync } from 'node:fs';
-const name = process.argv[2];
-if (!['pi', 'npm'].includes(name)) process.exit(98);
-if (name === 'pi' && !existsSync(${JSON.stringify(join(root, "ready"))})) process.exit(1);
-console.log(${JSON.stringify(dirs.bin)} + '/' + name);\n`);
-	executable("npm", `import { appendFileSync, writeFileSync } from 'node:fs';
-appendFileSync(${JSON.stringify(calls)}, JSON.stringify(['npm', ...process.argv.slice(2)]) + '\\n');
-writeFileSync(${JSON.stringify(join(root, "ready"))}, 'ready');\n`);
-	executable("pi", `import { appendFileSync } from 'node:fs';
-appendFileSync(${JSON.stringify(calls)}, JSON.stringify(['pi', ...process.argv.slice(2)]) + '\\n');\n`);
-	if (installed) writeFileSync(join(root, "ready"), "ready");
-	const env = {
-		PATH: dirs.bin, HOME: dirs.home, USERPROFILE: dirs.home, PI_CODING_AGENT_DIR: dirs.agent,
-		TMPDIR: dirs.tmp, XDG_CONFIG_HOME: dirs.config, XDG_CACHE_HOME: dirs.cache,
-		XDG_DATA_HOME: dirs.data, XDG_STATE_HOME: dirs.state, TERM: "dumb", NO_COLOR: "1",
-		npm_config_cache: dirs["npm-cache"], npm_config_userconfig: join(root, "npmrc"), npm_config_globalconfig: join(root, "npmrc"),
-	};
-	const snapshot = () => Object.fromEntries(readdirSync(dirs.agent).sort().map(name => [name, readFileSync(join(dirs.agent, name), "utf8")]));
+	writeFileSync(`${settings}.lazypi.fixture.bak`, "existing backup\n");
+	// A machine without Pi is modelled by staging the `pi` stub out of PATH: the
+	// CLI resolves commands from PATH, so an absent entry is an absent command. The
+	// stub npm bootstrap puts it back, which is the only way Pi appears here.
+	const piStub = ["", ".mjs", ".cmd"].map((suffix) => join(sandbox.bin, `pi${suffix}`)).find(existsSync);
+	const stagedPi = `${piStub}.staged`;
+	renameSync(piStub, stagedPi);
+	sandbox.stub("npm", `import { renameSync } from 'node:fs';
+renameSync(${JSON.stringify(stagedPi)}, ${JSON.stringify(piStub)});`);
+	if (installed) renameSync(stagedPi, piStub);
+	const snapshot = () => Object.fromEntries(readdirSync(sandbox.agent).sort().map(name => [name, readFileSync(join(sandbox.agent, name), "utf8")]));
 	const before = snapshot();
-	const readCalls = () => readFileSync(calls, "utf8").split("\n").filter(Boolean).map(line => JSON.parse(line));
+	const readCalls = () => sandbox.external().map(record => [record.command, ...record.argv]);
 	function record(result, command) {
-		writeFileSync(join(root, "command.json"), JSON.stringify(command));
-		for (const key of ["stdout", "stderr"]) writeFileSync(join(root, `${key}.txt`), result[key]);
-		writeFileSync(join(root, "exit.txt"), String(result.status));
+		writeFileSync(join(sandbox.root, "command.json"), JSON.stringify(command));
+		for (const key of ["stdout", "stderr"]) writeFileSync(join(sandbox.root, `${key}.txt`), result[key]);
+		writeFileSync(join(sandbox.root, "exit.txt"), String(result.status));
 		return result;
 	}
 	function run(args) {
-		const result = spawnSync(process.execPath, [cli, ...args], { cwd: dirs.work, env, encoding: "utf8", timeout: 10_000 });
+		const result = sandbox.run(args);
 		assert.equal(result.error, undefined);
-		return record(result, [process.execPath, cli, ...args]);
+		return record(result, ["lazypi", ...args]);
 	}
 	async function tty(steps) {
 		assert.ok(existsSync(ttyRunner), `Required TTY runner missing: ${ttyRunner}`);
-		const quote = value => `'${value.replaceAll("'", "'\\''")}'`;
-		const args = ["-q", "-e", "-c", `/usr/bin/stty cols 160 rows 50; exec ${quote(process.execPath)} ${quote(cli)} install`, join(root, "typescript")];
-		const child = spawn(ttyRunner, args, { cwd: dirs.work, env, stdio: ["pipe", "pipe", "pipe"] });
+		const args = ["-q", "-e", "-c", sandbox.shellCommand(["install"], { prefix: "/usr/bin/stty cols 160 rows 50; exec " }), join(sandbox.root, "typescript")];
+		const child = spawn(ttyRunner, args, { cwd: sandbox.work, env: sandbox.env, stdio: ["pipe", "pipe", "pipe"] });
 		let stdout = "", stderr = "", index = 0, unexpectedBootstrap = false;
 		const promptCalls = [];
 		const timer = setTimeout(() => child.kill("SIGKILL"), 3000);
@@ -69,7 +50,7 @@ appendFileSync(${JSON.stringify(calls)}, JSON.stringify(['pi', ...process.argv.s
 			const text = stripVTControlCharacters(stdout);
 			if (index < steps.length && text.includes(steps[index][0])) {
 				const [, keys, expectedCalls] = steps[index++];
-				writeFileSync(join(root, `prompt-${index}.json`), JSON.stringify(readCalls()));
+				writeFileSync(join(sandbox.root, `prompt-${index}.json`), JSON.stringify(readCalls()));
 				promptCalls.push([readCalls(), expectedCalls]);
 				keys.forEach((key, i) => setTimeout(() => child.stdin.write(key), 40 * (i + 1)));
 			} else if (index === 0 && !unexpectedBootstrap && text.includes("Install Pi now with")) {
@@ -84,12 +65,12 @@ appendFileSync(${JSON.stringify(calls)}, JSON.stringify(['pi', ...process.argv.s
 		for (const [actual, expected] of promptCalls) if (expected) assert.deepEqual(actual, expected);
 		return result;
 	}
-	return { root, settings, before, snapshot, readCalls, run, tty };
+	return { root: sandbox.root, settings, before, snapshot, readCalls, run, tty };
 }
 
 for (const stage of ["choice", "picker", "empty"]) {
-	test(`interactive ${stage} exits without bootstrap or settings/model/backup changes`, { skip: process.platform !== "linux" }, async () => {
-		const f = fixture();
+	test(`interactive ${stage} exits without bootstrap or settings/model/backup changes`, { skip: process.platform !== "linux" }, async (t) => {
+		const f = fixture(t);
 		const steps = stage === "choice"
 			? [["or pick them yourself?", ["\x03"]]]
 			: [["or pick them yourself?", ["\x1b[B", "\r"]], ["Pick packages to install", stage === "picker" ? ["\x03"] : [" ", "\r"]]];
@@ -104,8 +85,8 @@ for (const stage of ["choice", "picker", "empty"]) {
 }
 
 for (const pick of [false, true]) {
-	test(`interactive ${pick ? "picker" : "everything"} selection precedes accepted bootstrap`, { skip: process.platform !== "linux" }, async () => {
-		const f = fixture();
+	test(`interactive ${pick ? "picker" : "everything"} selection precedes accepted bootstrap`, { skip: process.platform !== "linux" }, async (t) => {
+		const f = fixture(t);
 		const steps = [["or pick them yourself?", pick ? ["\x1b[B", "\r"] : ["\r"], []]];
 		if (pick) steps.push(["Pick packages to install", ["\r"], []]);
 		steps.push(["Install Pi now with", ["\r"], []]);
@@ -128,7 +109,7 @@ for (const pick of [false, true]) {
 	});
 }
 
-test("noninteractive selectors and --yes preserve selected installs without bootstrap", { skip: process.platform === "win32" }, () => {
+test("noninteractive selectors and --yes preserve selected installs without bootstrap", { skip: process.platform === "win32" }, (t) => {
 	for (const [args, sources] of [
 		[["--yes"], coreSources],
 		[["--only", "core"], coreSources],
@@ -140,7 +121,7 @@ test("noninteractive selectors and --yes preserve selected installs without boot
 		[["--except", "optional"], coreSources],
 		[["--except", "core,optional"], []],
 	]) {
-		const f = fixture({ installed: true });
+		const f = fixture(t, { installed: true });
 		const result = f.run(["install", ...args]);
 		assert.equal(result.status, 0, result.stdout + result.stderr);
 		assert.equal(result.stderr, "");
@@ -152,8 +133,8 @@ test("noninteractive selectors and --yes preserve selected installs without boot
 	}
 });
 
-test("declining Pi bootstrap after selection retains exit 127 without changes", { skip: process.platform !== "linux" }, async () => {
-	const f = fixture();
+test("declining Pi bootstrap after selection retains exit 127 without changes", { skip: process.platform !== "linux" }, async (t) => {
+	const f = fixture(t);
 	const result = await f.tty([
 		["or pick them yourself?", ["\r"], []],
 		["Install Pi now with", ["\x1b[C", "\r"], []],
@@ -165,8 +146,8 @@ test("declining Pi bootstrap after selection retains exit 127 without changes", 
 	assert.deepEqual(f.snapshot(), f.before);
 });
 
-test("unattended --yes retains accepted bootstrap before selected package actions", { skip: process.platform === "win32" }, () => {
-	const f = fixture();
+test("unattended --yes retains accepted bootstrap before selected package actions", { skip: process.platform === "win32" }, (t) => {
+	const f = fixture(t);
 	const result = f.run(["install", "--yes", "--only", "web-access"]);
 	assert.equal(result.status, 0, result.stdout + result.stderr);
 	assert.equal(result.stderr, "");
@@ -178,9 +159,9 @@ test("unattended --yes retains accepted bootstrap before selected package action
 	assert.deepEqual(f.snapshot(), f.before);
 });
 
-test("invalid settings and unknown selectors fail before bootstrap and leave all settings intact", { skip: process.platform === "win32" }, () => {
+test("invalid settings and unknown selectors fail before bootstrap and leave all settings intact", { skip: process.platform === "win32" }, (t) => {
 	for (const malformed of [false, true]) {
-		const f = fixture({ malformed });
+		const f = fixture(t, { malformed });
 		const result = f.run(["install", "--yes", ...(malformed ? ["--except", "core,optional"] : ["--only", "not-a-package"])]);
 		assert.equal(result.status, 2);
 		assert.equal(result.stdout, "");

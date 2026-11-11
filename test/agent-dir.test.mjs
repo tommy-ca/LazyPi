@@ -1,37 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { delimiter, dirname, join, posix, resolve, win32 } from "node:path";
-import { spawnSync } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, posix, win32 } from "node:path";
 
 import { resolveAgentConfigDir } from "../bin/lazypi.mjs";
+import { createCliSandbox } from "./helpers/cli-spawn.mjs";
 
-const CLI_PATH = resolve("bin/lazypi.mjs");
 const EXTENSION_SETTINGS_SOURCE = "npm:@juanibiapina/pi-extension-settings";
-const POWERBAR_SOURCE = "npm:@juanibiapina/pi-powerbar";
-const AUTH_ENV_VARS = [
-	"ANTHROPIC_API_KEY",
-	"OPENAI_API_KEY",
-	"GOOGLE_API_KEY",
-	"GEMINI_API_KEY",
-	"OPENROUTER_API_KEY",
-	"TOGETHER_API_KEY",
-	"GROQ_API_KEY",
-	"MISTRAL_API_KEY",
-];
+const POWERBAR_SOURCE = "npm:@juanibiapina/powerbar";
 
-function createWorkspace(t) {
-	const root = mkdtempSync(join(tmpdir(), "lazypi-agent-dir-"));
-	t.after(() => rmSync(root, { recursive: true, force: true }));
-	const home = join(root, "home");
-	const workspace = join(root, "workspace");
-	const bin = join(root, "bin");
-	mkdirSync(home, { recursive: true });
-	mkdirSync(workspace, { recursive: true });
-	mkdirSync(bin, { recursive: true });
-	return { root, home, workspace, bin };
-}
+const CORE_SOURCES = [
+	"git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8",
+	"npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user", "npm:pi-web-access",
+];
 
 function writeSettings(path, packages) {
 	mkdirSync(path, { recursive: true });
@@ -43,34 +24,8 @@ function writeJson(path, value) {
 	writeFileSync(path, JSON.stringify(value, null, 2) + "\n");
 }
 
-function writeFakePi(bin) {
-	if (process.platform === "win32") {
-		writeFileSync(join(bin, "pi.cmd"), "@echo off\r\nif \"%1\"==\"--version\" echo pi test\r\nif defined PI_TEST_CALLS echo %*>>\"%PI_TEST_CALLS%\"\r\nexit /b 0\r\n");
-		return;
-	}
-	const piPath = join(bin, "pi");
-	writeFileSync(piPath, "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'pi test'; fi\nif [ -n \"$PI_TEST_CALLS\" ]; then printf '%s\\n' \"$*\" >> \"$PI_TEST_CALLS\"; fi\nexit 0\n");
-	chmodSync(piPath, 0o755);
-}
-
-function runCli(args, { cwd, home, agentDir, bin, callsPath } = {}) {
-	const env = {
-		...process.env,
-		HOME: home,
-		USERPROFILE: home,
-		PI_CODING_AGENT_DIR: agentDir,
-	};
-	if (bin) env.PATH = [bin, process.env.PATH].filter(Boolean).join(delimiter);
-	if (callsPath) env.PI_TEST_CALLS = callsPath;
-	for (const key of AUTH_ENV_VARS) delete env[key];
-	const result = spawnSync(process.execPath, [CLI_PATH, ...args], {
-		cwd,
-		env,
-		encoding: "utf8",
-		timeout: 60_000,
-	});
-	if (result.error) throw result.error;
-	return result;
+function calledArgv(sandbox) {
+	return sandbox.external().map((record) => record.argv);
 }
 
 test("resolveAgentConfigDir matches Pi path semantics", () => {
@@ -93,12 +48,12 @@ test("resolveAgentConfigDir matches Pi path semantics", () => {
 });
 
 test("status reads settings from PI_CODING_AGENT_DIR", (t) => {
-	const { home, workspace } = createWorkspace(t);
-	const customAgentDir = join(home, ".pi", "lazy");
-	writeSettings(join(home, ".pi", "agent"), ["npm:pi-mcp-adapter"]);
+	const sandbox = createCliSandbox(t);
+	const customAgentDir = join(sandbox.home, ".pi", "lazy");
+	writeSettings(sandbox.agent, ["npm:pi-mcp-adapter"]);
 	writeSettings(customAgentDir, ["npm:pi-subagents"]);
 
-	const result = runCli(["status"], { cwd: workspace, home, agentDir: "~/.pi/lazy" });
+	const result = sandbox.run(["status"], { env: { PI_CODING_AGENT_DIR: "~/.pi/lazy" } });
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.ok(result.stdout.includes(`Settings file: ${join(customAgentDir, "settings.json")}`));
@@ -107,13 +62,12 @@ test("status reads settings from PI_CODING_AGENT_DIR", (t) => {
 });
 
 test("status preserves and classifies pinned retired and external registrations", (t) => {
-	const { home, workspace } = createWorkspace(t);
-	const agentDir = join(home, ".pi", "agent");
-	const settingsFile = join(agentDir, "settings.json");
-	writeSettings(agentDir, ["npm:@narumitw/pi-btw@0.63.4", "npm:pi-memory-md@0.1.38", "npm:external-example"]);
+	const sandbox = createCliSandbox(t);
+	const settingsFile = sandbox.settingsPath();
+	writeSettings(sandbox.agent, ["npm:@narumitw/pi-btw@0.63.4", "npm:pi-memory-md@0.1.38", "npm:external-example"]);
 	const before = readFileSync(settingsFile, "utf8");
 
-	const result = runCli(["status"], { cwd: workspace, home, agentDir });
+	const result = sandbox.run(["status"]);
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.match(result.stdout, /Other Pi packages outside the LazyPi catalog \(3\):/);
@@ -125,25 +79,22 @@ test("status preserves and classifies pinned retired and external registrations"
 
 for (const [name, selection] of [["default", []], ["explicit core", ["--only", "core"]]]) {
 	test(`${name} install selects the candidate core and preserves unselected registrations`, (t) => {
-		const { root, home, workspace, bin } = createWorkspace(t);
-		const agentDir = join(home, ".pi", "agent");
-		const settingsFile = join(agentDir, "settings.json");
-		const callsPath = join(root, "pi-calls.log");
+		const sandbox = createCliSandbox(t);
+		const settingsFile = sandbox.settingsPath();
 		const packages = ["npm:pi-btw@0.1.0", "npm:external-example"];
 		writeJson(settingsFile, { packages, keep: { marker: true } });
-		writeFakePi(bin);
 
-		const result = runCli(["install", "--yes", ...selection], { cwd: workspace, home, agentDir, bin, callsPath });
+		const result = sandbox.run(["install", "--yes", ...selection]);
 
 		assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 		assert.match(result.stdout, /Selected:\s+6\/6/);
-		assert.deepEqual(readFileSync(callsPath, "utf8").trim().split(/\r?\n/), [
-			"install git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8",
-			"install npm:pi-subagents",
-			"install npm:pi-better-sandbox",
-			"install npm:pi-verdict",
-			"install npm:pi-ask-user",
-			"install npm:pi-web-access",
+		assert.deepEqual(calledArgv(sandbox), [
+			["install", "git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8"],
+			["install", "npm:pi-subagents"],
+			["install", "npm:pi-better-sandbox"],
+			["install", "npm:pi-verdict"],
+			["install", "npm:pi-ask-user"],
+			["install", "npm:pi-web-access"],
 		]);
 		const after = JSON.parse(readFileSync(settingsFile, "utf8"));
 		assert.deepEqual(after.packages, packages);
@@ -151,11 +102,13 @@ for (const [name, selection] of [["default", []], ["explicit core", ["--only", "
 	});
 }
 
-function writeStatefulPi(bin, local) {
-	const script = join(bin, "fake-pi.mjs");
-	writeFileSync(script, `import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
+// The stub behaves like Pi: it rejects anything but its documented install
+// shape and registers the source in the settings file it is pointed at.
+function stubStatefulPi(sandbox, local) {
+	sandbox.stub(
+		"pi",
+		`import { readFileSync, writeFileSync } from "node:fs";
 const args = process.argv.slice(2);
-appendFileSync(process.env.PI_TEST_CALLS, JSON.stringify(args) + "\\n");
 const prefix = ${JSON.stringify(local ? ["install", "-l", "--approve"] : ["install"])};
 if (args.length !== prefix.length + 1 || !prefix.every((arg, i) => args[i] === arg)
 	|| !/^(npm:|git:)/.test(args.at(-1))) {
@@ -169,36 +122,18 @@ if (!settings.packages.some(entry => (typeof entry === "string" ? entry : entry.
 	settings.packages.push(source);
 }
 writeFileSync(path, JSON.stringify(settings, null, 2) + "\\n");
-`);
-	const pi = join(bin, "pi");
-	writeFileSync(pi, `#!/bin/sh\nexec '${process.execPath}' '${script}' "$@"\n`);
-	chmodSync(pi, 0o755);
-	// LazyPi probes with `which`; never let lookup reach host executables.
-	const which = join(bin, "which");
-	writeFileSync(which, `#!${process.execPath}\nconst args = process.argv.slice(2);
-if (args.length !== 1 || !["pi", "npm"].includes(args[0])) process.exit(98);
-console.log(${JSON.stringify(bin)} + "/" + args[0]);
-`);
-	chmodSync(which, 0o755);
-	const npm = join(bin, "npm");
-	writeFileSync(npm, `#!${process.execPath}\nimport { appendFileSync } from "node:fs";
-appendFileSync(process.env.PI_TEST_CALLS, JSON.stringify(["unexpected npm", ...process.argv.slice(2)]) + "\\n");
-console.error("Unexpected npm fallback");
-process.exit(99);
-`);
-	chmodSync(npm, 0o755);
+`,
+	);
 }
 
 for (const local of [false, true]) {
 	const scope = local ? "project" : "global";
 	test(`${scope} default install preserves state with stateful fake Pi`, { skip: process.platform === "win32" }, (t) => {
-		const { root, home, workspace, bin } = createWorkspace(t);
-		const agentDir = join(home, ".pi", "agent");
-		const globalSettings = join(agentDir, "settings.json");
-		const projectSettings = join(workspace, ".pi", "settings.json");
+		const sandbox = createCliSandbox(t);
+		const globalSettings = sandbox.settingsPath();
+		const projectSettings = join(sandbox.work, ".pi", "settings.json");
 		const settingsFile = local ? projectSettings : globalSettings;
 		const oppositeFile = local ? globalSettings : projectSettings;
-		const callsPath = join(root, "calls.jsonl");
 		const packages = [
 			{
 				source: "npm:@narumitw/pi-btw@0.63.4",
@@ -233,43 +168,27 @@ for (const local of [false, true]) {
 			packages: ["npm:opposite-scope@3.0.0"],
 			subagents: { agentOverrides: { reviewer: { model: "opposite-model" } } },
 		});
-		const configFile = join(agentDir, "fixture-config.json");
-		const dataFile = join(workspace, ".pi", "fixture-data.md");
+		const configFile = join(sandbox.agent, "fixture-config.json");
+		const dataFile = join(sandbox.work, ".pi", "fixture-data.md");
 		writeJson(configFile, { enabled: true, untouched: [1, 2] });
 		mkdirSync(dirname(dataFile), { recursive: true });
 		writeFileSync(dataFile, "Persistent package data.\n\u0000sentinel\n");
 		const unchangedFiles = [oppositeFile, configFile, dataFile].map(path => [path, readFileSync(path)]);
-		writeFileSync(callsPath, "");
-		writeStatefulPi(bin, local);
+		stubStatefulPi(sandbox, local);
 
-		const result = spawnSync(process.execPath, [CLI_PATH, "install", "--yes", ...(local ? ["--local"] : [])], {
-			cwd: workspace,
-			env: {
-				HOME: home,
-				USERPROFILE: home,
-				PI_CODING_AGENT_DIR: agentDir,
-				PATH: bin,
-				PI_TEST_CALLS: callsPath,
-				PI_TEST_SETTINGS: settingsFile,
-			},
-			encoding: "utf8",
-			timeout: 15_000,
+		const result = sandbox.run(["install", "--yes", ...(local ? ["--local"] : [])], {
+			env: { PI_TEST_SETTINGS: settingsFile },
 		});
 		assert.equal(result.error, undefined);
 		assert.match(result.stdout, /Selected:          6\/6\n/);
 		assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 		assert.equal(result.signal, null);
 		assert.equal(result.stderr, "");
-		const sources = [
-			"git:github.com/tommy-ca/pstack@f1571b8431034dcd195f4ea055ccf1c84fc14fc8",
-			"npm:pi-subagents", "npm:pi-better-sandbox", "npm:pi-verdict", "npm:pi-ask-user", "npm:pi-web-access",
-		];
 		const prefix = local ? ["install", "-l", "--approve"] : ["install"];
-		const calls = readFileSync(callsPath, "utf8").trim().split("\n").map(line => JSON.parse(line));
-		assert.deepEqual(calls, sources.map(source => [...prefix, source]));
+		assert.deepEqual(calledArgv(sandbox), CORE_SOURCES.map(source => [...prefix, source]));
 		assert.deepEqual(JSON.parse(readFileSync(settingsFile, "utf8")), {
 			...original,
-			packages: [...packages, ...sources],
+			packages: [...packages, ...CORE_SOURCES],
 			subagents: {
 				defaultModel: "fixture-default",
 				agentOverrides: {
@@ -291,7 +210,7 @@ for (const local of [false, true]) {
 			"Already installed: 0",
 			"Will install:      6",
 			"Pi credentials:    none detected",
-			...sources.flatMap(source => ["", `→ pi install ${source}`]),
+			...CORE_SOURCES.flatMap(source => ["", `→ pi install ${source}`]),
 			"",
 			"What you've got:",
 			"  pstack               Canonical checkout registration only; native role binding and loading remain unverified.",
@@ -316,42 +235,35 @@ for (const local of [false, true]) {
 }
 
 test("optional selection is empty without package calls or settings changes", (t) => {
-	const { root, home, workspace, bin } = createWorkspace(t);
-	const agentDir = join(home, ".pi", "agent");
-	const callsPath = join(root, "pi-calls.log");
-	writeSettings(agentDir, []);
-	writeFakePi(bin);
+	const sandbox = createCliSandbox(t);
+	writeSettings(sandbox.agent, []);
 
-	writeFileSync(callsPath, "");
-	const before = readFileSync(join(agentDir, "settings.json"), "utf8");
-	const result = runCli(["install", "--yes", "--only", "optional"], { cwd: workspace, home, agentDir, bin, callsPath });
+	const before = readFileSync(sandbox.settingsPath(), "utf8");
+	const result = sandbox.run(["install", "--yes", "--only", "optional"]);
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.equal(result.stderr, "");
 	assert.equal(result.stdout, "Nothing selected — nothing to install.\n");
-	assert.equal(readFileSync(callsPath, "utf8"), "");
-	assert.equal(readFileSync(join(agentDir, "settings.json"), "utf8"), before);
+	assert.deepEqual(sandbox.external(), []);
+	assert.equal(readFileSync(sandbox.settingsPath(), "utf8"), before);
 });
 
 test("web access remains individually installable", (t) => {
-	const { root, home, workspace, bin } = createWorkspace(t);
-	const agentDir = join(home, ".pi", "agent");
-	const callsPath = join(root, "pi-calls.log");
-	writeSettings(agentDir, []);
-	writeFakePi(bin);
+	const sandbox = createCliSandbox(t);
+	writeSettings(sandbox.agent, []);
 
-	const result = runCli(["install", "--yes", "--only", "web-access"], { cwd: workspace, home, agentDir, bin, callsPath });
+	const result = sandbox.run(["install", "--yes", "--only", "web-access"]);
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.match(result.stdout, /Selected:\s+1\/6/);
-	assert.equal(readFileSync(callsPath, "utf8").trim(), "install npm:pi-web-access");
+	assert.deepEqual(calledArgv(sandbox), [["install", "npm:pi-web-access"]]);
 });
 
 test("status displays the installed source pin, not only the id column", (t) => {
-	const { home, workspace } = createWorkspace(t);
-	writeSettings(join(home, ".pi", "agent"), ["npm:pi-subagents@0.62.0"]);
+	const sandbox = createCliSandbox(t);
+	writeSettings(sandbox.agent, ["npm:pi-subagents@0.62.0"]);
 
-	const result = runCli(["status"], { cwd: workspace, home });
+	const result = sandbox.run(["status"]);
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.match(result.stdout, /✓ \[core\] subagents/);
@@ -359,56 +271,50 @@ test("status displays the installed source pin, not only the id column", (t) => 
 });
 
 test("install reads auth and writes settings in PI_CODING_AGENT_DIR", (t) => {
-	const { home, workspace, bin } = createWorkspace(t);
-	const defaultAgentDir = join(home, ".pi", "agent");
-	const customAgentDir = join(home, ".pi", "lazy");
-	writeFakePi(bin);
-	writeSettings(defaultAgentDir, ["npm:pi-mcp-adapter"]);
+	const sandbox = createCliSandbox(t);
+	const customAgentDir = join(sandbox.home, ".pi", "lazy");
+	writeSettings(sandbox.agent, ["npm:pi-mcp-adapter"]);
 	writeSettings(customAgentDir, ["npm:pi-subagents"]);
-	writeJson(join(defaultAgentDir, "auth.json"), { openai: { type: "api_key", key: "default" } });
+	writeJson(join(sandbox.agent, "auth.json"), { openai: { type: "api_key", key: "default" } });
 	writeJson(join(customAgentDir, "auth.json"), { anthropic: { type: "api_key", key: "custom" } });
 
-	const result = runCli(["--yes", "--only", "subagents"], { cwd: workspace, home, agentDir: customAgentDir, bin });
+	const result = sandbox.run(["--yes", "--only", "subagents"], { env: { PI_CODING_AGENT_DIR: customAgentDir } });
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.match(result.stdout, /Pi credentials:\s+anthropic \(auth\.json\)/);
 	const customSettings = JSON.parse(readFileSync(join(customAgentDir, "settings.json"), "utf8"));
-	const defaultSettings = JSON.parse(readFileSync(join(defaultAgentDir, "settings.json"), "utf8"));
+	const defaultSettings = JSON.parse(readFileSync(join(sandbox.agent, "settings.json"), "utf8"));
 	assert.equal(customSettings.subagents.agentOverrides.reviewer.model, "");
 	assert.equal(defaultSettings.subagents, undefined);
 });
 
 test("update and remove inspect the custom global settings", (t) => {
-	const { root, home, workspace, bin } = createWorkspace(t);
-	const callsPath = join(root, "pi-calls.log");
-	const defaultAgentDir = join(home, ".pi", "agent");
-	const customAgentDir = join(home, ".pi", "lazy");
-	writeFakePi(bin);
-	writeSettings(defaultAgentDir, ["npm:pi-subagents"]);
+	const sandbox = createCliSandbox(t);
+	const customAgentDir = join(sandbox.home, ".pi", "lazy");
+	writeSettings(sandbox.agent, ["npm:pi-subagents"]);
 	writeSettings(customAgentDir, [POWERBAR_SOURCE, EXTENSION_SETTINGS_SOURCE, "npm:pi-web-access"]);
 
-	const updateResult = runCli(["update"], { cwd: workspace, home, agentDir: customAgentDir, bin, callsPath });
+	const updateResult = sandbox.run(["update"], { env: { PI_CODING_AGENT_DIR: customAgentDir } });
 	assert.equal(updateResult.status, 0, `STDOUT:\n${updateResult.stdout}\nSTDERR:\n${updateResult.stderr}`);
 	const customSettings = JSON.parse(readFileSync(join(customAgentDir, "settings.json"), "utf8"));
 	assert.deepEqual(customSettings.packages, [POWERBAR_SOURCE, EXTENSION_SETTINGS_SOURCE, "npm:pi-web-access"]);
-	assert.deepEqual(JSON.parse(readFileSync(join(defaultAgentDir, "settings.json"), "utf8")).packages, ["npm:pi-subagents"]);
+	assert.deepEqual(JSON.parse(readFileSync(join(sandbox.agent, "settings.json"), "utf8")).packages, ["npm:pi-subagents"]);
 
-	const removeResult = runCli(["remove", "web-access"], { cwd: workspace, home, agentDir: customAgentDir, bin, callsPath });
+	const removeResult = sandbox.run(["remove", "web-access"], { env: { PI_CODING_AGENT_DIR: customAgentDir } });
 	assert.equal(removeResult.status, 0, `STDOUT:\n${removeResult.stdout}\nSTDERR:\n${removeResult.stderr}`);
-	const calls = readFileSync(callsPath, "utf8").trim().split(/\r?\n/).filter(Boolean);
-	assert.deepEqual(calls, ["update", "remove npm:pi-web-access"]);
+	assert.deepEqual(calledArgv(sandbox), [["update", "--extensions"], ["remove", "npm:pi-web-access"]]);
 });
 
 test("--local settings remain independent of PI_CODING_AGENT_DIR", (t) => {
-	const { home, workspace } = createWorkspace(t);
-	const customAgentDir = join(home, ".pi", "lazy");
+	const sandbox = createCliSandbox(t);
+	const customAgentDir = join(sandbox.home, ".pi", "lazy");
 	writeSettings(customAgentDir, ["npm:pi-subagents"]);
-	writeSettings(join(workspace, ".pi"), ["npm:pi-web-access"]);
+	writeSettings(join(sandbox.work, ".pi"), ["npm:pi-web-access"]);
 
-	const result = runCli(["status", "--local"], { cwd: workspace, home, agentDir: customAgentDir });
+	const result = sandbox.run(["status", "--local"], { env: { PI_CODING_AGENT_DIR: customAgentDir } });
 
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
-	assert.ok(result.stdout.includes(`Settings file: ${join(workspace, ".pi", "settings.json")}`));
+	assert.ok(result.stdout.includes(`Settings file: ${join(sandbox.work, ".pi", "settings.json")}`));
 	assert.match(result.stdout, /✓ \[core\] web-access/);
 	assert.doesNotMatch(result.stdout, /✓ \[core\] subagents/);
 });

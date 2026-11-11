@@ -3,8 +3,9 @@
 In-repo graph only. GitHub issues are disabled on `tommy-ca/LazyPi`, so this file
 is the durable epic and issue record. Pull requests are the delivery nodes.
 
-Legend: `[x]` landed, `[~]` open with a decision pending, `[!]` blocked on
-something outside the repository, `[ ]` not started.
+Legend: `[x]` landed, `[~]` in progress or awaiting a decision, `[!]` blocked on
+external proof or authorization, `[ ]` not started. Source presence and passing
+checks do not establish review acceptance.
 
 Source of every item: the 2026-11-10 thermo-nuclear audit, recorded in
 `odd/tasks/lazypi-hardening.md` (specs, tasks, log) and delivered through the
@@ -14,13 +15,17 @@ stacked pull requests below.
 
 The stack lands bottom-up. Each node depends on the one above it.
 
-| Node | Pull request | Branch | Depends on |
+| Node | Pull request | Branch | Delivery evidence |
 |---|---|---|---|
-| D1 contract authority | [#32](https://github.com/tommy-ca/LazyPi/pull/32) | `fix/contract-authority` | master |
-| D2 settings integrity | [#33](https://github.com/tommy-ca/LazyPi/pull/33) | `fix/settings-integrity` | D1 |
-| D3 decomposition | [#34](https://github.com/tommy-ca/LazyPi/pull/34) | `refactor/decompose-cli` | D2 |
-| D4 verification layer | [#35](https://github.com/tommy-ca/LazyPi/pull/35) | `chore/verification-coverage` | D3 |
-| D5 documentation truth | this branch | `docs/truth-and-graph` | master |
+| D1 contract authority | [#32](https://github.com/tommy-ca/LazyPi/pull/32) | `fix/contract-authority` | `154190e` is an ancestor of baseline `a567f9f` |
+| D2 settings integrity | [#33](https://github.com/tommy-ca/LazyPi/pull/33) | `fix/settings-integrity` | PR closed after base deletion; `30c6c36` landed through D3, native acceptance unresolved |
+| D3 decomposition | [#34](https://github.com/tommy-ca/LazyPi/pull/34) | `refactor/decompose-cli` | `0f5c80f` is an ancestor of baseline `a567f9f` |
+| D4 verification layer | [#37](https://github.com/tommy-ca/LazyPi/pull/37) | `chore/verification-layer` | Replaces closed [#35](https://github.com/tommy-ca/LazyPi/pull/35); `83d88d3` is an ancestor of baseline `a567f9f` |
+| D5 documentation truth | [#36](https://github.com/tommy-ca/LazyPi/pull/36) | `docs/truth-and-graph` | `b6d2c90` is an ancestor of baseline `a567f9f` |
+
+These are inherited delivery records cross-checked against local Git ancestry.
+They do not retrospectively approve D2. Do not delete a stacked base branch
+before retargeting and checking its dependent PR.
 
 ## E1 Settings and configuration integrity
 
@@ -39,10 +44,12 @@ The settings document could be destroyed, silently discarded, or disclosed.
 - [x] E1.5 Escape control characters from settings and auth before printing, so a
   committed project file cannot inject OSC 52 or forged error text into CI logs.
   D2.
-- [~] E1.6 The `status` parse-error diagnostic was restored after native review
-  caught that the shared printer changed it. Code fixed and pinned. The review
-  lineage remains open at `correction_required` because the host rejected the
-  correction-plan capture twice. Bookkeeping only, no code risk.
+- [!] E1.6 The `status` parse-error diagnostic was restored and pinned, but that
+  does not close native acceptance. After explicit human authorization, native
+  recovery replaced `review-930ad7d8e521922f` with `review-ce5ee99765aa1913`.
+  The successor stopped at `lens_context_budget_exceeded` for the accumulated
+  historical range. No retry or approval followed. The earlier description as
+  bookkeeping without risk was wrong and is withdrawn.
 
 ## E2 Credential handling
 
@@ -59,10 +66,13 @@ The settings document could be destroyed, silently discarded, or disclosed.
   the documented scripted path, no longer blocks on a bootstrap prompt. D2.
 - [x] E3.3 `status` no longer prints the always-empty legacy-sources section, and
   `doctor` no longer warns about a git migration the tool cannot perform. D3.
-- [~] E3.4 `update --local` emits `pi update --extensions` with no `-l` and no
-  `--approve`, while install and remove pass both. Under Pi's default project
-  trust, protected project resources are skipped, so project scope is silently
-  dropped. Recorded as observed behaviour, not fixed. Needs a product decision.
+- [~] E3.4 Current global update delegates bare `pi update`, which self-updates Pi
+  under its v1.5.0 public contract. Local update delegates `pi update --extensions`,
+  which updates global and trusted project packages, not project-only packages.
+  Pi rejects `-l` for update; `--approve` changes trust rather than scope. Human
+  decision S8 rejects LazyPi `update --local` before spawning or writing, and
+  makes plain update request extensions without overriding saved trust. T10
+  implements and verifies this outcome; it has not shipped.
 - [~] E3.5 `hasCmd` shells out to `which`, so a missing `which` makes a present
   `pi` look absent and triggers an unsolicited global install. This exact defect
   damaged the development environment during the audit. Resolve through
@@ -88,8 +98,9 @@ The settings document could be destroyed, silently discarded, or disclosed.
 - [~] E4.7 `commandPath` is uncached, so `doctor` spawns `which` once per binary.
 - [~] E4.8 The `parseArgs` invalid-argument path sets two flags for one condition,
   which `main` then decodes as a branch chain. Collapse to one outcome enum.
-- [~] E4.9 `PI_CODING_AGENT_DIR` is unvalidated, so a relative value writes
-  outside any intended root.
+- [~] E4.9 Relative `PI_CODING_AGENT_DIR` is explicitly asserted by existing
+  compatibility tests. The earlier wording treated an unproven policy concern
+  as a defect. Preserve that behavior unless a separate requirement changes it.
 
 ## E5 Contract layer
 
@@ -128,9 +139,10 @@ The settings document could be destroyed, silently discarded, or disclosed.
 - [~] E6.6 `windows-smoke.yml` is `workflow_dispatch` only, so no pull request
   ever runs it while the spec makes a Windows obligation normative. The trigger is
   recorded by a test instead of being invisible. Changing it is a CI cost decision.
-- [~] E6.7 The native-proof job requires a ref that pushes and pull requests never
-  produce, and uploads no artifact, so the receipts it exists to produce die with
-  the runner.
+- [~] E6.7 Native proof is dispatch-only with a pinned branch condition and no
+  artifact upload. It emits structured stdout receipts in platform job logs.
+  The earlier claim that receipts necessarily die with the runner was not
+  established. Log retention and retrieval remain separate investigation items.
 
 ## E7 Documentation truth
 
@@ -142,9 +154,48 @@ The settings document could be destroyed, silently discarded, or disclosed.
 - [x] E7.3 The audit claimed `v0.10.4` was never tagged. That was wrong, a
   lexicographic `git tag --list | tail` read as a missing tag. The tag exists.
   No change made.
-- [~] E7.4 Two `.atl` scratch trees and the historical `odd/tasks/*.md` claims are
-  now tracked, but the 1.3 GB historical evidence tree still occupies the
-  checkout exclusion and is not part of the repository.
+- [~] E7.4 The earlier claim that `.atl` scratch trees were tracked was not
+  established and is withdrawn. Historical ignored evidence is not a shipped
+  artifact. No cleanup or new measurement of that historical tree was performed
+  during the follow-up audit.
+
+## E8 Follow-up work and acceptance dependencies
+
+The renewed request is logged verbatim in the feature document at L11. The
+baseline is `a567f9f`. New work uses separate candidate ranges, not the stopped
+historical range. Existing graph IDs remain local issue IDs, not GitHub issues.
+
+```text
+E8 Follow-up hardening
++-- T7 Source audit and lookup design [partial; pending T8]
+|   +-- source/public-contract review [returned, no runtime proof]
+|   +-- competing lookup sketches and cross-judge [returned, design only]
+|   +-- interrogate of resulting candidates [pending]
++-- T8 Hermetic baseline and verification updates [landed as commits, PRs pending]
+|   +-- initial setup [failed before tests or probes, retained]
+|   +-- repaired payload [prepared, explicit new attempt authorized]
+|   +-- new attempt [invalid entrypoint guard; all named checks NOT RUN]
+|   +-- premise challenge and census [reports/census.mjs]
+|   +-- delivered f8a907b, 6fa18a1, de67d34, e69d421 [suite 219/219, Windows NOT RUN]
++-- T9 POSIX executable lookup correction [landed c08ace4; Windows NOT RUN]
++-- T10 Truthful update scope and rejection [landed 8f4a6ab; real Pi update unobserved]
++-- T11 Graph and contract reconciliation [record correction in progress]
++-- T12 Independently accepted PR slices and bottom-up landing [pending]
+```
+
+T8's baseline precedes product-source changes. T9 and T10 each carry behavior,
+regression tests, help/docs and their own spec delta. They do not require another
+broad CLI decomposition. T12 requires exact-patch independent verdicts, applicable
+native review, and current-head CI for each slice. The failed preparation remains
+failed even if a later explicitly authorized attempt succeeds. Model agreement,
+source excerpts and historical test totals are not runtime proof.
+
+Evidence is under `/tmp/lazypi-followup-audit/reports`; the canonical task and
+acceptance record is `odd/tasks/lazypi-hardening.md`. The append-only decision trail
+is `decisions.tsv` in that reports directory. The latest baseline report is
+`03-prepared-baseline.md`, `04-premise-and-census.md` and `04-census.txt`. L19-L23 in the feature
+document record the bounded stop, the premise challenge and the delivered
+isolation slices. No pull request exists for those slices yet.
 
 ## Risk register
 

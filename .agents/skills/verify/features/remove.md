@@ -8,14 +8,14 @@ write. It prints nothing on success and returns Pi's exit status.
 
 Use the stub-first recipe in [the verify skill](../SKILL.md): private `HOME`,
 `USERPROFILE`, `PI_CODING_AGENT_DIR`, XDG directories, `TMPDIR`, and npm
-config/cache, with stub `pi` and stub `npm` first on `PATH`. The stub `pi`
+config/cache, with stub `pi` and stub `npm` as the only `PATH` entries. The stub `pi`
 appends its argv to a log outside the checkout and exits 0. Write only
 disposable fixture settings; never point this drive at a real profile.
 
 ## Drive
 
 ```sh
-env -i PATH="$probe/bin:/usr/bin:/bin" HOME="$probe/home" USERPROFILE="$probe/home" \
+env -i PATH="$probe/bin" HOME="$probe/home" USERPROFILE="$probe/home" \
   PI_CODING_AGENT_DIR="$probe/agent" TMPDIR="$probe/tmp" \
   XDG_CONFIG_HOME="$probe/config" XDG_CACHE_HOME="$probe/cache" \
   XDG_DATA_HOME="$probe/data" XDG_STATE_HOME="$probe/state" \

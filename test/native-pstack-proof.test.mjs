@@ -7,6 +7,7 @@ import { fork, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { privateEnvironment, runOwned, runProof, supportInventoryCommand, validateSupportGraph } from "../scripts/native-pstack-proof.mjs";
+import { createCliSandbox } from "./helpers/cli-spawn.mjs";
 
 // Fixture evidence lives outside the checkout and is removed when this test
 // process exits. The previous in-checkout tree was never cleaned up and reached
@@ -57,7 +58,8 @@ const result = await runProof(transport, { canary: 'PRIVATE-CANARY', canaryPath:
 process.stdout.write(JSON.stringify({ ...result, children, effects }) + '\\n'); process.exitCode = result.ok ? 0 : 1;
 `);
 	const before = readFileSync(file, "utf8");
-	const result = spawnSync(process.execPath, [runner], { encoding: "utf8", timeout: 5000, env: { PATH: "/usr/bin:/bin", HOME: root } });
+	const sandbox = createCliSandbox(t, { prefix: "lazypi-native-runner-" });
+	const result = sandbox.spawn(process.execPath, [runner], { encoding: "utf8", timeout: 5000, env: { HOME: root } });
 	assert.equal(result.error, undefined);
 	assert.equal(result.stderr, "");
 	assert.equal(readFileSync(file, "utf8"), before);
@@ -65,8 +67,8 @@ process.stdout.write(JSON.stringify({ ...result, children, effects }) + '\\n'); 
 	return { ...result, value: JSON.parse(result.stdout) };
 }
 
-test("help is offline and names the hosted-only boundary", () => {
-	const result = spawnSync(process.execPath, [script, "--help"], { encoding: "utf8", timeout: 5000 });
+test("help is offline and names the hosted-only boundary", (t) => {
+	const result = createCliSandbox(t, { prefix: "lazypi-native-help-" }).spawn(process.execPath, [script, "--help"], { timeout: 5000 });
 	assert.equal(result.status, 0); assert.equal(result.stderr, "");
 	assert.match(result.stdout, /hosted-only/);
 });
@@ -118,8 +120,8 @@ for (const phase of ["install", "discovery", "child", "shutdown"]) test(`${phase
 	assert.equal(r.value.children, ["child", "shutdown"].includes(phase) ? 1 : 0);
 });
 
-test("hosted entry rejects a local invocation before installing or touching state", () => {
-	const r = spawnSync(process.execPath, [script, "--hosted"], { encoding: "utf8", timeout: 5000, env: { PATH: "/usr/bin:/bin" } });
+test("hosted entry rejects a local invocation before installing or touching state", (t) => {
+	const r = createCliSandbox(t, { prefix: "lazypi-native-hosted-" }).spawn(process.execPath, [script, "--hosted"], { timeout: 5000 });
 	assert.equal(r.status, 1); assert.equal(r.stderr, "");
 	const records = r.stdout.trim().split("\n").map(JSON.parse);
 	assert.equal(records.length, 1); assert.equal(records[0].kind, "negative");
@@ -146,10 +148,10 @@ test("probe-owned HTTP transport emits one read and refuses an extra request", a
 	} finally { await provider.close(); }
 });
 
-test("owned finite process timeout is recorded and does not retry", async () => {
+test("owned finite process timeout is recorded and does not retry", async (t) => {
 	const { runOwned } = await import("../scripts/native-pstack-proof.mjs");
 	const root = mkdtempSync(join(scratch, "process-timeout-"));
-	const r = await runOwned(process.execPath, ["-e", "process.stdout.write('started\\\\n');setInterval(()=>{},1000)"], { cwd: root, env: { PATH: "/usr/bin:/bin" }, timeoutMs: 200 });
+	const r = await runOwned(process.execPath, ["-e", "process.stdout.write('started\\\\n');setInterval(()=>{},1000)"], { cwd: root, env: createCliSandbox(t, { prefix: "lazypi-native-owned-" }).env, timeoutMs: 200 });
 	assert.equal(r.stdout, "started\\n"); assert.equal(r.stderr, ""); assert.equal(r.timeout, true); assert.equal(r.signal, "SIGTERM"); assert.equal(r.code, null);
 });
 
@@ -175,14 +177,15 @@ for (const name of ["observer", "provider"]) test(`${name} rejects unknown argum
 	assert.equal(r.error, undefined); assert.equal(digest(readFileSync(file)), before);
 	assert.equal(r.status, 2); assert.equal(r.stdout, ""); assert.equal(r.stderr, "Use --help for this internal probe entry point.\n");
 });
-test("observer help does not run the imported provider entry point", () => {
-	const r = spawnSync(process.execPath, [resolve("scripts/native-pstack-observer.mjs"), "--help"], { encoding: "utf8", timeout: 3000 });
+test("observer help does not run the imported provider entry point", (t) => {
+	const r = createCliSandbox(t, { prefix: "lazypi-native-observer-help-" }).spawn(process.execPath, [resolve("scripts/native-pstack-observer.mjs"), "--help"], { timeout: 3000 });
 	assert.equal(r.status, 0); assert.equal(r.stderr, "");
 	assert.equal(r.stdout, "Probe-owned native observer. --controller ROOT SDK_ROOT CANARY is an IPC-only internal entry point, never a local verification command.\n");
 });
-test("imports ignore caller arguments and produce no output", () => {
+test("imports ignore caller arguments and produce no output", (t) => {
+	const sandbox = createCliSandbox(t, { prefix: "lazypi-native-imports-" });
 	for (const arg of ["--help", "--typo"]) {
-		const r = spawnSync(process.execPath, ["--input-type=module", "-e", `await import(${JSON.stringify(new URL("../scripts/native-pstack-observer.mjs", import.meta.url).href)});await import(${JSON.stringify(new URL("../scripts/native-pstack-provider.mjs", import.meta.url).href)});`, "--", "fixture", arg], { encoding: "utf8", timeout: 3000 });
+		const r = sandbox.spawn(process.execPath, ["--input-type=module", "-e", `await import(${JSON.stringify(new URL("../scripts/native-pstack-observer.mjs", import.meta.url).href)});await import(${JSON.stringify(new URL("../scripts/native-pstack-provider.mjs", import.meta.url).href)});`, "--", "fixture", arg], { timeout: 3000 });
 		assert.equal(r.status, 0); assert.equal(r.stdout, ""); assert.equal(r.stderr, "");
 	}
 });

@@ -1,9 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, chmodSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { delimiter, join, resolve } from "node:path";
+import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+
+import { createCliSandbox } from "./helpers/cli-spawn.mjs";
 
 const PACKED_CLI_SMOKE_COMMAND = "node scripts/packed-cli-smoke.mjs";
 const OPTIONAL_INSTALL = "node bin/lazypi.mjs --yes --only optional";
@@ -123,43 +125,19 @@ test("linux CI asserts the empty optional selection contract instead of a no-op 
 // Its name is the pattern the workflow step selects, so the gate and this proof
 // cannot drift apart.
 test("empty optional selection changes nothing and runs no pi install", (t) => {
-	const root = mkdtempSync(join(tmpdir(), "lazypi-empty-optional-"));
-	t.after(() => rmSync(root, { recursive: true, force: true }));
-	for (const name of ["home", "agent", "work", "bin", "tmp"]) mkdirSync(join(root, name));
-	const settings = join(root, "agent", "settings.json");
+	const sandbox = createCliSandbox(t, { prefix: "lazypi-empty-optional-" });
+	const settings = sandbox.settingsPath();
 	const original = JSON.stringify({ packages: ["npm:pi-subagents"], keep: true }) + "\n";
 	writeFileSync(settings, original);
 	writeFileSync(`${settings}.lazypi.fixture.bak`, "existing backup\n");
-	const calls = join(root, "package-calls.log");
-	writeFileSync(calls, "");
 	// Stub executables, not a filtered environment: an empty selection that grew
-	// a spawn would reach the stub and leave a line in the call log.
-	for (const name of ["pi", "npm"]) {
-		if (process.platform === "win32") {
-			writeFileSync(join(root, "bin", `${name}.cmd`), `@echo off\r\necho ${name} %*>>"${calls}"\r\nexit /b 0\r\n`);
-			continue;
-		}
-		const path = join(root, "bin", name);
-		writeFileSync(path, `#!/bin/sh\nprintf '%s %s\\n' ${name} "$*" >> "${calls}"\nexit 0\n`);
-		chmodSync(path, 0o755);
-	}
-	const result = spawnSync(process.execPath, [resolve("bin/lazypi.mjs"), "--yes", "--only", "optional"], {
-		cwd: join(root, "work"),
-		encoding: "utf8",
-		timeout: 30_000,
-		env: {
-			PATH: [join(root, "bin"), ...(process.platform === "win32" ? [] : ["/usr/bin", "/bin"])].join(delimiter),
-			HOME: join(root, "home"),
-			USERPROFILE: join(root, "home"),
-			PI_CODING_AGENT_DIR: join(root, "agent"),
-			TMPDIR: join(root, "tmp"),
-		},
-	});
+	// a spawn would reach a stub and leave a recorded invocation behind.
+	const result = sandbox.run(["--yes", "--only", "optional"]);
 	assert.equal(result.error, undefined);
 	assert.equal(result.status, 0, `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}`);
 	assert.equal(result.stdout, "Nothing selected — nothing to install.\n");
 	assert.equal(result.stderr, "");
-	assert.equal(readFileSync(calls, "utf8"), "", "an empty selection must not run pi or npm");
+	assert.deepEqual(sandbox.external(), [], "an empty selection must not run pi or npm");
 	assert.equal(readFileSync(settings, "utf8"), original);
 	assert.equal(readFileSync(`${settings}.lazypi.fixture.bak`, "utf8"), "existing backup\n");
 });
@@ -216,6 +194,10 @@ test("workflow suite accepts CRLF checkout files without weakening mutations", (
 	t.after(() => rmSync(root, { recursive: true, force: true }));
 	mkdirSync(join(root, ".github", "workflows"), { recursive: true });
 	mkdirSync(join(root, "scripts"));
+	mkdirSync(join(root, "helpers"));
+	// The suite imports the isolation helper, so a run from another checkout root
+	// needs its copy beside the suite as well.
+	writeFileSync(join(root, "helpers", "cli-spawn.mjs"), readFileSync(join("test", "helpers", "cli-spawn.mjs")));
 	writeFileSync(join(root, "scripts", "packed-cli-smoke.mjs"), readFileSync("scripts/packed-cli-smoke.mjs"));
 	for (const name of ["test.yml", "windows-smoke.yml"]) {
 		writeFileSync(join(root, ".github", "workflows", name), readFileSync(`.github/workflows/${name}`, "utf8").replace(/\r?\n/g, "\r\n"));
