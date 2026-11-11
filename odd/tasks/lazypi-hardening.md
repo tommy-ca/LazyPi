@@ -297,3 +297,20 @@ binding twice as missing or stale, with no mutation either time. Parent did not
 compose substitute tokens and is not retrying; the reviewer of immutable trees
 produced no verdict, so lineage review-8a1de3d2981a5139 stays open at
 correction_required and needs a human decision or a facade fix.
+
+L27. Option-1 diagnosis and slice-1 closure. The earlier acceptance was blocked
+by the facade, not by the provider: a capture compares the provider-issued
+binding against a STATUS fetched through the route recorded at start, and that
+route carried no base-ref, so no binding could ever match. A fresh lineage started
+with an explicit base-ref and committed-only carried the selector, and every
+capture matched on the first try. Lineage review-bab47ba5a7e4d10c reviewed the
+corrected candidate tree 1b71c0cac665c9f8b6865e2646958f69ee619a8e with two
+openai/gpt-6.1-sol reviewers, reached approved on the last admitted event, and was
+acknowledged, burning its authority. One informational WARNING remains,
+R3-missing-pi-restored at test/pstack-retirement.test.mjs:47, non-blocking and
+explicitly not a reason to re-review the candidate. The stuck lineage
+review-8a1de3d2981a5139 stays recorded as blocked by the missing selector; its
+refuter finding was fixed and is what the fresh lineage reviewed. Total review
+spend so far is five model runs. Remaining slices are unreviewed and the stack is
+not yet pushed.
+
