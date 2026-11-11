@@ -352,3 +352,21 @@ half. The tool-defect half is a separate unit with disjoint surfaces, so the 424
 authored lines recorded across two commits are the text slice alone and the
 remaining work is tracked separately rather than folded in to fit a number.
 
+L29. Tool-defect half delivered. Commit ae5b83e. Two of the eight e2e checks were
+`() => {}` bodies that `check()` counted as passes; the worker showed the real
+false pass by driving a doctor fixture that prints a problem line and exits 0 and
+still reported E2E PASS: 8 checks. Both bodies now assert state. Optional sources
+derive like core, the pstack index comes from the catalog, subagent overrides
+compare exactly, doctor's exit-1 branch has an exact-output pin, and the Windows
+step that could not fail now runs the empty-optional gate on that runner. One
+instruction was wrong: parent told the worker to forward `--settings`, but
+`bin/lazypi.mjs` has no such flag and exits 2 on unknown arguments. The worker
+forwarded the asserted file through PI_CODING_AGENT_DIR, resolved the CLI beside
+the script, and failed closed on any other filename, and its probe showed the base
+comparing one file's sources against another file's count. Parent measured 242 of
+242 tests with spec:validate 18 plus 41 clean and confirmed no empty check bodies
+remain. Slice boundary: a79e910 plan, ac02470 text and rule, 8553b18 records,
+ae5b83e tools. The 684 authored lines across four commits are two coherent slices,
+not one; reshaping them to satisfy a heuristic would have merged text and CI risk
+into a single unreadable review.
+
